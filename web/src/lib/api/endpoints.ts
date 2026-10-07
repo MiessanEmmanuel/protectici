@@ -33,7 +33,10 @@ export interface RegisterInput {
 /** Surface de l'API utilisée par l'application (réelle ou mock). */
 export interface Api {
   // Authentification
-  register(input: RegisterInput, idempotencyKey?: string): Promise<User>;
+  /** 202 : message générique identique dans tous les cas (anti-énumération). Aucune session ouverte. */
+  register(input: RegisterInput, idempotencyKey?: string): Promise<string>;
+  /** 202 public, réponse identique dans tous les cas (aucun mot de passe renvoyé). */
+  resendVerificationPublic(email: string): Promise<string>;
   login(input: { email: string; password: string; remember?: boolean }): Promise<LoginResult>;
   twoFactorChallenge(input: { code?: string; recovery_code?: string }): Promise<User>;
   logout(): Promise<void>;
@@ -116,14 +119,26 @@ export function markerQueryToParams(q: MarkerQuery): Query {
 
 const enc = encodeURIComponent;
 
+export const RESEND_NEUTRAL_MESSAGE =
+  'Si cette adresse correspond à un compte non confirmé, un nouvel e-mail vient d’être envoyé.';
+
+export const REGISTER_NEUTRAL_MESSAGE =
+  'Si cette adresse est valide, vous allez recevoir un e-mail pour activer votre compte.';
+
 export function buildApi(req: Requester): Api {
   return {
     async register(input, idempotencyKey) {
-      const res = await req<{ data: User }>('POST', '/auth/register', {
+      const res = await req<{ message?: string }>('POST', '/auth/register', {
         body: input,
         idempotencyKey,
       });
-      return res.data;
+      return res?.message ?? REGISTER_NEUTRAL_MESSAGE;
+    },
+    async resendVerificationPublic(email) {
+      const res = await req<{ message?: string }>('POST', '/auth/verification/resend', {
+        body: { email },
+      });
+      return res?.message ?? RESEND_NEUTRAL_MESSAGE;
     },
     async login(input) {
       const res = await req<{ data?: User; two_factor?: boolean }>('POST', '/auth/login', {

@@ -16,6 +16,9 @@ return [
 
     'default' => env('MAIL_MAILER', 'log'),
 
+    // Local uniquement : laisser les liens signés visibles dans les e-mails journalisés (mailer « log »).
+    'log_links' => (bool) env('MAIL_LOG_LINKS', false),
+
     /*
     |--------------------------------------------------------------------------
     | Mailer Configurations

@@ -8,7 +8,6 @@ use App\Rules\StrongPassword;
 use App\Rules\ValidTurnstileToken;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
@@ -35,20 +34,11 @@ class RegisterRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:100', 'regex:/^[\pL\pM\' .-]{1,100}$/u'],
             'last_name' => ['required', 'string', 'max:100', 'regex:/^[\pL\pM\' .-]{1,100}$/u'],
-            'email' => ['required', 'string', 'email:rfc,strict', 'max:255', Rule::unique('users', 'email')->withoutTrashed()],
+            'email' => ['required', 'string', 'email:rfc,strict', 'max:255'],
             'password' => ['required', 'string', 'confirmed', StrongPassword::forRole(User::ROLE_USER)],
             'phone' => ['nullable', 'string', 'max:30', new PhoneNumber],
             'consent' => ['required', 'accepted'],
             'turnstile_token' => ValidTurnstileToken::rules(),
-        ];
-    }
-
-    /** @return array<string, string> */
-    public function messages(): array
-    {
-        return [
-            // Anti-énumération : pas de « cette adresse est déjà utilisée ».
-            'email.unique' => __('auth.register_failed'),
         ];
     }
 }

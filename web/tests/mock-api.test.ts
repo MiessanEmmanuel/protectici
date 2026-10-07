@@ -65,3 +65,45 @@ describe('fixtures et API simulée', () => {
     expect(JSON.stringify(reviews)).not.toMatch(/@/);
   });
 });
+
+describe('inscription (flux anti-énumération)', () => {
+  const input = {
+    first_name: 'A',
+    last_name: 'B',
+    email: 'nouveau@example.test',
+    password: 'motdepasse12',
+    password_confirmation: 'motdepasse12',
+    consent: true,
+  };
+
+  it('renvoie un message générique identique, même pour un e-mail « déjà pris »', async () => {
+    const a = await mockApi.register(input);
+    const b = await mockApi.register({ ...input, email: 'pris@example.test' });
+    expect(a).toBe(b);
+    expect(a).toMatch(/^Si cette adresse est valide/);
+  });
+
+  it('ouvre aucune session et refuse la connexion tant que le lien n’est pas cliqué', async () => {
+    await mockApi.register(input);
+    await expect(mockApi.getUser()).resolves.toBeNull();
+    await expect(
+      mockApi.login({ email: input.email, password: input.password }),
+    ).rejects.toMatchObject({ status: 403 });
+  });
+
+  it('valide toujours le consentement (422)', async () => {
+    await expect(mockApi.register({ ...input, consent: false })).rejects.toMatchObject({
+      status: 422,
+    });
+  });
+
+  it('renvoi public : même réponse neutre pour tout e-mail ; 403 avec code email_unverified', async () => {
+    const a = await mockApi.resendVerificationPublic('x@example.test');
+    const b = await mockApi.resendVerificationPublic('inconnu@example.test');
+    expect(a).toBe(b);
+    await mockApi.register(input);
+    await expect(
+      mockApi.login({ email: input.email, password: input.password }),
+    ).rejects.toMatchObject({ status: 403, code: 'email_unverified' });
+  });
+});

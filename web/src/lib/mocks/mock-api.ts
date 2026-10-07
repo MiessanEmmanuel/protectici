@@ -1,4 +1,5 @@
 import { ApiError } from '../api/errors';
+import { REGISTER_NEUTRAL_MESSAGE, RESEND_NEUTRAL_MESSAGE } from '../api/endpoints';
 import type { Api, RegisterInput } from '../api/endpoints';
 import type {
   GeocodeResult,
@@ -37,6 +38,21 @@ interface MockState {
 }
 
 let pending2fa: MockState | null = null;
+/** Compte « en attente de vérification » (mode mock uniquement). */
+let pendingVerification: MockState | null = null;
+
+/** Mode mock : indique s'il y a une inscription à « confirmer » par le lien de démonstration. */
+export function mockHasPendingVerification(): boolean {
+  return pendingVerification !== null;
+}
+
+/** Mode mock : simule le clic sur le lien e-mail (vérifie et connecte automatiquement). */
+export function mockClickVerificationLink(): boolean {
+  if (!pendingVerification) return false;
+  writeState(pendingVerification);
+  pendingVerification = null;
+  return true;
+}
 
 const isBrowser = () => typeof document !== 'undefined';
 const delay = (ms = 120) =>
@@ -270,19 +286,21 @@ export const mockApi: Api = {
       fail('password', 'La confirmation ne correspond pas.');
     if (input.password.length < 10)
       fail('password', 'Le mot de passe doit contenir au moins 10 caractères.');
-    if (normalize(input.email) === 'pris@example.test')
-      fail('email', 'Cette adresse e-mail est déjà utilisée.');
-    const state: MockState = {
+    // Réponse identique quel que soit l'état de l'e-mail (anti-énumération). Aucune session ouverte.
+    pendingVerification = {
       e: input.email,
       f: input.first_name,
       l: input.last_name,
       r: 'user',
       tf: false,
-      v: false,
+      v: true,
       fav: [],
     };
-    writeState(state);
-    return toUser(state);
+    return REGISTER_NEUTRAL_MESSAGE;
+  },
+  async resendVerificationPublic() {
+    await delay();
+    return RESEND_NEUTRAL_MESSAGE; // identique pour tout e-mail
   },
   async login({ email, password }) {
     await delay();
@@ -291,6 +309,15 @@ export const mockApi: Api = {
         email: ['Ces identifiants ne correspondent à aucun compte.'],
       });
     const lower = normalize(email);
+    if (pendingVerification && normalize(pendingVerification.e) === lower) {
+      throw new ApiError(
+        403,
+        'Veuillez confirmer votre adresse e-mail. Un nouveau lien vient de vous être envoyé.',
+        {},
+        null,
+        'email_unverified',
+      );
+    }
     const role: Role = lower.startsWith('admin')
       ? 'admin'
       : lower.startsWith('editor')

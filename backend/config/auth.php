@@ -119,6 +119,15 @@ return [
     'frontend_url' => rtrim((string) env('FRONTEND_URL', 'http://localhost:3000'), '/'),
 
     // Durée minimale (ms) de « mot de passe oublié » pour masquer l'existence du compte.
+    // Durée minimale de /auth/register (anti-énumération par le temps de réponse)
+    'register_timebox_ms' => (int) env('AUTH_REGISTER_TIMEBOX_MS', 1000),
+
+    // Liens de confirmation : 3 e-mails par heure et par adresse destinataire
+    'verification_mail_per_hour' => 3,
+
+    // Jours avant purge des comptes jamais vérifiés
+    'unverified_retention_days' => 7,
+
     'forgot_password_timebox_ms' => (int) env('AUTH_FORGOT_PASSWORD_TIMEBOX_MS', 400),
 
 ];

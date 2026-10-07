@@ -1,24 +1,40 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef, useState, type FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { clientApi } from '@/lib/api/client';
-import { describeError } from '@/lib/api/errors';
+import { describeError, errorMessage } from '@/lib/api/errors';
+import type { RegisterInput } from '@/lib/api/endpoints';
+import { USE_MOCKS } from '@/lib/env';
+import { mockClickVerificationLink } from '@/lib/mocks/mock-api';
 import { formToObject, registerSchema, validate, type FieldErrors } from '@/lib/validation';
-import { useSession } from '../layout/SessionProvider';
-import { Button, ButtonLink } from '../ui/Button';
+import { Button } from '../ui/Button';
 import { Checkbox } from '../ui/Checkbox';
-import { FormError, FormSuccess } from '../ui/Field';
+import { FormError } from '../ui/Field';
 import { Input } from '../ui/Input';
 
+export const RESEND_DELAY_S = 60;
+
 export function RegisterForm() {
-  const { setUser } = useSession();
+  const router = useRouter();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  // Clé d'idempotence générée une fois par formulaire : un renvoi réseau ne crée pas deux comptes.
-  const idempotencyKey = useRef<string>(typeof crypto !== 'undefined' ? crypto.randomUUID() : '');
+  const [resendIn, setResendIn] = useState(0);
+  const [resendNotice, setResendNotice] = useState<string | null>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (sentTo) titleRef.current?.focus();
+  }, [sentTo]);
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -29,12 +45,11 @@ export function RegisterForm() {
     setBusy(true);
     try {
       const { phone, ...rest } = parsed.data;
-      const user = await clientApi.register(
-        { ...rest, ...(phone ? { phone } : {}) },
-        idempotencyKey.current || undefined,
-      );
-      setUser(user);
-      setDone(true);
+      const input: RegisterInput = { ...rest, ...(phone ? { phone } : {}) };
+      await clientApi.register(input, crypto.randomUUID());
+      // Seul l'e-mail est conservé (pour le renvoi) : le mot de passe n'est plus en mémoire.
+      setSentTo(input.email);
+      setResendIn(RESEND_DELAY_S);
     } catch (err) {
       const d = describeError(err);
       setErrors(d.fields);
@@ -44,11 +59,56 @@ export function RegisterForm() {
     }
   }
 
-  if (done) {
+  async function resend() {
+    if (!sentTo || resendIn > 0) return;
+    setBusy(true);
+    setResendNotice(null);
+    try {
+      setResendNotice(await clientApi.resendVerificationPublic(sentTo));
+      setResendIn(RESEND_DELAY_S);
+    } catch (err) {
+      setResendNotice(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (sentTo) {
     return (
       <div className="flex flex-col gap-4">
-        <FormSuccess message="Votre compte a été créé. Un e-mail de vérification vous a été envoyé : cliquez sur le lien qu’il contient pour pouvoir ajouter des favoris et publier des avis." />
-        <ButtonLink href="/compte">Accéder à mon compte</ButtonLink>
+        <h2 ref={titleRef} tabIndex={-1} className="text-lg font-bold outline-none">
+          Vérifiez votre boîte e-mail
+        </h2>
+        <p role="status">
+          Si cette adresse est valide, vous allez recevoir un e-mail pour activer votre compte.
+          Consultez votre boîte de réception et vos courriers indésirables. Le lien est valable 60
+          minutes.
+        </p>
+        <p aria-live="polite" role="status" className="min-h-6 text-sm">
+          {resendNotice}
+        </p>
+        <Button
+          variant="secondary"
+          onClick={() => void resend()}
+          disabled={resendIn > 0}
+          loading={busy}
+        >
+          {resendIn > 0 ? `Renvoyer l’e-mail (dans ${resendIn} s)` : 'Renvoyer l’e-mail'}
+        </Button>
+        {USE_MOCKS ? (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              mockClickVerificationLink();
+              router.push('/compte?verified=1');
+            }}
+          >
+            Démo : simuler le clic sur le lien reçu par e-mail
+          </Button>
+        ) : null}
+        <p className="text-center text-sm">
+          <Link href="/connexion">Aller à la connexion</Link>
+        </p>
       </div>
     );
   }

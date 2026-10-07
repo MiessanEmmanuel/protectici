@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use App\Exceptions\ApiHttpException;
 use App\Http\Middleware\StaffSessionInactivity;
 use App\Models\User;
 use App\Services\AuditLogger;
@@ -27,6 +28,7 @@ class AuthenticateUser
         private readonly LoginThrottle $throttle,
         private readonly TwoFactorAuthentication $twoFactor,
         private readonly AuditLogger $audit,
+        private readonly VerificationMailer $mailer,
     ) {}
 
     /**
@@ -56,6 +58,13 @@ class AuthenticateUser
         }
 
         $this->throttle->clear($key);
+
+        // Identifiants corrects mais e-mail non confirmé : jamais de connexion ; nouveau lien (3/h/adresse).
+        if (! $user->hasVerifiedEmail()) {
+            $this->mailer->send($user);
+
+            throw new ApiHttpException(403, 'Veuillez confirmer votre adresse e-mail. Un nouveau lien vient de vous être envoyé.', errorCode: 'email_unverified');
+        }
 
         $session = $request->session();
 

@@ -32,7 +32,7 @@ function registerPayload(array $extra = []): array
 it('est désactivé en test (aucun appel réseau)', function () {
     expect(app(TurnstileVerifier::class))->toBeInstanceOf(NullTurnstileVerifier::class);
 
-    $this->postJson('/api/v1/auth/register', registerPayload())->assertCreated();
+    $this->postJson('/api/v1/auth/register', registerPayload())->assertStatus(202);
     Http::assertNothingSent();
 });
 
@@ -70,7 +70,7 @@ it('exige et vérifie le jeton à l\'inscription quand il est activé', function
     $this->postJson('/api/v1/auth/register', registerPayload(['turnstile_token' => 'mauvais']))
         ->assertUnprocessable()->assertJsonValidationErrors(['turnstile_token']);
     $this->postJson('/api/v1/auth/register', registerPayload(['turnstile_token' => 'bon']))
-        ->assertCreated();
+        ->assertStatus(202);
 });
 
 it('exige le jeton au mot de passe oublié quand il est activé', function () {

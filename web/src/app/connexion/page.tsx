@@ -9,9 +9,11 @@ export const metadata: Metadata = { title: 'Connexion', robots: { index: false, 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ redirect?: string | string[] }>;
+  searchParams: Promise<{ redirect?: string | string[]; verified?: string | string[] }>;
 }) {
   const raw = (await searchParams).redirect;
+  const v = (await searchParams).verified;
+  const verified = Array.isArray(v) ? v[0] : v;
   const redirect = safeRedirect(Array.isArray(raw) ? raw[0] : raw, '/compte');
   return (
     <AuthShell
@@ -23,7 +25,10 @@ export default async function LoginPage({
         </>
       }
     >
-      <LoginForm redirect={redirect} />
+      <LoginForm
+        redirect={redirect}
+        verified={verified === '0' || verified === '1' ? verified : undefined}
+      />
     </AuthShell>
   );
 }

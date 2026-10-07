@@ -100,12 +100,7 @@ export function ProximityControl({ value, onChange }: ProximityControlProps) {
         </p>
       ) : null}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-        <Button
-          variant="secondary"
-          onClick={locate}
-          loading={locating}
-          className="sm:shrink-0"
-        >
+        <Button variant="secondary" onClick={locate} loading={locating} className="sm:shrink-0">
           Utiliser ma position
         </Button>
         <div className="flex flex-1 flex-col gap-1">

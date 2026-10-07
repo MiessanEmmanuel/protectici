@@ -38,6 +38,7 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TURNSTILE_ENABLED" value="false"/>
+        <env name="AUTH_REGISTER_TIMEBOX_MS" value="0"/>
         <env name="IP_HASH_SECRET" value="test-ip-hash-secret"/>
         <env name="FRONTEND_URL" value="http://localhost:3000"/>
         <env name="SANCTUM_STATEFUL_DOMAINS" value="localhost:3000,127.0.0.1:3000"/>

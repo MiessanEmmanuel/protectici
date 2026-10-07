@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { clientApi } from '@/lib/api/client';
-import { describeError } from '@/lib/api/errors';
+import { ApiError, describeError } from '@/lib/api/errors';
 import { safeRedirect } from '@/lib/safe-redirect';
 import {
   formToObject,
@@ -19,7 +19,7 @@ import { Checkbox } from '../ui/Checkbox';
 import { FormError } from '../ui/Field';
 import { Input } from '../ui/Input';
 
-export function LoginForm({ redirect }: { redirect?: string }) {
+export function LoginForm({ redirect, verified }: { redirect?: string; verified?: string }) {
   const router = useRouter();
   const { setUser } = useSession();
   const [step, setStep] = useState<'credentials' | 'two_factor'>('credentials');
@@ -27,9 +27,11 @@ export function LoginForm({ redirect }: { redirect?: string }) {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [unverified, setUnverified] = useState(false);
   const target = safeRedirect(redirect, '/compte');
 
   function fail(e: unknown) {
+    setUnverified(e instanceof ApiError && e.status === 403 && e.code === 'email_unverified');
     const d = describeError(e);
     setErrors(d.fields);
     setFormError(d.form);
@@ -124,7 +126,32 @@ export function LoginForm({ redirect }: { redirect?: string }) {
 
   return (
     <form onSubmit={(e) => void onCredentials(e)} noValidate className="flex flex-col gap-4">
+      {verified === '0' ? (
+        <div
+          role="alert"
+          className="rounded-md border border-danger bg-danger-soft p-3 text-danger"
+        >
+          Lien invalide ou expiré. Connectez-vous pour recevoir un nouveau lien de confirmation, ou
+          créez à nouveau votre compte.
+        </div>
+      ) : null}
+      {verified === '1' ? (
+        <div
+          role="status"
+          className="rounded-md border border-success bg-success-soft p-3 text-success"
+        >
+          Adresse e-mail confirmée. Vous pouvez vous connecter.
+        </div>
+      ) : null}
       <FormError message={formError} />
+      <p
+        aria-live="polite"
+        className={unverified ? 'rounded-md bg-warning-soft p-3 text-sm' : 'sr-only'}
+      >
+        {unverified
+          ? 'Un nouveau lien de confirmation vient d’être envoyé à votre adresse. Cliquez dessus pour activer votre compte et vous connecter automatiquement (pensez aux courriers indésirables).'
+          : ''}
+      </p>
       <Input
         label="Adresse e-mail"
         name="email"

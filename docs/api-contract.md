@@ -43,15 +43,16 @@ Contrat **partagé** entre `backend/` (Laravel) et `web/` (Next.js). Source de v
 | Méthode | Chemin | Corps / paramètres | Réponse |
 |---|---|---|---|
 | GET | `/sanctum/csrf-cookie` | — | 204 |
-| POST | `/auth/register` | `first_name, last_name, email, password, password_confirmation, phone?, consent (true obligatoire), turnstile_token?` | 201 `{data: User}` (+ email de vérification) |
-| POST | `/auth/login` | `email, password, remember?` | 200 `{data: User}` **ou** 200 `{ "two_factor": true }` si 2FA requise |
+| POST | `/auth/register` | `first_name, last_name, email, password, password_confirmation, phone?, consent (true obligatoire), turnstile_token?` | **202** `{ "message": "Si cette adresse est valide, vous allez recevoir un e-mail pour activer votre compte." }` — **réponse strictement identique** (corps, code, durée) que l'e-mail soit nouveau, déjà utilisé ou non vérifié. Aucune session n'est ouverte à ce stade. |
+| POST | `/auth/login` | `email, password, remember?` | 200 `{data: User}` **ou** 200 `{ "two_factor": true }` si 2FA requise. Compte **non vérifié** : identifiants corrects ⇒ 403 `{message: "Veuillez confirmer votre adresse e-mail. Un nouveau lien vient de vous être envoyé."}` (nouveau lien limité à 3/heure) ; le corps contient `"code": "email_unverified"` (les autres 403 n'ont pas ce code : le front n'affiche le rappel « nouveau lien envoyé » que pour ce code) ; identifiants faux ⇒ 422 générique habituel. |
 | POST | `/auth/two-factor-challenge` | `code` **ou** `recovery_code` | 200 `{data: User}` |
 | POST | `/auth/logout` | — | 204 |
 | GET | `/auth/user` | — (auth) | 200 `{data: User}` / 401 |
 | POST | `/auth/forgot-password` | `email` | 200 message **identique** que le compte existe ou non |
 | POST | `/auth/reset-password` | `token, email, password, password_confirmation` | 200 |
-| GET | `/auth/verify-email/{id}/{hash}` | lien signé | redirection vers `{WEB_URL}/compte?verified=1` |
+| GET | `/auth/verify-email/{id}/{hash}` | lien signé, expirant (60 min), à usage unique | Vérifie l'e-mail **et ouvre la session (connexion automatique)**, puis redirige vers `{WEB_URL}/compte?verified=1`. Lien invalide, expiré ou déjà utilisé : redirection vers `{WEB_URL}/connexion?verified=0`. |
 | POST | `/auth/email/resend` | (auth) | 202 |
+| POST | `/auth/verification/resend` | `email` (public, sans session), `turnstile_token?` | **202** `{ "message": "Si cette adresse correspond à un compte non confirmé, un nouvel e-mail vient d'être envoyé." }` — réponse identique dans tous les cas, 3 e-mails/heure/adresse et 10/heure/IP (au dépassement : même 202, aucun e-mail). Le front l'utilise pour « Renvoyer l'e-mail » (il ne conserve ni ne renvoie jamais le mot de passe). |
 | POST | `/auth/two-factor/enable` | (auth) | 200 `{ secret, qr_svg }` |
 | POST | `/auth/two-factor/confirm` | `code` | 200 `{ recovery_codes: [..] }` |
 | POST | `/auth/two-factor/disable` | `password` | 204 |
@@ -96,6 +97,6 @@ Ces points complètent le contrat ci-dessus ; ils reflètent le comportement ré
 - `PUT /favorite` : 403 « Veuillez vérifier votre adresse e-mail pour ajouter des favoris. » si e-mail non vérifié ; 404 si fiche non publiée ; `DELETE` idempotent (204).
 - Auteur d'avis : « Prénom N. » (« Anonyme » si compte anonymisé).
 - Login : échec = 422 `errors.email`, message identique (compte inconnu, inactif ou mot de passe faux). 2FA requise = `{"two_factor": true}` seul ; `/auth/user` = 401 tant que le challenge n'est pas réussi.
-- Register : rôle toujours `user` ; l'utilisateur est connecté après inscription ; e-mail déjà pris = 422 générique.
+- **Register (révisé le 2026-10-07)** : réponse 202 identique dans tous les cas (anti-énumération, `security.md` §12). Nouveau compte (rôle `user`, non vérifié) ⇒ e-mail avec lien de confirmation signé ; le clic **vérifie et connecte automatiquement**. E-mail déjà utilisé et vérifié ⇒ e-mail « vous avez déjà un compte » (liens connexion / mot de passe oublié), aucun changement de compte. E-mail existant **non vérifié** ⇒ les nouvelles données (nom, mot de passe) **remplacent** les anciennes et un nouveau lien est envoyé (neutralise le détournement par pré-inscription). Les comptes non vérifiés ne peuvent pas se connecter et sont purgés après 7 jours. Limites : 5 inscriptions/heure/IP et 3 e-mails/heure/adresse destinataire (anti-bombardement). Durée de réponse égalisée (Timebox).
 - `email/resend` 202 `{message}` ; `reset-password` 200 `{message}` ; 2FA enable déjà confirmée 409 ; disable pour admin/editor 403 ; challenge sans login en attente 422 ; `verify-email` redirige vers `/compte?verified=1` ou `?verified=0`.
 - Mots de passe : 10 caractères (user), 12 (provider/editor/admin). Cookie de session : `protectici_session`.

@@ -21,16 +21,16 @@ it('vérifie l\'email via un lien signé valide et redirige vers le front', func
     $this->get($url)->assertRedirect('http://localhost:3000/compte?verified=1');
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
 
-    // Lien déjà utilisé : toujours un succès (idempotent).
-    $this->get($url)->assertRedirect('http://localhost:3000/compte?verified=1');
+    // Lien déjà utilisé : refusé (usage unique).
+    $this->get($url)->assertRedirect('http://localhost:3000/connexion?verified=0');
 });
 
 it('redirige en échec pour une signature invalide', function () {
     $user = User::factory()->unverified()->create();
     $url = (new VerifyEmailNotification)->verificationUrl($user);
 
-    $this->get($url.'0')->assertRedirect('http://localhost:3000/compte?verified=0');
-    $this->get('/api/v1/auth/verify-email/'.$user->id.'/'.sha1($user->email))->assertRedirect('http://localhost:3000/compte?verified=0');
+    $this->get($url.'0')->assertRedirect('http://localhost:3000/connexion?verified=0');
+    $this->get('/api/v1/auth/verify-email/'.$user->id.'/'.sha1($user->email))->assertRedirect('http://localhost:3000/connexion?verified=0');
     expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
 });
 
@@ -40,7 +40,7 @@ it('redirige en échec pour un lien expiré', function () {
 
     $this->travel(61)->minutes();
 
-    $this->get($url)->assertRedirect('http://localhost:3000/compte?verified=0');
+    $this->get($url)->assertRedirect('http://localhost:3000/connexion?verified=0');
     expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
 });
 
@@ -50,8 +50,8 @@ it('redirige en échec pour un hash ne correspondant pas ou un compte inexistant
     $badHash = URL::temporarySignedRoute('auth.verification.verify', now()->addHour(), ['id' => $user->id, 'hash' => sha1('autre@example.com')]);
     $unknown = URL::temporarySignedRoute('auth.verification.verify', now()->addHour(), ['id' => 999999, 'hash' => sha1('x@example.com')]);
 
-    $this->get($badHash)->assertRedirect('http://localhost:3000/compte?verified=0');
-    $this->get($unknown)->assertRedirect('http://localhost:3000/compte?verified=0');
+    $this->get($badHash)->assertRedirect('http://localhost:3000/connexion?verified=0');
+    $this->get($unknown)->assertRedirect('http://localhost:3000/connexion?verified=0');
     expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
 });
 
@@ -59,7 +59,7 @@ it('ignore tout paramètre de redirection fourni (pas de redirection ouverte)', 
     $user = User::factory()->unverified()->create();
     $url = (new VerifyEmailNotification)->verificationUrl($user);
 
-    $this->get($url.'&redirect=https://evil.example')->assertRedirect('http://localhost:3000/compte?verified=0');
+    $this->get($url.'&redirect=https://evil.example')->assertRedirect('http://localhost:3000/connexion?verified=0');
 });
 
 it('renvoie le lien de vérification (202) à un compte non vérifié', function () {

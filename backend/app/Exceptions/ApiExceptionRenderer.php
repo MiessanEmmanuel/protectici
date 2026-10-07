@@ -62,7 +62,11 @@ class ApiExceptionRenderer
         }
 
         if ($e instanceof ApiHttpException) {
-            return response()->json(['message' => $e->getMessage()], $e->getStatusCode(), $e->getHeaders());
+            return response()->json(
+                ['message' => $e->getMessage()] + ($e->errorCode !== null ? ['code' => $e->errorCode] : []),
+                $e->getStatusCode(),
+                $e->getHeaders(),
+            );
         }
 
         if ($e instanceof HttpExceptionInterface) {

@@ -90,6 +90,7 @@ async function toApiError(response: Response): Promise<ApiError> {
     message,
     errors,
     parseRetryAfter(response.headers.get('Retry-After')),
+    typeof record.code === 'string' ? record.code : null,
   );
 }
 

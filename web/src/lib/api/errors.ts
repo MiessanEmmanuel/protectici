@@ -3,18 +3,22 @@ export class ApiError extends Error {
   readonly status: number;
   readonly errors: Record<string, string[]>;
   readonly retryAfter: number | null;
+  /** Code machine optionnel du corps d'erreur (ex. "email_unverified"). */
+  readonly code: string | null;
 
   constructor(
     status: number,
     message: string,
     errors: Record<string, string[]> = {},
     retryAfter: number | null = null,
+    code: string | null = null,
   ) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.errors = errors;
     this.retryAfter = retryAfter;
+    this.code = code;
   }
 
   get isValidation(): boolean {

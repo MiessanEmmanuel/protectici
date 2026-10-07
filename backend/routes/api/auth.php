@@ -7,10 +7,14 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\Auth\PublicVerificationResendController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,6 +23,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('register', RegisterController::class)->middleware('throttle:register')->name('register');
+    Route::post('verification/resend', PublicVerificationResendController::class)->name('verification.resend');
     Route::post('login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login')->name('login');
     Route::post('two-factor-challenge', TwoFactorChallengeController::class)->middleware('throttle:two-factor')->name('two-factor.challenge');
     Route::post('forgot-password', PasswordResetLinkController::class)->middleware('throttle:password-reset')->name('password.email');
@@ -26,7 +31,13 @@ Route::prefix('auth')->name('auth.')->group(function () {
 
     // Lien reçu par email : signature vérifiée dans le service pour rediriger aussi en cas d'échec.
     Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
-        ->middleware('throttle:verify-email')
+        // Navigation depuis un e-mail (sans Origin) : la session doit être démarrée explicitement.
+        ->middleware([
+            'throttle:verify-email',
+            EncryptCookies::class,
+            AddQueuedCookiesToResponse::class,
+            StartSession::class,
+        ])
         ->where(['id' => '[0-9]+', 'hash' => '[A-Fa-f0-9]{40}'])
         ->name('verification.verify');
 

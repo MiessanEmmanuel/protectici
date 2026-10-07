@@ -70,8 +70,14 @@ describe('client API : CSRF et cookies', () => {
   });
 
   it("transmet la clé d'idempotence", async () => {
-    const { api, calls } = setup([jsonResponse(204), jsonResponse(201, { data: { id: 1 } })]);
-    await api.register(
+    const { api, calls } = setup([
+      jsonResponse(204),
+      jsonResponse(202, {
+        message:
+          'Si cette adresse est valide, vous allez recevoir un e-mail pour activer votre compte.',
+      }),
+    ]);
+    const message = await api.register(
       {
         first_name: 'A',
         last_name: 'B',
@@ -83,6 +89,7 @@ describe('client API : CSRF et cookies', () => {
       'uuid-1',
     );
     expect((calls[1]!.init.headers as Record<string, string>)['Idempotency-Key']).toBe('uuid-1');
+    expect(message).toMatch(/^Si cette adresse est valide/);
   });
 });
 
@@ -194,5 +201,33 @@ describe('construction des requêtes', () => {
     expect(url.searchParams.get('sort')).toBe('-rating');
     expect(url.searchParams.get('lat')).toBe('5.3');
     expect(url.searchParams.get('per_page')).toBe('12');
+  });
+});
+
+describe('vérification e-mail et code d’erreur', () => {
+  it('resendVerificationPublic envoie uniquement l’e-mail à /auth/verification/resend', async () => {
+    const { api, calls } = setup([jsonResponse(204), jsonResponse(202, { message: 'Neutre.' })]);
+    await expect(api.resendVerificationPublic('a@b.co')).resolves.toBe('Neutre.');
+    expect(calls[1]!.url).toBe('http://api.test/api/v1/auth/verification/resend');
+    expect(JSON.parse(String(calls[1]!.init.body))).toEqual({ email: 'a@b.co' });
+  });
+
+  it('expose le code du corps d’erreur (403 email_unverified)', async () => {
+    const { api } = setup([
+      jsonResponse(204),
+      jsonResponse(403, { message: 'Confirmez.', code: 'email_unverified' }),
+    ]);
+    await expect(api.login({ email: 'a@b.co', password: 'x' })).rejects.toMatchObject({
+      status: 403,
+      code: 'email_unverified',
+    });
+  });
+
+  it('code null pour un 403 sans code', async () => {
+    const { api } = setup([jsonResponse(204), jsonResponse(403, { message: 'Interdit.' })]);
+    await expect(api.login({ email: 'a@b.co', password: 'x' })).rejects.toMatchObject({
+      status: 403,
+      code: null,
+    });
   });
 });

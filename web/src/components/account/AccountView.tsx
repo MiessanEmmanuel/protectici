@@ -51,7 +51,9 @@ export function AccountView({ justVerified }: { justVerified: boolean }) {
 
   return (
     <div className="flex flex-col gap-6">
-      {justVerified ? <FormSuccess message="Votre adresse e-mail est vérifiée. Merci !" /> : null}
+      {justVerified ? (
+        <FormSuccess message="Adresse e-mail confirmée, vous êtes connecté." />
+      ) : null}
       {!user.email_verified ? (
         <Card className="border-accent-text bg-warning-soft">
           <p className="font-semibold">Adresse e-mail non vérifiée</p>
