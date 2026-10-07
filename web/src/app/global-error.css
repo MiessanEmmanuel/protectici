@@ -1,0 +1,22 @@
+.ge-body {
+  font-family: system-ui, sans-serif;
+  color: #001029;
+  margin: 0;
+}
+.ge-main {
+  max-width: 32rem;
+  margin: 4rem auto;
+  padding: 0 1rem;
+  text-align: center;
+}
+.ge-main button {
+  min-height: 44px;
+  padding: 0 1.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #0343a4;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}

@@ -1,0 +1,78 @@
+@import 'tailwindcss';
+@import './theme.css';
+@import 'leaflet/dist/leaflet.css';
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    min-height: 100dvh;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    line-height: 1.2;
+    color: var(--color-ink);
+  }
+  a {
+    color: var(--color-primary);
+    text-underline-offset: 3px;
+  }
+  :focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  button,
+  [role='button'],
+  summary {
+    cursor: pointer;
+  }
+}
+
+/* Mouvement réduit : désactive animations et transitions */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Leaflet : icônes locales, cibles tactiles confortables */
+.leaflet-container {
+  font-family: var(--font-sans);
+  z-index: 0;
+}
+.leaflet-container a {
+  color: var(--color-primary);
+}
+.leaflet-touch .leaflet-bar a {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+}
+
+/* Regroupement de marqueurs (classe seule : aucun style en ligne, CSP stricte) */
+.pi-cluster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: 3px solid var(--color-surface);
+  box-shadow: var(--shadow-card);
+  font-weight: 700;
+}

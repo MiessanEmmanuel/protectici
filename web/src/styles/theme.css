@@ -1,0 +1,68 @@
+/*
+ * JETONS DE THÈME — seul fichier à modifier pour la refonte visuelle (phase 6).
+ * Toute la mise en forme des composants passe par ces variables (classes Tailwind
+ * générées : bg-primary, text-ink, border-line, rounded-md, shadow-card, etc.).
+ *
+ * Contrastes mesurés (design.md §3.3) : l'or #EAAB13 n'est JAMAIS un texte sur fond clair.
+ */
+@theme {
+  /* Marque */
+  --color-primary: #0343a4;
+  --color-primary-hover: #02367f;
+  --color-primary-active: #022a63;
+  --color-primary-soft: #eaf1fb;
+  --color-primary-soft-2: #d2e2f7;
+  --color-on-primary: #ffffff;
+  --color-accent: #eaab13; /* fond uniquement, texte #001029 dessus */
+  --color-on-accent: #001029;
+  --color-accent-text: #8a6200; /* seul or autorisé en texte sur clair */
+  --color-night: #001029;
+  --color-on-night: #ffffff;
+  --color-link-on-night: #7fb0ff;
+
+  /* Neutres */
+  --color-ink: #001029;
+  --color-muted: #4f5b70;
+  --color-line: #d5ddea;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f5f7fb;
+  --color-focus: #0343a4;
+
+  /* États */
+  --color-success: #0f7b4f;
+  --color-success-soft: #e3f5ec;
+  --color-danger: #c62828;
+  --color-danger-soft: #fdecec;
+  --color-warning-soft: #fff6dd;
+
+  /* Typographie (polices système : aucune police externe) */
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --font-heading: var(--font-sans);
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+
+  /* Rayons */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 999px;
+
+  /* Ombres */
+  --shadow-card: 0 1px 2px rgb(0 16 41 / 0.06), 0 2px 8px rgb(0 16 41 / 0.06);
+  --shadow-overlay: 0 8px 32px rgb(0 16 41 / 0.24);
+
+  /* Mise en page */
+  --container-page: 72rem;
+  --spacing-tap: 2.75rem; /* cible tactile minimale 44 px */
+}
+
+:root {
+  --focus-ring: 3px solid var(--color-focus);
+  --focus-offset: 2px;
+}
