@@ -1,0 +1,44 @@
+# OS / éditeurs
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Secrets (jamais versionnés — security.md §4)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.sql
+*.dump
+
+# Backend (Laravel)
+backend/vendor/
+backend/node_modules/
+backend/storage/*.key
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*
+backend/public/storage
+backend/public/hot
+backend/.phpunit.cache/
+backend/.phpunit.result.cache
+backend/.php-cs-fixer.cache
+
+# Web (Next.js)
+web/node_modules/
+web/.next/
+web/out/
+web/coverage/
+web/playwright-report/
+web/test-results/
+*.tsbuildinfo
+next-env.d.ts
+
+# Divers
+coverage/
+npm-debug.log*

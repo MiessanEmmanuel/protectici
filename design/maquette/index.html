@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="fr" data-theme="a">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProtectIci — Maquette design (données factices)</title>
+<link rel="icon" href="../assets/elephant-icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Sora:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS — palette issue de l'ancien site ============ */
+:root{
+  --blue:#0343A4; --gold:#EAAB13; --night:#001029; --white:#fff; --gray:#EDEDED;
+  --ok:#0F7B4F; --danger:#C62828;
+}
+/* Direction A — Institutionnel */
+[data-theme=a]{
+  --bg:#fff; --bg-alt:#F1F5FB; --surface:#fff; --text:#001029; --muted:#4F5B70;
+  --primary:#0343A4; --link:#0343A4; --cta-bg:#0343A4; --cta-ink:#fff; --accent:#EAAB13; --accent-ink:#001029;
+  --border:#D5DDEA; --radius:8px; --radius-lg:12px; --shadow:0 1px 2px rgba(0,16,41,.06),0 8px 24px rgba(0,16,41,.06);
+  --head:'Barlow Condensed',sans-serif; --head-w:700; --head-case:uppercase; --head-ls:.015em; --body:'Inter',sans-serif;
+  --hero-bg:linear-gradient(180deg,#EAF1FB 0%,#fff 100%); --hero-ink:#001029; --hero-muted:#4F5B70;
+  --head-bg:#fff; --top-bg:#001029; --top-ink:#cfd8e8; --foot-bg:#001029; --foot-ink:#cfd8e8;
+  --tag-bg:#EAF1FB; --tag-ink:#02367F; --mono:'Inter',sans-serif;
+}
+/* Direction B — Centre de commandement (sombre) */
+[data-theme=b]{
+  --bg:#001029; --bg-alt:#041A3B; --surface:#0A2148; --text:#F2F5FA; --muted:#9FB0CC;
+  --primary:#7FB0FF; --link:#7FB0FF; --cta-bg:#EAAB13; --cta-ink:#001029; --accent:#EAAB13; --accent-ink:#001029;
+  --border:#1B3566; --radius:2px; --radius-lg:4px; --shadow:0 0 0 1px #1B3566;
+  --head:'Oswald',sans-serif; --head-w:600; --head-case:uppercase; --head-ls:.04em; --body:'Inter',sans-serif;
+  --hero-bg:radial-gradient(900px 400px at 80% -10%,#0343A4 0%,transparent 60%),#001029; --hero-ink:#fff; --hero-muted:#9FB0CC;
+  --head-bg:#001029; --top-bg:#00091A; --top-ink:#9FB0CC; --foot-bg:#00091A; --foot-ink:#9FB0CC;
+  --tag-bg:#0F2C5C; --tag-ink:#BBD3FF; --mono:'IBM Plex Mono',monospace;
+}
+/* Direction C — Proximité (arrondi, mobile d'abord) */
+[data-theme=c]{
+  --bg:#F5F7FB; --bg-alt:#EDEDED; --surface:#fff; --text:#001029; --muted:#586277;
+  --primary:#0343A4; --link:#0343A4; --cta-bg:#EAAB13; --cta-ink:#001029; --accent:#EAAB13; --accent-ink:#001029;
+  --border:#E1E6EF; --radius:999px; --radius-lg:24px; --shadow:0 10px 30px rgba(3,67,164,.10);
+  --head:'Sora',sans-serif; --head-w:700; --head-case:none; --head-ls:-.01em; --body:'Plus Jakarta Sans',sans-serif;
+  --hero-bg:linear-gradient(160deg,#0343A4 0%,#02296b 100%); --hero-ink:#fff; --hero-muted:#cfe0ff;
+  --head-bg:#fff; --top-bg:#0343A4; --top-ink:#e4eeff; --foot-bg:#001029; --foot-ink:#cfd8e8;
+  --tag-bg:#EAF1FB; --tag-ink:#02367F; --mono:'Plus Jakarta Sans',sans-serif;
+}
+
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--body,Inter,sans-serif);background:#10151f;color:var(--text);-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button,input,select{font:inherit;color:inherit}
+
+/* ============ BARRE DE CONTRÔLE (hors maquette) ============ */
+.ctl{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:10px 16px;background:#0b1220;color:#dfe7f5;font:500 13px Inter,sans-serif;border-bottom:1px solid #243049}
+.ctl b{font-weight:700;color:#fff}
+.seg{display:inline-flex;border:1px solid #33425f;border-radius:8px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:7px 12px;cursor:pointer;color:#b9c6df}
+.seg button[aria-pressed=true]{background:#EAAB13;color:#001029;font-weight:700}
+.ctl small{color:#8ea0c2}
+
+.stage{container-type:inline-size;margin:0 auto;background:var(--bg);color:var(--text);min-height:100vh;transition:max-width .2s}
+.stage[data-view=mobile]{max-width:390px;box-shadow:0 0 0 1px #33425f}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+/* ============ ÉLÉMENTS COMMUNS ============ */
+h1,h2,h3,h4{font-family:var(--head);font-weight:var(--head-w);text-transform:var(--head-case);letter-spacing:var(--head-ls);line-height:1.05}
+.ico{width:1.1em;height:1.1em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:var(--radius);border:2px solid transparent;font-weight:700;cursor:pointer;background:var(--cta-bg);color:var(--cta-ink);font-size:15px;white-space:nowrap}
+.btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn.ghost{background:transparent;color:var(--text);border-color:var(--border)}
+.btn.gold{background:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:8px 14px;font-size:14px}
+.tag{display:inline-block;padding:4px 10px;border-radius:var(--radius);background:var(--tag-bg);color:var(--tag-ink);font-size:12.5px;font-weight:600}
+[data-theme=c] .tag{border-radius:999px}
+.badge-ok{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#0F7B4F;background:#E3F5EC;padding:4px 9px;border-radius:var(--radius)}
+[data-theme=b] .badge-ok{background:#0C3B2D;color:#7DE0B4}
+.stars{display:inline-flex;align-items:center;gap:2px;color:var(--accent)}
+.stars .ico{fill:currentColor;stroke:none}
+.rate{display:inline-flex;gap:6px;align-items:center;font-weight:700;font-size:14px}
+.rate small{color:var(--muted);font-weight:500}
+.eyebrow{font:600 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--primary)}
+[data-theme=a] .eyebrow{color:#8A6200}
+.sec{padding:64px 0}
+.sec.alt{background:var(--bg-alt)}
+.sec-h{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:28px;flex-wrap:wrap}
+.sec-h h2{font-size:clamp(30px,4vw,44px);margin-top:6px}
+.sec-h a{color:var(--link);font-weight:700;display:inline-flex;gap:6px;align-items:center}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+[data-theme=b] .card{box-shadow:none}
+
+/* ============ EN-TÊTE ============ */
+.top{background:var(--top-bg);color:var(--top-ink);font-size:13px}
+.top .wrap{display:flex;gap:22px;justify-content:space-between;align-items:center;padding-top:8px;padding-bottom:8px;flex-wrap:wrap}
+.top span{display:inline-flex;gap:6px;align-items:center}
+.top .l,.top .r{display:flex;gap:20px;flex-wrap:wrap}
+header.h{background:var(--head-bg);border-bottom:1px solid var(--border);position:relative;z-index:5}
+header.h .wrap{display:flex;align-items:center;gap:28px;padding-top:10px;padding-bottom:10px}
+.logo img{height:64px;width:auto}
+[data-theme=b] .logo{background:#fff;border-radius:4px;padding:2px 10px}
+nav.m{display:flex;gap:4px;flex:1;justify-content:center;flex-wrap:wrap}
+nav.m a{padding:10px 12px;font-weight:600;font-size:14.5px;border-radius:var(--radius);color:var(--text)}
+nav.m a:hover,nav.m a[aria-current]{color:var(--link);background:var(--bg-alt)}
+[data-theme=c] nav.m a{border-radius:999px}
+.burger{display:none;background:none;border:1px solid var(--border);border-radius:var(--radius);padding:10px;color:var(--text)}
+.flash{background:var(--accent);color:var(--accent-ink);font-size:13.5px;font-weight:600}
+.flash .wrap{display:flex;gap:14px;align-items:center;padding-top:7px;padding-bottom:7px;overflow:hidden;white-space:nowrap}
+.flash b{background:var(--accent-ink);color:var(--accent);padding:3px 9px;border-radius:var(--radius);font:700 11.5px var(--mono);letter-spacing:.12em}
+.flash span{overflow:hidden;text-overflow:ellipsis}
+
+/* ============ HERO ============ */
+.hero{background:var(--hero-bg);color:var(--hero-ink);padding:72px 0 0;position:relative;overflow:hidden}
+.hero .eyebrow{color:var(--accent)}
+[data-theme=a] .hero .eyebrow{color:#8A6200}
+.hero h1{font-size:clamp(40px,6.2vw,76px);max-width:15ch;margin:12px 0 18px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+[data-theme=a] .hero h1 em{color:var(--blue)}
+.hero p.lead{font-size:18px;max-width:56ch;color:var(--hero-muted);line-height:1.55}
+.hero .grid-bg{position:absolute;inset:0;opacity:.0;pointer-events:none}
+[data-theme=b] .hero .grid-bg{opacity:.18;background-image:linear-gradient(#1B3566 1px,transparent 1px),linear-gradient(90deg,#1B3566 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(180deg,#000,transparent 85%)}
+.hero-in{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding-bottom:40px}
+.hero-art{display:flex;justify-content:center}
+.hero-art .plate{background:#fff;border-radius:var(--radius-lg);padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.25);width:min(100%,380px)}
+[data-theme=b] .hero-art .plate{border-radius:4px;border:1px solid #1B3566}
+[data-theme=a] .hero-art .plate{box-shadow:var(--shadow)}
+.search{margin-top:30px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:14px;display:grid;grid-template-columns:1fr 1fr 1.2fr auto;gap:10px}
+[data-theme=c] .search{border-radius:32px;padding:12px}
+[data-theme=b] .search{border:1px solid var(--accent);box-shadow:0 0 0 4px rgba(234,171,19,.15)}
+.fld{display:flex;flex-direction:column;gap:3px;padding:6px 12px;border-radius:var(--radius);background:var(--bg-alt);min-width:0}
+[data-theme=c] .fld{border-radius:20px}
+.fld label{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.fld select,.fld input{border:0;background:transparent;padding:3px 0;font-weight:600;font-size:15px;min-width:0;width:100%}
+.fld select option{color:#001029}
+.search .btn{height:100%;padding:0 26px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.chip{display:inline-flex;gap:7px;align-items:center;padding:7px 13px;border:1px solid color-mix(in srgb,var(--hero-ink) 25%,transparent);border-radius:var(--radius);font-size:13.5px;font-weight:600;color:var(--hero-ink);background:color-mix(in srgb,var(--hero-ink) 5%,transparent)}
+[data-theme=c] .chip{border-radius:999px}
+.stats{position:relative;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid color-mix(in srgb,var(--hero-ink) 18%,transparent)}
+.stats div{padding:20px 24px;border-right:1px solid color-mix(in srgb,var(--hero-ink) 18%,transparent)}
+.stats div:last-child{border-right:0}
+.stats b{display:block;font:var(--head-w) 34px var(--head);text-transform:var(--head-case)}
+.stats span{font-size:13.5px;color:var(--hero-muted)}
+
+/* ============ PRESTATAIRES ============ */
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.pcard{padding:18px;display:flex;flex-direction:column;gap:12px}
+.pcard .top-row{display:flex;gap:12px;align-items:center}
+.ava{width:52px;height:52px;border-radius:var(--radius);background:linear-gradient(135deg,var(--blue),#02296b);display:grid;place-items:center;color:#fff;font:700 18px var(--head);flex:none}
+[data-theme=c] .ava{border-radius:16px}
+.pcard h3{font-size:21px}
+.pcard .meta{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:14px}
+.pcard .meta span{display:flex;gap:7px;align-items:center}
+.pcard .tags{display:flex;gap:6px;flex-wrap:wrap}
+.pcard .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:6px}
+.pcard .foot a{color:var(--link);font-weight:700;display:inline-flex;gap:5px;align-items:center}
+
+/* ============ PROXIMITÉ ============ */
+.near{display:grid;grid-template-columns:.9fr 1.1fr;gap:22px}
+.list{display:flex;flex-direction:column}
+.row{display:flex;gap:14px;padding:16px;border-bottom:1px solid var(--border);align-items:center}
+.row:last-child{border-bottom:0}
+.row .dist{font:700 13px var(--mono);background:var(--accent);color:var(--accent-ink);padding:5px 9px;border-radius:var(--radius);white-space:nowrap}
+.row h4{font-size:18px;margin-bottom:3px}
+.row p{font-size:13.5px;color:var(--muted)}
+.row .go{margin-left:auto;color:var(--link)}
+.pinic{width:42px;height:42px;border-radius:var(--radius);background:var(--tag-bg);color:var(--tag-ink);display:grid;place-items:center;flex:none}
+[data-theme=c] .pinic{border-radius:50%}
+.map{position:relative;min-height:340px;overflow:hidden;border-radius:var(--radius-lg);border:1px solid var(--border);background:
+  radial-gradient(circle at 30% 40%,rgba(3,67,164,.10),transparent 40%),
+  repeating-linear-gradient(35deg,transparent 0 46px,rgba(127,160,210,.22) 46px 48px),
+  repeating-linear-gradient(-55deg,transparent 0 60px,rgba(127,160,210,.18) 60px 62px),var(--bg-alt)}
+.map svg.river{position:absolute;inset:0;width:100%;height:100%;opacity:.5}
+.pin{position:absolute;transform:translate(-50%,-100%);color:var(--blue)}
+.pin .ico{width:34px;height:34px;fill:currentColor;stroke:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.3))}
+.pin.me{color:var(--accent)}
+.map .att{position:absolute;right:8px;bottom:6px;font-size:11px;background:rgba(255,255,255,.85);color:#333;padding:2px 6px;border-radius:4px}
+.map .ctl-card{position:absolute;left:14px;top:14px;background:var(--surface);border:1px solid var(--border);padding:10px 14px;border-radius:var(--radius);font-size:13.5px;font-weight:600;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow)}
+
+/* ============ DIS-MOI TOUT ============ */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.tile{padding:22px;display:flex;flex-direction:column;gap:10px;min-height:170px}
+.tile .ti{width:46px;height:46px;border-radius:var(--radius);display:grid;place-items:center;background:var(--accent);color:var(--accent-ink)}
+[data-theme=c] .tile .ti{border-radius:16px}
+.tile h3{font-size:22px}
+.tile p{font-size:14px;color:var(--muted);line-height:1.5}
+
+/* ============ BANDE INSCRIPTION ============ */
+.join{background:linear-gradient(100deg,var(--blue),#02296b);color:#fff;border-radius:var(--radius-lg);padding:40px;display:flex;gap:30px;align-items:center;justify-content:space-between;flex-wrap:wrap;position:relative;overflow:hidden}
+.join h2{font-size:clamp(28px,3.6vw,42px);max-width:20ch}
+.join p{color:#cfe0ff;margin-top:8px;max-width:52ch}
+[data-theme=b] .join{border:1px solid var(--accent)}
+
+/* ============ BLOG ============ */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.post{overflow:hidden;display:flex;flex-direction:column}
+.post .img{aspect-ratio:16/10;background:linear-gradient(135deg,#0343A4,#001029);position:relative}
+.post:nth-child(2) .img{background:linear-gradient(135deg,#02296b,#EAAB13 160%)}
+.post:nth-child(3) .img{background:linear-gradient(135deg,#001029,#0343A4 70%)}
+.post .img .ico{position:absolute;right:14px;bottom:12px;width:44px;height:44px;opacity:.35;color:#fff}
+.post .img .tag{position:absolute;left:12px;top:12px;background:var(--accent);color:var(--accent-ink)}
+.post .b{padding:18px;display:flex;flex-direction:column;gap:10px}
+.post h3{font-size:22px;text-transform:none;letter-spacing:0}
+[data-theme=a] .post h3{text-transform:uppercase;letter-spacing:.01em}
+.post .m{font-size:13px;color:var(--muted);display:flex;gap:12px}
+
+/* ============ PIED DE PAGE ============ */
+footer{background:var(--foot-bg);color:var(--foot-ink);padding:56px 0 24px;font-size:14.5px}
+.fgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.2fr;gap:30px}
+footer h4{color:#fff;font-size:17px;margin-bottom:14px}
+footer ul{list-style:none;padding:0;display:grid;gap:9px}
+footer .plate{background:#fff;border-radius:var(--radius-lg);padding:10px 14px;display:inline-block;margin-bottom:14px}
+footer .plate img{height:64px}
+footer .nl{display:flex;gap:8px;margin-top:6px}
+footer .nl input{flex:1;min-width:0;padding:11px 12px;border-radius:var(--radius);border:1px solid #2a4170;background:#0a1c3d;color:#fff}
+.legal{border-top:1px solid #1d3157;margin-top:34px;padding-top:18px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px}
+
+/* ============ FICHE PRESTATAIRE ============ */
+.crumb{font-size:13.5px;color:var(--muted);padding:18px 0}
+.crumb a{color:var(--link)}
+.fhead{padding:26px;display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center}
+.fhead .ava{width:92px;height:92px;font-size:34px;border-radius:var(--radius-lg)}
+.fhead h1{font-size:clamp(30px,4.4vw,48px);margin-bottom:8px}
+.fhead .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.fact{display:flex;gap:10px;flex-wrap:wrap}
+.fgrid2{display:grid;grid-template-columns:1.6fr 1fr;gap:22px;margin-top:22px;align-items:start}
+.box{padding:24px;margin-bottom:22px}
+.box h2{font-size:26px;margin-bottom:14px}
+.box p{line-height:1.65;color:var(--muted)}
+.kv{display:grid;grid-template-columns:1fr 1.3fr;gap:0;font-size:14.5px}
+.kv div{padding:11px 0;border-bottom:1px solid var(--border)}
+.kv div:nth-child(odd){color:var(--muted)}
+.kv div:nth-child(even){font-weight:600}
+.rev{padding:16px 0;border-bottom:1px solid var(--border)}
+.rev:last-child{border-bottom:0}
+.rev .who{display:flex;gap:10px;align-items:center;margin-bottom:6px;font-weight:700}
+.rev .who small{font-weight:500;color:var(--muted)}
+.reply{margin:10px 0 0 14px;padding:12px 14px;border-left:3px solid var(--accent);background:var(--bg-alt);border-radius:0 var(--radius) var(--radius) 0;font-size:14px}
+.side .btn{width:100%;margin-bottom:10px}
+.side .contact{display:grid;gap:12px;font-size:15px;margin:14px 0}
+.side .contact span{display:flex;gap:10px;align-items:center}
+.minimap{height:150px;border-radius:var(--radius);border:1px solid var(--border);position:relative;overflow:hidden;background:repeating-linear-gradient(35deg,transparent 0 40px,rgba(127,160,210,.25) 40px 42px),repeating-linear-gradient(-55deg,transparent 0 54px,rgba(127,160,210,.2) 54px 56px),var(--bg-alt)}
+.minimap .pin{left:50%;top:62%}
+.notice{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:flex-start}
+.demo{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:center;padding:8px}
+
+/* ============ RESPONSIVE (container queries : marche aussi en vue « Mobile ») ============ */
+@container (max-width:980px){
+  .grid4{grid-template-columns:repeat(2,1fr)}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .near,.fgrid2{grid-template-columns:1fr}
+  .hero-in{grid-template-columns:1fr}
+  .hero-art{display:none}
+  .search{grid-template-columns:1fr 1fr}
+  .search .btn{grid-column:1/-1;padding:14px}
+  .fgrid{grid-template-columns:1fr 1fr}
+}
+@container (max-width:1100px){
+  nav.m{display:none}
+  .burger{display:inline-flex;margin-left:auto}
+}
+@container (max-width:640px){
+  .wrap{padding:0 16px}
+  .grid4,.grid3,.tiles,.fgrid{grid-template-columns:1fr}
+  .search{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .stats div:nth-child(2){border-right:0}
+  .stats div{border-bottom:1px solid color-mix(in srgb,var(--hero-ink) 18%,transparent)}
+  .sec{padding:44px 0}
+  .top .r{display:none}
+  .logo img{height:52px}
+  .fhead{grid-template-columns:1fr;text-align:left}
+  .kv{grid-template-columns:1fr 1fr}
+  .join{padding:26px}
+  .hero{padding-top:44px}
+}
+.page{display:none}.page.on{display:block}
+</style>
+</head>
+<body>
+
+<!-- Sprite d'icônes -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 005 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8L12 2.5z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.5-9-9a5 5 0 019-3 5 5 0 019 3c-2 4.5-9 9-9 9z"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.8l7.6-3.6M8.2 13.2l7.6 3.6"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/></symbol>
+  <symbol id="i-thumb" viewBox="0 0 24 24"><path d="M7 11v9H4v-9h3zM7 11l4-7c1.5 0 2.5 1 2 3l-.5 3H19a2 2 0 012 2.3l-1.2 6A2 2 0 0118 20H7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+</svg>
+
+<!-- ===== Barre de contrôle de la maquette ===== -->
+<div class="ctl">
+  <b>Maquette ProtectIci</b>
+  <span>Direction :</span>
+  <div class="seg" id="seg-theme">
+    <button data-v="a" aria-pressed="true">A · Institutionnel</button>
+    <button data-v="b" aria-pressed="false">B · Centre de commandement</button>
+    <button data-v="c" aria-pressed="false">C · Proximité</button>
+  </div>
+  <span>Page :</span>
+  <div class="seg" id="seg-page">
+    <button data-v="home" aria-pressed="true">Accueil</button>
+    <button data-v="fiche" aria-pressed="false">Fiche prestataire</button>
+  </div>
+  <span>Écran :</span>
+  <div class="seg" id="seg-view">
+    <button data-v="desktop" aria-pressed="true">Ordinateur</button>
+    <button data-v="mobile" aria-pressed="false">Mobile</button>
+  </div>
+  <small>Toutes les données sont factices.</small>
+</div>
+
+<div class="stage" id="stage" data-view="desktop">
+
+  <div class="top"><div class="wrap">
+    <div class="l"><span><svg class="ico"><use href="#i-phone"/></svg>+225 00 00 00 00 00</span><span><svg class="ico"><use href="#i-clock"/></svg>24h/7</span><span><svg class="ico"><use href="#i-mail"/></svg>info@exemple.ci</span></div>
+    <div class="r"><span><svg class="ico"><use href="#i-pin"/></svg>Abidjan Plateau</span></div>
+  </div></div>
+
+  <header class="h"><div class="wrap">
+    <a class="logo" href="#"><img src="../assets/logo-protectici.webp" alt="ProtectIci — accueil"></a>
+    <nav class="m" aria-label="Navigation principale">
+      <a href="#" aria-current="page">Accueil</a><a href="#">À propos</a><a href="#">Demande de devis</a><a href="#">Prestataires</a><a href="#">Forces étatiques</a><a href="#">Dis-moi tout</a><a href="#">Contact</a>
+    </nav>
+    <a class="btn sm ghost" href="#">Se connecter</a>
+    <button class="burger" aria-label="Ouvrir le menu"><svg class="ico"><use href="#i-menu"/></svg></button>
+  </div></header>
+
+  <div class="flash"><div class="wrap"><b>FLASH INFO</b><span>Sécurité 101 : comment protéger votre vie au quotidien &nbsp;•&nbsp; Naviguez en toute sécurité : conseils pratiques sur le web</span></div></div>
+
+  <!-- ================= PAGE ACCUEIL ================= -->
+  <main class="page on" id="p-home">
+
+    <section class="hero">
+      <div class="grid-bg"></div>
+      <div class="wrap">
+        <div class="hero-in">
+          <div>
+            <span class="eyebrow">Sécurité &amp; sûreté privées · Côte d'Ivoire</span>
+            <h1>Trouvez une entreprise de sécurité <em>de confiance</em></h1>
+            <p class="lead">L'annuaire des prestataires agréés et des forces de l'ordre. Comparez, contactez, demandez un devis, en quelques clics.</p>
+
+            <form class="search" onsubmit="return false" role="search" aria-label="Rechercher un prestataire">
+              <div class="fld"><label for="s1">Localisation</label><select id="s1"><option>Abidjan — Plateau</option><option>Abidjan — Cocody</option><option>Bouaké</option></select></div>
+              <div class="fld"><label for="s2">Type de service</label><select id="s2"><option>Gardiennage</option><option>Vidéosurveillance</option><option>Brigade canine</option><option>Sécurité incendie</option></select></div>
+              <div class="fld"><label for="s3">Nom de l'entreprise</label><input id="s3" placeholder="Rechercher par titre…"></div>
+              <button class="btn gold" type="submit"><svg class="ico"><use href="#i-search"/></svg>Rechercher</button>
+            </form>
+            <div class="chips" aria-label="Services fréquents">
+              <span class="chip"><svg class="ico"><use href="#i-shield"/></svg>Gardiennage armé</span>
+              <span class="chip"><svg class="ico"><use href="#i-shield"/></svg>Vidéosurveillance</span>
+              <span class="chip"><svg class="ico"><use href="#i-shield"/></svg>Brigade canine</span>
+              <span class="chip"><svg class="ico"><use href="#i-shield"/></svg>Sécurité incendie</span>
+            </div>
+          </div>
+          <div class="hero-art"><div class="plate"><img src="../assets/logo-protectici.webp" alt=""></div></div>
+        </div>
+      </div>
+      <div class="wrap" style="padding:0">
+        <div class="stats" style="border-top:1px solid color-mix(in srgb,var(--hero-ink) 18%,transparent)">
+          <div><b>120+</b><span>Prestataires référencés</span></div>
+          <div><b>40</b><span>Forces étatiques</span></div>
+          <div><b>24</b><span>Types de services</span></div>
+          <div><b>24h/7</b><span>Annuaire accessible</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="wrap">
+        <div class="sec-h"><div><span class="eyebrow">Annuaire</span><h2>Prestataires populaires</h2></div><a href="#">Voir tout <svg class="ico"><use href="#i-arrow"/></svg></a></div>
+        <div class="grid4">
+          <article class="card pcard"><div class="top-row"><div class="ava">DS</div><div><h3>Dauphin Sécurité</h3><span class="rate"><span class="stars"><svg class="ico"><use href="#i-star"/></svg></span>4,6 <small>(18 avis)</small></span></div></div>
+            <span class="badge-ok" style="align-self:flex-start"><svg class="ico"><use href="#i-check"/></svg>Vérifié</span>
+            <div class="meta"><span><svg class="ico"><use href="#i-pin"/></svg>Abidjan — Plateau</span><span><svg class="ico"><use href="#i-phone"/></svg>+225 00 00 00 00 01</span></div>
+            <div class="tags"><span class="tag">Intervention</span><span class="tag">Garde rapprochée</span><span class="tag">Gardiennage armé</span></div>
+            <div class="foot"><span style="font-size:13px;color:var(--muted)">dès 90 000 FCFA</span><a href="#" data-go="fiche">Voir l'entreprise <svg class="ico"><use href="#i-arrow"/></svg></a></div></article>
+          <article class="card pcard"><div class="top-row"><div class="ava">FE</div><div><h3>Fenapepsci</h3><span class="rate"><span class="stars"><svg class="ico"><use href="#i-star"/></svg></span>4,2 <small>(9 avis)</small></span></div></div>
+            <span class="badge-ok" style="align-self:flex-start"><svg class="ico"><use href="#i-check"/></svg>Vérifié</span>
+            <div class="meta"><span><svg class="ico"><use href="#i-pin"/></svg>Abidjan — Cocody</span><span><svg class="ico"><use href="#i-phone"/></svg>+225 00 00 00 00 02</span></div>
+            <div class="tags"><span class="tag">Audit</span><span class="tag">Brigade canine</span><span class="tag">Incendie</span></div>
+            <div class="foot"><span style="font-size:13px;color:var(--muted)">sur devis</span><a href="#" data-go="fiche">Voir l'entreprise <svg class="ico"><use href="#i-arrow"/></svg></a></div></article>
+          <article class="card pcard"><div class="top-row"><div class="ava">GS</div><div><h3>Global Security Challenge</h3><span class="rate"><span class="stars"><svg class="ico"><use href="#i-star"/></svg></span>5,0 <small>(1 avis)</small></span></div></div>
+            <span class="badge-ok" style="align-self:flex-start"><svg class="ico"><use href="#i-check"/></svg>Vérifié</span>
+            <div class="meta"><span><svg class="ico"><use href="#i-pin"/></svg>Abidjan — Marcory</span><span><svg class="ico"><use href="#i-phone"/></svg>+225 00 00 00 00 03</span></div>
+            <div class="tags"><span class="tag">Intervention</span><span class="tag">Brigade canine</span><span class="tag">Gardiennage armé</span></div>
+            <div class="foot"><span style="font-size:13px;color:var(--muted)">dès 120 000 FCFA</span><a href="#" data-go="fiche">Voir l'entreprise <svg class="ico"><use href="#i-arrow"/></svg></a></div></article>
+          <article class="card pcard"><div class="top-row"><div class="ava">RF</div><div><h3>Royal Force</h3><span class="rate"><span class="stars"><svg class="ico"><use href="#i-star"/></svg></span>5,0 <small>(1 avis)</small></span></div></div>
+            <span class="badge-ok" style="align-self:flex-start"><svg class="ico"><use href="#i-check"/></svg>Vérifié</span>
+            <div class="meta"><span><svg class="ico"><use href="#i-pin"/></svg>Abidjan — Yopougon</span><span><svg class="ico"><use href="#i-phone"/></svg>+225 00 00 00 00 04</span></div>
+            <div class="tags"><span class="tag">Intervention</span><span class="tag">Audit</span><span class="tag">Événementiel</span></div>
+            <div class="foot"><span style="font-size:13px;color:var(--muted)">sur devis</span><a href="#" data-go="fiche">Voir l'entreprise <svg class="ico"><use href="#i-arrow"/></svg></a></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec alt">
+      <div class="wrap">
+        <div class="sec-h"><div><span class="eyebrow">Forces étatiques</span><h2>Les plus proches de vous</h2></div><a href="#">Toutes les forces <svg class="ico"><use href="#i-arrow"/></svg></a></div>
+        <div class="near">
+          <div class="card list">
+            <div class="row"><div class="pinic"><svg class="ico"><use href="#i-shield"/></svg></div><div><h4>Commissariat — Plateau</h4><p>Police · Déposer une plainte, constat d'accident</p></div><span class="dist">0,8 km</span></div>
+            <div class="row"><div class="pinic"><svg class="ico"><use href="#i-shield"/></svg></div><div><h4>Commissariat — Cocody</h4><p>Police · Signaler un fait suspect, perte</p></div><span class="dist">3,2 km</span></div>
+            <div class="row"><div class="pinic"><svg class="ico"><use href="#i-shield"/></svg></div><div><h4>Poste de gendarmerie — Marcory</h4><p>Gendarmerie · Assistance, cérémonies</p></div><span class="dist">5,1 km</span></div>
+            <div class="row" style="justify-content:center"><a class="btn ghost sm" href="#"><svg class="ico"><use href="#i-pin"/></svg>Utiliser ma position</a></div>
+          </div>
+          <div class="map" role="img" aria-label="Carte factice : forces proches">
+            <svg class="river" viewBox="0 0 600 340" preserveAspectRatio="none"><path d="M-10 250 C120 200 220 300 340 240 S520 160 620 210" fill="none" stroke="#8fb3e8" stroke-width="26" stroke-linecap="round"/></svg>
+            <div class="ctl-card"><svg class="ico"><use href="#i-pin"/></svg>3 forces à moins de 6 km</div>
+            <div class="pin" style="left:34%;top:46%"><svg class="ico"><use href="#i-pin"/></svg></div>
+            <div class="pin" style="left:62%;top:34%"><svg class="ico"><use href="#i-pin"/></svg></div>
+            <div class="pin" style="left:72%;top:70%"><svg class="ico"><use href="#i-pin"/></svg></div>
+            <div class="pin me" style="left:48%;top:58%"><svg class="ico"><use href="#i-pin"/></svg></div>
+            <span class="att">© OpenStreetMap (démo)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="wrap">
+        <div class="sec-h"><div><span class="eyebrow">Dis-moi tout</span><h2>Votre avis compte</h2></div><a href="#">Ouvrir le formulaire <svg class="ico"><use href="#i-arrow"/></svg></a></div>
+        <div class="tiles">
+          <a class="card tile" href="#"><div class="ti"><svg class="ico"><use href="#i-thumb"/></svg></div><h3>Encouragement</h3><p>Saluez le travail d'un agent ou d'une entreprise.</p></a>
+          <a class="card tile" href="#"><div class="ti"><svg class="ico"><use href="#i-msg"/></svg></div><h3>Question</h3><p>Posez une question sur un produit ou une prestation.</p></a>
+          <a class="card tile" href="#"><div class="ti"><svg class="ico"><use href="#i-flag"/></svg></div><h3>Plainte</h3><p>Signalez un problème. Vous recevez un numéro de suivi.</p></a>
+          <a class="card tile" href="#"><div class="ti"><svg class="ico"><use href="#i-bulb"/></svg></div><h3>Suggestion</h3><p>Proposez une amélioration du service.</p></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" style="padding-top:0">
+      <div class="wrap">
+        <div class="join">
+          <div><span class="eyebrow" style="color:var(--accent)">Professionnel de la sécurité</span><h2>Faites-vous connaître</h2><p>Inscrivez votre établissement dans l'annuaire. Fiche vérifiée, avis clients et demandes de devis directes.</p></div>
+          <a class="btn gold" href="#">Inscrire mon établissement <svg class="ico"><use href="#i-arrow"/></svg></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec alt">
+      <div class="wrap">
+        <div class="sec-h"><div><span class="eyebrow">Blog</span><h2>Actualités &amp; conseils</h2></div><a href="#">Tous les articles <svg class="ico"><use href="#i-arrow"/></svg></a></div>
+        <div class="grid3">
+          <article class="card post"><div class="img"><span class="tag">Cybercriminalité</span><svg class="ico"><use href="#i-shield"/></svg></div><div class="b"><h3>Guide essentiel pour protéger vos données</h3><div class="m"><span>9 sept. 2021</span><span>39 vues</span></div></div></article>
+          <article class="card post"><div class="img"><span class="tag">Domotique</span><svg class="ico"><use href="#i-shield"/></svg></div><div class="b"><h3>Sécurité 2.0 : la domotique garde votre maison</h3><div class="m"><span>31 août 2021</span><span>36 vues</span></div></div></article>
+          <article class="card post"><div class="img"><span class="tag">Formation</span><svg class="ico"><use href="#i-shield"/></svg></div><div class="b"><h3>Sécurité 360° : une formation complète</h3><div class="m"><span>31 août 2021</span><span>39 vues</span></div></div></article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= PAGE FICHE PRESTATAIRE ================= -->
+  <main class="page" id="p-fiche">
+    <div class="wrap">
+      <div class="crumb"><a href="#" data-go="home">Accueil</a> › <a href="#">Annuaire</a> › Puissance 6 Security</div>
+
+      <section class="card fhead">
+        <div class="ava">P6</div>
+        <div>
+          <h1>Puissance 6 Security</h1>
+          <span class="rate"><span class="stars"><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg></span>4,5 <small>(12 avis)</small></span>
+          <div class="tags"><span class="badge-ok"><svg class="ico"><use href="#i-check"/></svg>Agrément vérifié</span><span class="tag">Abidjan — Plateau</span><span class="tag">À partir de 90 000 FCFA</span></div>
+        </div>
+        <div class="fact"><button class="btn ghost sm"><svg class="ico"><use href="#i-heart"/></svg>Favori</button><button class="btn ghost sm"><svg class="ico"><use href="#i-share"/></svg>Partager</button></div>
+      </section>
+
+      <div class="fgrid2">
+        <div>
+          <section class="card box"><h2>Présentation</h2><p>Entreprise de sécurité privée proposant la sécurité des biens et des personnes, le gardiennage, la sécurité électronique (alarme, anti-intrusion, vidéosurveillance), l'assistance-intervention et la garde rapprochée. Texte de démonstration.</p></section>
+          <section class="card box"><h2>Services</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="tag">Assistance / Intervention</span><span class="tag">Gardiennage armé</span><span class="tag">Gardiennage non armé</span><span class="tag">Vidéosurveillance</span><span class="tag">Alarme / anti-intrusion</span><span class="tag">Garde rapprochée</span></div></section>
+          <section class="card box"><h2>Informations légales</h2>
+            <div class="kv"><div>Forme juridique</div><div>SARL</div><div>Capital social</div><div>12 000 000 FCFA</div><div>Registre de commerce</div><div>CI-ABJ-0000-X-00000</div><div>N° d'agrément</div><div>AGR-000000</div><div>Directeur général</div><div>M. Nom Prénom</div><div>Contact d'urgence</div><div>+225 00 00 00 00 00</div></div></section>
+          <section class="card box"><h2>Avis clients</h2>
+            <div class="rev"><div class="who">Aïcha K. <span class="stars"><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg></span><small>il y a 2 mois</small></div><p>Équipe ponctuelle et professionnelle, intervention rapide lors d'une alarme de nuit.</p>
+              <div class="reply"><b>Réponse de l'entreprise :</b> Merci pour votre confiance.</div></div>
+            <div class="rev"><div class="who">Yao B. <span class="stars"><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg></span><small>il y a 5 mois</small></div><p>Bon service, facturation à clarifier.</p></div>
+            <p class="notice" style="margin-top:12px"><svg class="ico"><use href="#i-shield"/></svg>Les avis sont publiés après modération. Connexion requise pour en déposer un.</p>
+          </section>
+        </div>
+
+        <aside class="side">
+          <section class="card box"><a class="btn" href="#"><svg class="ico"><use href="#i-mail"/></svg>Demander un devis</a><a class="btn ghost" href="#"><svg class="ico"><use href="#i-phone"/></svg>Appeler</a>
+            <div class="contact"><span><svg class="ico"><use href="#i-phone"/></svg>+225 00 00 00 00 00</span><span><svg class="ico"><use href="#i-mail"/></svg>contact@exemple.ci</span><span><svg class="ico"><use href="#i-pin"/></svg>Abidjan Plateau, rue fictive</span></div>
+            <div class="minimap"><div class="pin"><svg class="ico"><use href="#i-pin"/></svg></div></div>
+          </section>
+          <section class="card box"><h2 style="font-size:22px">Un souci avec ce prestataire ?</h2><p style="margin-bottom:14px;font-size:14.5px">Encouragement, question, plainte ou suggestion : « Dis-moi tout ».</p><a class="btn gold" href="#">Dis-moi tout</a></section>
+        </aside>
+      </div>
+    </div>
+    <div style="height:56px"></div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="fgrid">
+        <div><div class="plate"><img src="../assets/logo-protectici.webp" alt="ProtectIci"></div><p>Première plateforme d'information et de services dédiée à la sécurité et à la sûreté privées en Côte d'Ivoire.</p></div>
+        <div><h4>À propos</h4><ul><li>Qui sommes-nous</li><li>Nos partenaires</li><li>Nos clients</li><li>Contact</li></ul></div>
+        <div><h4>Infos utiles</h4><ul><li>Annuaire prestataires</li><li>Forces étatiques</li><li>Demande de devis</li><li>Dis-moi tout</li></ul></div>
+        <div><h4>Newsletter</h4><p>Conseils et actualités sécurité.</p><div class="nl"><input aria-label="Votre email" placeholder="Votre email"><button class="btn gold sm">OK</button></div></div>
+      </div>
+      <div class="legal"><span>© 2022–2026 ProtectIci — Tous droits réservés</span><span>Powered by FYG Technologies</span></div>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement, stage=document.getElementById('stage');
+  function setSeg(id,val,fn){document.querySelectorAll('#'+id+' button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.v===val))});fn(val)}
+  function theme(v){root.dataset.theme=v}
+  function page(v){document.querySelectorAll('.page').forEach(function(p){p.classList.toggle('on',p.id==='p-'+v)});window.scrollTo({top:0})}
+  function view(v){stage.dataset.view=v}
+  function save(){try{localStorage.setItem('pi-mq',JSON.stringify({t:root.dataset.theme,p:document.querySelector('.page.on').id.slice(2),v:stage.dataset.view}))}catch(e){}}
+  [['seg-theme',theme],['seg-page',page],['seg-view',view]].forEach(function(s){
+    document.querySelectorAll('#'+s[0]+' button').forEach(function(b){b.addEventListener('click',function(){setSeg(s[0],b.dataset.v,s[1]);save()})})
+  });
+  document.querySelectorAll('[data-go]').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();setSeg('seg-page',a.dataset.go,page);save()})});
+  document.addEventListener('keydown',function(e){var m={'1':'a','2':'b','3':'c'};if(m[e.key]&&!/INPUT|SELECT/.test(e.target.tagName)){setSeg('seg-theme',m[e.key],theme);save()}});
+  try{var s=JSON.parse(localStorage.getItem('pi-mq')||'null');if(s){setSeg('seg-theme',s.t,theme);setSeg('seg-page',s.p,page);setSeg('seg-view',s.v,view)}}catch(e){}
+})();
+</script>
+</body>
+</html>
