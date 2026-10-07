@@ -6,9 +6,9 @@ Contrat **partagé** entre `backend/` (Laravel) et `web/` (Next.js). Source de v
 
 ## 1. Conventions
 
-- Base : `{API_URL}/api/v1` (local : `http://localhost:8000/api/v1`). JSON uniquement (`Accept: application/json`).
+- Base : `{API_URL}/api/v1` (local : `http://127.0.0.1:8001/api/v1`). JSON uniquement (`Accept: application/json`).
 - Auth : Sanctum SPA, **cookies httpOnly + CSRF**. Avant toute requête d'écriture : `GET {API_URL}/sanctum/csrf-cookie` (hors préfixe `/api/v1`), puis envoi de l'en-tête `X-XSRF-TOKEN` (valeur du cookie `XSRF-TOKEN`) et `credentials: 'include'`.
-- Local : web `http://localhost:3000`, API `http://localhost:8000` (même site → cookies partagés). CORS en liste blanche, `supports_credentials=true`.
+- Local : web `http://127.0.0.1:3000`, API `http://127.0.0.1:8001` (même hôte → cookies partagés ; on évite `localhost` car le port 8000 et les cookies `XSRF-TOKEN` de `localhost` peuvent être pris par un autre projet local). CORS en liste blanche, `supports_credentials=true`. Le serveur Next (SSR) doit envoyer `Origin`/`Referer` = origine du web, en plus du cookie, pour que Sanctum lise la session.
 - Identifiants publics : **`slug`** (jamais l'`id` interne).
 - Dates : ISO 8601 UTC (`2026-10-07T14:30:00Z`). Montants : entiers FCFA. Distances : mètres (`distance_m`). Coordonnées : `lat`, `lng` (nombres décimaux).
 - Réponse objet : `{ "data": { … } }`. Réponse liste paginée : `{ "data": [ … ], "meta": { "current_page", "last_page", "per_page", "total" }, "links": { "next", "prev" } }`. `per_page` par défaut 12, **max 50**.
@@ -84,3 +84,18 @@ Seuls les enregistrements `is_visible = true AND status = 'approved' AND deleted
 ## 5. Pages Next.js attendues (phases 1–2)
 
 `/` accueil · `/annuaire` (liste + filtres + bascule liste/carte) · `/annuaire/[slug]` · `/forces-etatiques` · `/forces-etatiques/[slug]` · `/connexion` · `/inscription` (compte) · `/mot-de-passe-oublie` · `/reinitialiser-mot-de-passe` · `/compte` (profil, mot de passe, 2FA, favoris) · `/admin` (zone protégée `admin`/`editor` : simple page d'accueil de contrôle d'accès en phase 2) · pages `404` et `500`.
+
+## 6. Écarts constatés et arbitrés (2026-10-07, après phases 1–2)
+
+Ces points complètent le contrat ci-dessus ; ils reflètent le comportement réel, vérifié par le superviseur.
+- 500 : le corps contient aussi `request_id` (et l'en-tête `X-Request-Id`). 503 sur `/geocode` si Nominatim est indisponible (`Retry-After: 30`).
+- `per_page` > 50 est ramené à 50 (pas de 422). `links.next/prev` sont des URL absolues de l'API ; le front utilise `page`.
+- `/map/markers` : `bbox` optionnel (500 marqueurs max) ; `type` et `filter[type]` distincts, tous deux supportés.
+- Proximité : `lat`+`lng` sans `radius_km` ⇒ rayon 50 km. Tri par défaut : pertinence si `filter[q]`, sinon distance si lat/lng, sinon nom.
+- `ProviderDetail.description` vaut `""` si nulle. `is_favorite` est `null` pour un anonyme.
+- `PUT /favorite` : 403 « Veuillez vérifier votre adresse e-mail pour ajouter des favoris. » si e-mail non vérifié ; 404 si fiche non publiée ; `DELETE` idempotent (204).
+- Auteur d'avis : « Prénom N. » (« Anonyme » si compte anonymisé).
+- Login : échec = 422 `errors.email`, message identique (compte inconnu, inactif ou mot de passe faux). 2FA requise = `{"two_factor": true}` seul ; `/auth/user` = 401 tant que le challenge n'est pas réussi.
+- Register : rôle toujours `user` ; l'utilisateur est connecté après inscription ; e-mail déjà pris = 422 générique.
+- `email/resend` 202 `{message}` ; `reset-password` 200 `{message}` ; 2FA enable déjà confirmée 409 ; disable pour admin/editor 403 ; challenge sans login en attente 422 ; `verify-email` redirige vers `/compte?verified=1` ou `?verified=0`.
+- Mots de passe : 10 caractères (user), 12 (provider/editor/admin). Cookie de session : `protectici_session`.

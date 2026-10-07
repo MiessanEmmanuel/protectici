@@ -252,17 +252,17 @@ Commandes prévisionnelles (le repo est vide aujourd'hui, ne pas les considérer
 # 1. Base PostGIS
 docker compose up -d db
 
-# 2. API Laravel
+# 2. API Laravel (PostgreSQL + PostGIS locaux via Homebrew, bases protectici_dev / protectici_test ; Docker non requis en local)
 cd backend
 cp .env.example .env && composer install
 php artisan key:generate
 php artisan migrate --seed        # données factices
-php artisan serve                 # http://localhost:8000
+php artisan serve --host=127.0.0.1 --port=8001   # http://127.0.0.1:8001 (le port 8000 peut être pris par un autre projet local)
 
 # 3. Front Next.js
 cd ../web
 cp .env.example .env.local && npm install
-npm run dev                       # http://localhost:3000
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8001 npm run dev -- -H 127.0.0.1   # http://127.0.0.1:3000 (utiliser 127.0.0.1 et non localhost : cookies Sanctum isolés)
 ```
 
 > Pour que les cookies Sanctum fonctionnent en local, utiliser des hôtes du même domaine parent (ex. `localhost:3000` ↔ `localhost:8000`, ou `app.localhost` ↔ `api.localhost`) et configurer `SANCTUM_STATEFUL_DOMAINS` et `SESSION_DOMAIN`.
