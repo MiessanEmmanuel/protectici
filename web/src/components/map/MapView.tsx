@@ -6,13 +6,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import { clusterPoints, type Point } from '@/lib/cluster';
 
-const DEFAULT_CENTER: [number, number] = [5.3364, -4.0267]; // Abidjan
-const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const ATTRIBUTION =
+export const DEFAULT_CENTER: [number, number] = [5.3364, -4.0267]; // Abidjan
+export const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+export const ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>';
 
 /** Icônes servies localement (/public/map) : aucun appel CDN. */
-const markerIcon = L.icon({
+export const markerIcon = L.icon({
   iconUrl: '/map/marker-icon.png',
   iconRetinaUrl: '/map/marker-icon-2x.png',
   shadowUrl: '/map/marker-shadow.png',

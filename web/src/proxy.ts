@@ -9,7 +9,7 @@ import { safeRedirect } from '@/lib/safe-redirect';
  * Ce contrôle n'est PAS une autorisation : l'API Laravel refait toujours la vérification.
  */
 
-const PROTECTED = ['/admin', '/compte'];
+const PROTECTED = ['/admin', '/compte', '/espace-prestataire'];
 
 function apiOrigin(): string {
   try {
@@ -53,6 +53,8 @@ export function proxy(request: NextRequest) {
   if (
     pathname.startsWith('/admin') ||
     pathname.startsWith('/compte') ||
+    pathname.startsWith('/espace-prestataire') ||
+    pathname.startsWith('/inscription-etablissement') ||
     pathname.startsWith('/connexion')
   ) {
     response.headers.set('Cache-Control', 'no-store');

@@ -68,9 +68,14 @@ export function HeaderNav() {
           <li className="mt-2 flex flex-col gap-2 lg:mt-0 lg:ml-2 lg:flex-row lg:items-center">
             {status === 'authenticated' && user ? (
               <>
-                {user.role === 'admin' || user.role === 'editor' ? (
+                {user.role === 'admin' ? (
                   <Link href="/admin" className={link}>
                     Administration
+                  </Link>
+                ) : null}
+                {user.role === 'provider' ? (
+                  <Link href="/espace-prestataire" className={link}>
+                    Mes établissements
                   </Link>
                 ) : null}
                 <Link href="/compte" className={buttonClasses('secondary')}>

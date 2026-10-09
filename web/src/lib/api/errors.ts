@@ -33,6 +33,9 @@ export class ApiError extends Error {
   get isNotFound(): boolean {
     return this.status === 404;
   }
+  get isConflict(): boolean {
+    return this.status === 409;
+  }
   get isRateLimited(): boolean {
     return this.status === 429;
   }
@@ -43,10 +46,14 @@ export const GENERIC_MESSAGES: Record<number, string> = {
   401: 'Vous devez être connecté pour effectuer cette action.',
   403: "Vous n'avez pas l'autorisation d'effectuer cette action.",
   404: 'Cette page ou cette ressource est introuvable.',
+  409: 'Cette action est en conflit avec l’état actuel. Rechargez la page et réessayez.',
+  413: 'Le fichier est trop volumineux.',
+  415: 'Ce type de fichier n’est pas accepté.',
   419: 'Votre session a expiré. Rechargez la page et réessayez.',
   422: 'Certaines informations sont invalides. Corrigez les champs signalés.',
   429: 'Trop de tentatives. Patientez un instant avant de réessayer.',
   500: 'Une erreur est survenue. Réessayez dans quelques instants.',
+  503: 'Le service est momentanément indisponible. Réessayez dans quelques instants.',
 };
 
 export function genericMessage(status: number): string {

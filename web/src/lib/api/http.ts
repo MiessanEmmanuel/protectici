@@ -6,6 +6,10 @@ export type Query = Record<string, QueryValue>;
 export interface RequestOptions {
   query?: Query;
   body?: unknown;
+  /** Envoi multipart (uploads) : l'en-tête Content-Type (avec boundary) est posé par le navigateur. */
+  formData?: FormData;
+  /** `blob` : renvoie le flux brut (téléchargement d'un justificatif). Défaut : JSON. */
+  responseType?: 'json' | 'blob';
   signal?: AbortSignal;
   /** Secondes de cache serveur pour les lectures publiques anonymes (défaut 60). */
   revalidate?: number;
@@ -137,7 +141,9 @@ export function createRequester(config: RequesterConfig): Requester {
         const token = readXsrf();
         if (token) headers['X-XSRF-TOKEN'] = token;
       }
-      if (options.body !== undefined) {
+      if (options.formData) {
+        init.body = options.formData;
+      } else if (options.body !== undefined) {
         headers['Content-Type'] = 'application/json';
         init.body = JSON.stringify(options.body);
       }
@@ -176,6 +182,7 @@ export function createRequester(config: RequesterConfig): Requester {
     }
     if (!response.ok) throw await toApiError(response);
     if (response.status === 204 || response.status === 205) return undefined;
+    if (options.responseType === 'blob') return response.blob();
     const text = await response.text();
     if (!text) return undefined;
     try {

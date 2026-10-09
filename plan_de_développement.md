@@ -65,6 +65,8 @@ Contexte, stack et décisions : `CLAUDE.md`. Base de données : `modele.md`. Rè
 
 ## Phase 3 — Comptes, modération et relation client
 
+> **Avancement (2026-10-09)** : **vague A terminée et vérifiée** (inscription d'établissement, espace prestataire, administration et modération, e-mails). **Vague B à faire** : avis, « Dis-moi tout », devis, contact, anti-spam (Turnstile + champ piège), file d'attente des e-mails, stockage R2.
+
 **Objectif** : tout ce qui crée de la donnée : inscription des établissements, avis, retours clients, devis, et l'outil d'administration pour les traiter.
 
 **Livrables**

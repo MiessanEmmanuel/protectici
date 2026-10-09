@@ -39,3 +39,14 @@ export function telHref(phone: string): string {
 export function pluralize(n: number, singular: string, plural: string): string {
   return `${n} ${n > 1 ? plural : singular}`;
 }
+
+export function formatDateTime(iso: string): string {
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  }).format(new Date(iso));
+}

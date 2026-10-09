@@ -27,11 +27,16 @@ Pour que les cookies Sanctum fonctionnent, web et API doivent partager le domain
 
 | E-mail saisi | Rôle | Particularités |
 |---|---|---|
-| commence par `admin` | admin | 2FA demandée, code `123456` |
-| commence par `editor` | editor | 2FA demandée, code `123456` |
+| commence par `admin` | admin | 2FA demandée, code `123456` ; accès à tout `/admin` (données factices en mémoire, remises à zéro au rechargement) |
+| commence par `editor` | editor | 2FA demandée, code `123456` ; pas d'accès à `/admin` |
+| commence par `prestataire` | provider | propriétaire de 2 fiches : « Garde Lagune Sécurité » (en attente) et « Phoenix Protection » (rejetée, avec motif) |
 | autre | user | — |
 
 Mot de passe : 8 caractères minimum (connexion), 10 (inscription). `pris@example.test` simule un e-mail déjà utilisé. La session simulée est un cookie `mock_state` non sensible (jamais de jeton, jamais en production).
+
+## Pages de la phase 3 (vague A)
+
+`/inscription-etablissement` (multi-étapes, connexion + e-mail vérifié requis) · `/espace-prestataire` et `/espace-prestataire/[type]/[slug]` · `/admin` (tableau de bord), `/admin/etablissements`, `/admin/etablissements/[type]/[id]`, `/admin/modifications`, `/admin/utilisateurs`, `/admin/referentiels`, `/admin/journal`. Tout fonctionne en mode mock. Les images renvoyées par l'API doivent venir de `NEXT_PUBLIC_API_URL` ou de `NEXT_PUBLIC_MEDIA_ORIGINS` (CSP `img-src`).
 
 ## Scripts
 

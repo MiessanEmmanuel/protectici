@@ -6,7 +6,7 @@ import { clientApi } from '@/lib/api/client';
 import { errorMessage } from '@/lib/api/errors';
 import { buildHref } from '@/lib/search-params';
 import { useSession } from '../layout/SessionProvider';
-import { Button } from '../ui/Button';
+import { Button, ButtonLink } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { FormError, FormSuccess } from '../ui/Field';
 import { Badge } from '../ui/Tag';
@@ -100,6 +100,22 @@ export function AccountView({ justVerified }: { justVerified: boolean }) {
         </h2>
         <div className="mt-4">
           <TwoFactorSection user={user} />
+        </div>
+      </Card>
+
+      <Card as="section" aria-labelledby="etablissements">
+        <h2 id="etablissements" className="text-xl font-bold">
+          Mes établissements
+        </h2>
+        <p className="mt-1 text-muted">
+          Vous représentez une entreprise de sécurité ou une administration ? Inscrivez-la dans
+          l’annuaire ou gérez vos fiches existantes.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <ButtonLink href="/espace-prestataire" variant="secondary">
+            Gérer mes fiches
+          </ButtonLink>
+          <ButtonLink href="/inscription-etablissement">Inscrire un établissement</ButtonLink>
         </div>
       </Card>
 

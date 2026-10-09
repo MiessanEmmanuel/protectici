@@ -13,6 +13,7 @@ import type {
   StateForceSummary,
   User,
 } from '../api/types';
+import { createWaveAMocks } from './establishments';
 import { stateForces } from './forces';
 import { providers, reviewsBySlug } from './providers';
 import { cities, referenceData } from './reference';
@@ -110,7 +111,7 @@ export function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: 
   return Math.round(2 * 6371000 * Math.asin(Math.sqrt(a)));
 }
 
-function paginate<T>(items: T[], page = 1, perPage = 12): Paginated<T> {
+export function paginate<T>(items: T[], page = 1, perPage = 12): Paginated<T> {
   const per = Math.min(Math.max(perPage, 1), 50);
   const last = Math.max(1, Math.ceil(items.length / per));
   const current = Math.min(Math.max(page, 1), last);
@@ -278,7 +279,26 @@ function geocodeLocal(q: string): GeocodeResult[] {
 
 /* ---------- API simulée ---------- */
 
+const waveA = createWaveAMocks({
+  requireSession() {
+    const s = requireState();
+    return {
+      email: s.e,
+      first_name: s.f,
+      last_name: s.l,
+      role: s.r,
+      two_factor: s.tf,
+      verified: s.v,
+    };
+  },
+  delay: async (ms) => {
+    await delay(ms);
+  },
+  paginate,
+});
+
 export const mockApi: Api = {
+  ...waveA,
   async register(input: RegisterInput) {
     await delay();
     if (!input.consent) fail('consent', 'Vous devez accepter les conditions pour créer un compte.');
@@ -322,7 +342,9 @@ export const mockApi: Api = {
       ? 'admin'
       : lower.startsWith('editor')
         ? 'editor'
-        : 'user';
+        : lower.startsWith('prestataire')
+          ? 'provider'
+          : 'user';
     const existing = readState();
     const state: MockState = {
       e: email,
@@ -333,10 +355,19 @@ export const mockApi: Api = {
             : 'Awa'
           : role === 'admin'
             ? 'Admin'
-            : 'Éditeur',
-      l: role === 'user' ? (existing?.e === email ? existing.l : 'Koné') : 'Démo',
+            : role === 'provider'
+              ? 'Yao'
+              : 'Éditeur',
+      l:
+        role === 'user'
+          ? existing?.e === email
+            ? existing.l
+            : 'Koné'
+          : role === 'provider'
+            ? 'Prestataire'
+            : 'Démo',
       r: role,
-      tf: role !== 'user',
+      tf: role === 'admin' || role === 'editor',
       v: true,
       fav: existing?.e === email ? existing.fav : [],
     };

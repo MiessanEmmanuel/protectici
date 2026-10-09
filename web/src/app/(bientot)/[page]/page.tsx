@@ -7,11 +7,6 @@ import { EmptyState } from '@/components/ui/EmptyState';
 
 /** Pages prévues dans les phases suivantes : on les annonce clairement plutôt que d'afficher une 404. */
 const PAGES: Record<string, { title: string; phase: string; text: string }> = {
-  'inscription-etablissement': {
-    title: 'Inscrire mon établissement',
-    phase: 'Phase 3',
-    text: 'Le formulaire d’inscription des établissements (prestataires privés et administrations) sera disponible prochainement. Chaque fiche sera validée par notre équipe avant publication.',
-  },
   devis: {
     title: 'Demande de devis',
     phase: 'Phase 3',
