@@ -10,6 +10,8 @@ use App\Models\Post;
 use App\Models\PostCategory;
 use App\Models\ProcedureType;
 use App\Models\Provider;
+use App\Models\ProviderChangeRequest;
+use App\Models\ProviderDocument;
 use App\Models\ProviderExecutive;
 use App\Models\Review;
 use App\Models\ServiceType;
@@ -21,6 +23,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -50,6 +53,7 @@ class DemoSeeder extends Seeder
             $accounts = $this->users();
             $providers = $this->providers($accounts['provider']);
             $this->reviews($providers, $accounts['reviewers']);
+            $this->establishmentWorkflow($accounts['provider'], $accounts['user'], $providers->first());
             $this->stateForces();
             $this->posts($accounts['editor']);
             $this->partners();
@@ -173,6 +177,60 @@ class DemoSeeder extends Seeder
         $deleted->delete();
 
         return $providers;
+    }
+
+    /** @param array<string, mixed> $d */
+    /**
+     * Données du workflow d'établissements (vague A) : fiches en attente du compte prestataire de démo,
+     * demande de modification en attente, justificatif factice sur le disque privé, force étatique en attente.
+     */
+    private function establishmentWorkflow(User $provider, User $user, Provider $approved): void
+    {
+        $abidjan = City::where('slug', 'abidjan')->firstOrFail();
+        $services = ServiceType::pluck('id', 'slug');
+        $companyTypes = CompanyType::pluck('id', 'slug');
+
+        $pending = [];
+        foreach ([['Sentinelle Démo Sécurité', 101, ['gardiennage-non-arme', 'videosurveillance']], ['Rempart Démo Protection', 102, ['brigade-canine', 'escorte']]] as [$name, $serial, $slugs]) {
+            $p = $this->saveProvider([
+                'name' => $name, 'description' => $this->description($name, $slugs), 'district' => null,
+                'city_id' => $abidjan->id, 'legal_form' => 'sarl', 'serial' => $serial,
+                'is_verified' => false, 'is_featured' => false, 'status' => 'pending', 'user_id' => $provider->id,
+            ]);
+            $this->attach($p, $slugs, ['entreprise-de-securite-et-surete-agreee'], $services, $companyTypes);
+            $pending[] = $p;
+        }
+
+        if (! ProviderChangeRequest::where('provider_id', $approved->id)->where('status', 'pending')->exists()) {
+            $request = new ProviderChangeRequest;
+            $request->forceFill([
+                'provider_id' => $approved->id,
+                'requested_by' => $provider->id,
+                'changes' => [
+                    'corporate_purpose' => ['old' => $approved->corporate_purpose, 'new' => 'Gardiennage, télésurveillance et conseil en sûreté (objet social fictif mis à jour).'],
+                    'share_capital' => ['old' => $approved->share_capital, 'new' => 20_000_000],
+                ],
+            ])->save();
+        }
+
+        $pendingProvider = $pending[0];
+        if (! ProviderDocument::where('provider_id', $pendingProvider->id)->exists()) {
+            $disk = (string) config('establishments.documents_disk');
+            $path = 'documents/provider/'.$pendingProvider->id.'/demo-justificatif-factice.pdf';
+            Storage::disk($disk)->put($path, "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%% Justificatif FACTICE de démonstration\n%%EOF", 'private');
+            (new ProviderDocument)->fill([
+                'provider_id' => $pendingProvider->id, 'type' => 'approval_certificate', 'disk' => $disk, 'path' => $path,
+                'original_name' => 'agrement-factice.pdf', 'mime_type' => 'application/pdf', 'size_bytes' => (int) Storage::disk($disk)->size($path),
+            ])->save();
+        }
+
+        $forceType = StateForceType::query()->orderBy('id')->firstOrFail();
+        $force = StateForce::withTrashed()->firstOrNew(['slug' => 'commissariat-demo-en-attente']);
+        $force->forceFill([
+            'user_id' => $user->id, 'force_type_id' => $forceType->id, 'name' => 'Commissariat Démo en attente',
+            'description' => 'Fiche factice en attente de validation.', 'phone' => '+22527200099',
+            'city_id' => $abidjan->id, 'status' => 'pending', 'is_visible' => false,
+        ])->save();
     }
 
     /** @param array<string, mixed> $d */

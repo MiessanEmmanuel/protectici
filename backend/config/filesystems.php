@@ -47,6 +47,16 @@ return [
             'report' => false,
         ],
 
+        // Justificatifs (RCCM, agréments, pièces d'identité) : disque PRIVÉ, jamais d'URL publique.
+        'private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/documents'),
+            'visibility' => 'private',
+            'serve' => false,
+            'throw' => true,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -57,6 +67,20 @@ return [
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
+            'report' => false,
+        ],
+
+        // Bucket PRIVÉ des justificatifs (DOCUMENTS_DISK=s3-private) : aucune lecture publique, accès par flux serveur.
+        's3-private' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_PRIVATE_BUCKET'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
+            'throw' => true,
             'report' => false,
         ],
 

@@ -36,4 +36,10 @@ class UserPolicy
     {
         return $actor->isAdmin() && ! $actor->is($target);
     }
+
+    /** Gestion d'un compte par l'administration (rôle, statut, anonymisation) ; les gardes métier sont dans UserAdministration. */
+    public function administer(User $actor, User $target): bool
+    {
+        return $actor->isAdmin() && $actor->is_active;
+    }
 }

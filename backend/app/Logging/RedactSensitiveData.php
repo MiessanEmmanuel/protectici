@@ -55,8 +55,13 @@ class RedactSensitiveData
 
         $text = preg_replace('/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/', '[email]', $text) ?? $text;
 
-        // Numéros de téléphone (7 à 15 chiffres, éventuellement groupés / préfixés par +)
-        return preg_replace('/(?<![\w.])\+?\d[\d\s.\-]{6,17}\d(?![\w])/', '[phone]', $text) ?? $text;
+        // Numéros de téléphone (7 à 15 chiffres, éventuellement groupés / préfixés par +). Ne ciblent pas :
+        // les adresses IPv4 (127.0.0.1), les dates (2026-10-08), les valeurs de paramètres (expires=1790000000), les chemins et versions.
+        return preg_replace(
+            '#(?<![\w./:-])(?!\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(?![\d]|\.\d))(?!\d{4}-\d{2}-\d{2}(?!\d))(?:\+|(?<!=))\d[\d\s.\-]{6,17}\d(?![\w])#',
+            '[phone]',
+            $text,
+        ) ?? $text;
     }
 
     /**

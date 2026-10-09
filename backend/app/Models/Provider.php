@@ -24,6 +24,9 @@ use Illuminate\Support\Facades\DB;
  * @property string $status
  * @property bool $is_visible
  * @property Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $reviewed_at
+ * @property Carbon|null $approval_expires_at
  * @property string|null $latitude
  * @property string|null $longitude
  */

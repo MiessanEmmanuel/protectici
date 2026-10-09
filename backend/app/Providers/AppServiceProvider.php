@@ -23,6 +23,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -63,6 +64,14 @@ class AppServiceProvider extends ServiceProvider
         Model::preventLazyLoading($strict);
         Model::preventSilentlyDiscardingAttributes($strict);
         Model::preventAccessingMissingAttributes($strict);
+
+        // Zone d'administration : rôle admin actif uniquement (l'éditeur n'y a aucun accès, security.md §12).
+        Gate::define('admin-area', fn (User $user): bool => $user->isAdmin() && $user->is_active);
+        // Inscription d'un établissement : compte actif et e-mail vérifié.
+        Gate::define('register-establishment', fn (User $user): bool => $user->is_active && $user->hasVerifiedEmail());
+
+        // Administration : 120 / minute / administrateur.
+        RateLimiter::for('admin-api', fn (Request $r) => Limit::perMinute(120)->by('admin|'.($r->user()?->getAuthIdentifier() ?? $r->ip())));
 
         // Limiteurs de l'annuaire public (security.md §18) : clé = IP.
         RateLimiter::for('public-search', fn (Request $r) => Limit::perMinute(60)->by('public-search:'.$r->ip()));

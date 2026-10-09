@@ -53,4 +53,15 @@ Données factices : ~40 prestataires (dont Dauphin Sécurité, Fenapepsci, Globa
 - Rôles PostgreSQL (`protectici_owner/app/ro`) : migration `manage_database_roles`, inactive par défaut. Activer avec `DB_MANAGE_ROLES=true` en staging/production, puis attribuer LOGIN et mot de passe fort hors dépôt.
 - Journal d'audit en ajout seul : pour purger, le rôle propriétaire désactive temporairement `trg_audit_logs_immutable` (voir la migration des triggers).
 - Géocodage : interface `Geocoder` (Nominatim en production, cache, 1 requête/s, User-Agent configurable via `NOMINATIM_USER_AGENT`) ; les tests utilisent un faux géocodeur et `Http::preventStrayRequests()`.
-- E-mails Resend : `MAIL_MAILER=resend` + `RESEND_API_KEY` exigent `composer require resend/resend-php` (non installé, mail en `log` en local).
+- E-mails Resend : `resend/resend-php` est installé ; `MAIL_MAILER=resend` + `RESEND_API_KEY` en staging/production, `log` en local.
+
+## Phase 3 vague A : établissements, espace prestataire, administration
+
+Contrat : `../docs/api-contract.md` §7. Routes : `routes/api/establishments.php` (propriétaire) et `routes/api/admin.php`.
+
+- **Propriétaire** (session + e-mail vérifié) : `POST /establishments` (en-tête `Idempotency-Key`, 3/jour/IP et 5/jour/utilisateur sur les créations réelles), `GET /me/establishments`, `GET|PATCH /me/establishments/{type}/{slug}`, `POST .../resubmit`, `POST|DELETE .../change-requests`, `POST|DELETE .../documents` (disque privé), `POST|DELETE .../media`. Établissement d'autrui = 404.
+- **Admin** (`/admin/*` : rôle `admin` actif + 2FA confirmée + session 30 min ; editor/provider/user = 403) : tableau de bord, établissements (approve/reject/suspend/restore/verify/unverify/delete avec `confirm_name`), demandes de modification, téléchargement des justificatifs (flux `attachment`, chaque accès audité), utilisateurs (rôle, activation, anonymisation avec `confirm_email`), référentiels, journal d'audit, notifications internes.
+- **Stockage** : `MEDIA_DISK` (défaut `public`, lancer `php artisan storage:link` en local) et `DOCUMENTS_DISK` (défaut `private`, jamais d'URL). Images réencodées en WebP par GD (EXIF supprimé, côté max borné), justificatifs PDF/JPEG/PNG vérifiés par contenu. Staging/production : disques `s3` / `s3-private` (R2) : exige `composer require league/flysystem-aws-s3-v3` (NON installé ici).
+- **E-mails** : `App\Notifications\Establishment\EstablishmentMail` (reçue, validée, rejetée, suspendue, modification approuvée/rejetée), envoyés une seule fois par transition. Notifications internes : `AdminAlert` (base de données).
+- **Données de démo** : le compte `prestataire@demo.protectici.test` possède 2 fiches `pending`, une demande de modification en attente sur Dauphin Sécurité et un justificatif factice ; `utilisateur@demo.protectici.test` possède une force étatique `pending`. Pour tester l'admin : activer la 2FA du compte `admin@demo.protectici.test` (voir plus haut).
+- Config : `config/establishments.php` (limites, disques). Nettoyage des clés d'idempotence : table `idempotency_keys` (pas encore purgée automatiquement).

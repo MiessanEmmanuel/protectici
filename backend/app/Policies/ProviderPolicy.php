@@ -4,10 +4,13 @@ namespace App\Policies;
 
 use App\Models\Provider;
 use App\Models\User;
+use App\Policies\Concerns\ManagesOwnEstablishment;
 use Illuminate\Auth\Access\Response;
 
 class ProviderPolicy
 {
+    use ManagesOwnEstablishment;
+
     private function isPublished(Provider $provider): bool
     {
         return $provider->is_visible && $provider->status === 'approved' && $provider->deleted_at === null;
@@ -46,9 +49,10 @@ class ProviderPolicy
         return $user->isAdmin();
     }
 
+    /** Demande de modification des champs sensibles : propriétaire, fiche non suspendue. */
     public function requestChange(User $user, Provider $provider): bool
     {
-        return $this->isOwner($user, $provider);
+        return $this->isOwner($user, $provider) && $provider->status !== 'suspended';
     }
 
     public function approve(User $user, Provider $provider): bool

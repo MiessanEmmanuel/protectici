@@ -50,7 +50,15 @@ class ApiExceptionRenderer
         }
 
         if ($e instanceof AuthorizationException) {
-            return response()->json(['message' => self::MESSAGES[403]], 403);
+            // denyAsNotFound() => 404 ; message de Policy (français) conservé, message par défaut de Laravel masqué.
+            if ($e->status() === 404) {
+                return response()->json(['message' => self::MESSAGES[404]], 404);
+            }
+            $custom = $e->getMessage();
+
+            return response()->json([
+                'message' => $custom !== '' && $custom !== 'This action is unauthorized.' ? $custom : self::MESSAGES[403],
+            ], 403);
         }
 
         if ($e instanceof ModelNotFoundException) {
