@@ -120,12 +120,27 @@ export const cities: City[] = [
   city(6, 'Daloa', 6.8774, -6.4502, [{ name: 'Centre de Daloa' }]),
 ];
 
+export const feedbackTopics: Option[] = options(
+  [
+    'Courtoisie des agents',
+    "Rapidité d'intervention",
+    'Disponibilité',
+    'Ponctualité',
+    'Tenue et propreté des agents',
+    'Professionnalisme et qualité du service',
+    'Facturation et service après-vente',
+    'Autres',
+  ],
+  0,
+);
+
 export const referenceData: ReferenceData = {
   cities,
   company_types: companyTypes,
   service_types: serviceTypes,
   state_force_types: stateForceTypes,
   procedure_types: procedureTypes,
+  feedback_topics: feedbackTopics,
 };
 
 export function findDistrict(citySlug: string, districtSlug: string) {

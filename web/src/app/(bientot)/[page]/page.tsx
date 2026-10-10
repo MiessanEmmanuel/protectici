@@ -7,21 +7,6 @@ import { EmptyState } from '@/components/ui/EmptyState';
 
 /** Pages prévues dans les phases suivantes : on les annonce clairement plutôt que d'afficher une 404. */
 const PAGES: Record<string, { title: string; phase: string; text: string }> = {
-  devis: {
-    title: 'Demande de devis',
-    phase: 'Phase 3',
-    text: 'La demande de devis auprès des prestataires sera bientôt disponible.',
-  },
-  'dis-moi-tout': {
-    title: 'Dis-moi tout',
-    phase: 'Phase 3',
-    text: 'Le formulaire « Dis-moi tout » (encouragement, question, plainte, suggestion) sera bientôt disponible.',
-  },
-  contact: {
-    title: 'Contact',
-    phase: 'Phase 4',
-    text: 'Le formulaire de contact sera bientôt disponible. Vous pouvez en attendre l’ouverture en consultant l’annuaire.',
-  },
   'a-propos': {
     title: 'Qui sommes-nous',
     phase: 'Phase 4',

@@ -1,4 +1,13 @@
 import type {
+  ContactStatus,
+  FeedbackActionType,
+  FeedbackStatus,
+  FeedbackTargetType,
+  QuoteRecipientStatus,
+  QuoteStatus,
+  ReviewReportReason,
+  ReviewReportStatus,
+  ReviewStatus,
   Executive,
   DocumentType,
   EstablishmentStatus,
@@ -101,9 +110,84 @@ const EVENT_LABELS: Record<string, string> = {
   'document.downloaded': 'Justificatif consulté',
   role_changed: 'Rôle modifié',
   'user.anonymized': 'Compte anonymisé',
+  'review.approved': 'Avis approuvé',
+  'review.rejected': 'Avis rejeté',
+  'review.deleted': 'Avis supprimé',
+  'review_report.accepted': 'Signalement accepté',
+  'review_report.dismissed': 'Signalement rejeté',
+  'feedback.updated': 'Dossier « Dis-moi tout » mis à jour',
+  'feedback.replied': 'Réponse « Dis-moi tout » envoyée',
+  'quote.dispatched': 'Devis acheminé',
+  'quote.updated': 'Devis mis à jour',
+  'contact.updated': 'Message de contact mis à jour',
+  'contact.replied': 'Réponse au message de contact envoyée',
 };
 
 /** Libellé français d'un événement d'audit ; l'identifiant brut est conservé s'il est inconnu. */
 export function eventLabel(event: string): string {
   return EVENT_LABELS[event] ?? event;
 }
+
+/* ---------- Vague B ---------- */
+
+export const REVIEW_STATUS_LABELS: Record<ReviewStatus, string> = {
+  pending: 'En attente de modération',
+  approved: 'Publié',
+  rejected: 'Rejeté',
+};
+
+export const REPORT_REASON_LABELS: Record<ReviewReportReason, string> = {
+  spam: 'Publicité ou courrier indésirable',
+  offensive: 'Propos injurieux ou offensants',
+  false_info: 'Informations fausses ou trompeuses',
+  other: 'Autre raison',
+};
+
+export const REPORT_STATUS_LABELS: Record<ReviewReportStatus, string> = {
+  open: 'À traiter',
+  accepted: 'Accepté',
+  dismissed: 'Rejeté',
+};
+
+export const FEEDBACK_STATUS_LABELS: Record<FeedbackStatus, string> = {
+  new: 'Reçu',
+  in_progress: 'En cours de traitement',
+  forwarded: 'Transmis au prestataire',
+  resolved: 'Résolu',
+  closed: 'Clôturé',
+};
+
+export const FEEDBACK_ACTION_LABELS: Record<FeedbackActionType, string> = {
+  encouragement: 'Un encouragement',
+  question: 'Une question',
+  complaint: 'Une plainte',
+  suggestion: 'Une suggestion',
+};
+
+export const FEEDBACK_TARGET_LABELS: Record<FeedbackTargetType, string> = {
+  employee: 'Un employé',
+  product: 'Un produit',
+  service: 'Une prestation',
+};
+
+export const QUOTE_STATUS_LABELS: Record<QuoteStatus, string> = {
+  new: 'Nouvelle',
+  sent: 'Transmise',
+  answered: 'Répondue',
+  closed: 'Clôturée',
+  cancelled: 'Annulée',
+};
+
+export const QUOTE_RECIPIENT_STATUS_LABELS: Record<QuoteRecipientStatus, string> = {
+  sent: 'Reçu',
+  viewed: 'Consulté',
+  replied: 'Répondu',
+  declined: 'Décliné',
+};
+
+export const CONTACT_STATUS_LABELS: Record<ContactStatus, string> = {
+  new: 'Nouveau',
+  read: 'Lu',
+  answered: 'Répondu',
+  archived: 'Archivé',
+};

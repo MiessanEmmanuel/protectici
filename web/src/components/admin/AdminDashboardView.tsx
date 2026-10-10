@@ -21,6 +21,23 @@ export function AdminDashboardView() {
                 À traiter
               </h2>
               <ul className="grid gap-4 sm:grid-cols-3">
+                <Counter label="Avis à modérer" value={d.pending_reviews} href="/admin/avis" />
+                <Counter
+                  label="Signalements d'avis ouverts"
+                  value={d.open_review_reports}
+                  href="/admin/avis"
+                />
+                <Counter
+                  label="Nouveaux « Dis-moi tout »"
+                  value={d.new_feedbacks}
+                  href="/admin/dis-moi-tout"
+                />
+                <Counter label="Nouveaux devis" value={d.new_quote_requests} href="/admin/devis" />
+                <Counter
+                  label="Nouveaux messages de contact"
+                  value={d.new_contact_messages}
+                  href="/admin/messages"
+                />
                 <Counter
                   label="Prestataires en attente"
                   value={d.pending_providers}

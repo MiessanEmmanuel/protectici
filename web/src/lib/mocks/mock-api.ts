@@ -7,15 +7,15 @@ import type {
   Paginated,
   ProviderQuery,
   ProviderSummary,
-  Review,
   Role,
   StateForceQuery,
   StateForceSummary,
   User,
 } from '../api/types';
-import { createWaveAMocks } from './establishments';
+import { createWaveAMocks, type MockContext } from './establishments';
+import { createWaveBMocks } from './wave-b';
 import { stateForces } from './forces';
-import { providers, reviewsBySlug } from './providers';
+import { providers } from './providers';
 import { cities, referenceData } from './reference';
 
 /**
@@ -279,7 +279,7 @@ function geocodeLocal(q: string): GeocodeResult[] {
 
 /* ---------- API simulée ---------- */
 
-const waveA = createWaveAMocks({
+const mockContext: MockContext = {
   requireSession() {
     const s = requireState();
     return {
@@ -295,10 +295,17 @@ const waveA = createWaveAMocks({
     await delay(ms);
   },
   paginate,
-});
+};
+const waveA = createWaveAMocks(mockContext);
+const { dashboardCounts, ...waveB } = createWaveBMocks(mockContext);
 
 export const mockApi: Api = {
   ...waveA,
+  ...waveB,
+  async adminDashboard() {
+    const base = await waveA.adminDashboard();
+    return { ...base, ...dashboardCounts() };
+  },
   async register(input: RegisterInput) {
     await delay();
     if (!input.consent) fail('consent', 'Vous devez accepter les conditions pour créer un compte.');
@@ -342,7 +349,7 @@ export const mockApi: Api = {
       ? 'admin'
       : lower.startsWith('editor')
         ? 'editor'
-        : lower.startsWith('prestataire')
+        : lower.startsWith('prestataire') || lower.startsWith('proprietaire')
           ? 'provider'
           : 'user';
     const existing = readState();
@@ -485,12 +492,6 @@ export const mockApi: Api = {
     return { ...p, is_favorite: state ? state.fav.includes(slug) : null };
   },
   async trackProviderView() {},
-  async listProviderReviews(slug, page, perPage) {
-    if (!providers.some((p) => p.slug === slug))
-      throw new ApiError(404, 'Cette page ou cette ressource est introuvable.');
-    const reviews: Review[] = reviewsBySlug[slug] ?? [];
-    return paginate(reviews, page, perPage ?? 5);
-  },
   async listStateForces(query = {}) {
     await delay(60);
     return paginate(filterForces(query), query.page, query.per_page);

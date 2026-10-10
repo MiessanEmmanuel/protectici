@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { buildCsp } from '@/lib/csp';
+import { turnstileSiteKey } from '@/lib/env';
 import { safeRedirect } from '@/lib/safe-redirect';
 
 /**
@@ -42,6 +43,7 @@ export function proxy(request: NextRequest) {
     isDev: process.env.NODE_ENV !== 'production',
     apiOrigin: apiOrigin(),
     mediaOrigins: process.env.NEXT_PUBLIC_MEDIA_ORIGINS,
+    turnstile: turnstileSiteKey() !== '',
   });
 
   const requestHeaders = new Headers(request.headers);

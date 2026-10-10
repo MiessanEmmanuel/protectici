@@ -14,3 +14,11 @@ export const ALLOW_INDEXING = process.env.NEXT_PUBLIC_ALLOW_INDEXING === '1';
 export function serverApiUrl(): string {
   return (process.env.API_INTERNAL_URL || API_URL).replace(/\/+$/, '');
 }
+
+/**
+ * Clé de site Cloudflare Turnstile (publique par nature, jamais le secret). Lue à chaque appel
+ * pour rester testable ; vide = Turnstile désactivé (le script Cloudflare n'est alors jamais chargé).
+ */
+export function turnstileSiteKey(): string {
+  return (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '').trim();
+}

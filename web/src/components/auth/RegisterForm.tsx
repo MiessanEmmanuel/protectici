@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { describeError, errorMessage } from '@/lib/api/errors';
-import type { RegisterInput } from '@/lib/api/endpoints';
+import { RESEND_NEUTRAL_MESSAGE, type RegisterInput } from '@/lib/api/endpoints';
 import { USE_MOCKS } from '@/lib/env';
 import { mockClickVerificationLink } from '@/lib/mocks/mock-api';
 import { formToObject, registerSchema, validate, type FieldErrors } from '@/lib/validation';
+import { AntiSpamFields } from '../security/AntiSpamFields';
+import { TURNSTILE_REQUIRED_MESSAGE, useAntiSpam } from '../security/use-anti-spam';
 import { Button } from '../ui/Button';
 import { Checkbox } from '../ui/Checkbox';
 import { FormError } from '../ui/Field';
@@ -25,6 +27,7 @@ export function RegisterForm() {
   const [resendIn, setResendIn] = useState(0);
   const [resendNotice, setResendNotice] = useState<string | null>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const spam = useAntiSpam();
 
   useEffect(() => {
     if (sentTo) titleRef.current?.focus();
@@ -42,10 +45,22 @@ export function RegisterForm() {
     const parsed = validate(registerSchema, formToObject(e.currentTarget));
     if (!parsed.ok) return setErrors(parsed.errors);
     setErrors({});
+    const { phone, ...rest } = parsed.data;
+    if (spam.trapped) {
+      // Champ piège rempli : succès simulé identique, aucun appel (contrat §8.0).
+      setSentTo(rest.email);
+      setResendIn(RESEND_DELAY_S);
+      return;
+    }
+    if (!spam.ready) return setFormError(TURNSTILE_REQUIRED_MESSAGE);
     setBusy(true);
     try {
-      const { phone, ...rest } = parsed.data;
-      const input: RegisterInput = { ...rest, ...(phone ? { phone } : {}) };
+      const token = spam.payload().turnstile_token;
+      const input: RegisterInput = {
+        ...rest,
+        ...(phone ? { phone } : {}),
+        ...(token ? { turnstile_token: token } : {}),
+      };
       await clientApi.register(input, crypto.randomUUID());
       // Seul l'e-mail est conservé (pour le renvoi) : le mot de passe n'est plus en mémoire.
       setSentTo(input.email);
@@ -55,20 +70,30 @@ export function RegisterForm() {
       setErrors(d.fields);
       setFormError(d.form);
     } finally {
+      spam.reset(); // un jeton Turnstile ne sert qu'une fois
       setBusy(false);
     }
   }
 
   async function resend() {
     if (!sentTo || resendIn > 0) return;
+    if (!spam.ready) return setResendNotice(TURNSTILE_REQUIRED_MESSAGE);
     setBusy(true);
     setResendNotice(null);
     try {
-      setResendNotice(await clientApi.resendVerificationPublic(sentTo));
+      if (spam.trapped) {
+        setResendNotice(RESEND_NEUTRAL_MESSAGE);
+      } else {
+        const token = spam.payload().turnstile_token;
+        setResendNotice(
+          await clientApi.resendVerificationPublic(sentTo, token ? { turnstile_token: token } : undefined),
+        );
+      }
       setResendIn(RESEND_DELAY_S);
     } catch (err) {
       setResendNotice(errorMessage(err));
     } finally {
+      spam.reset();
       setBusy(false);
     }
   }
@@ -87,6 +112,7 @@ export function RegisterForm() {
         <p aria-live="polite" role="status" className="min-h-6 text-sm">
           {resendNotice}
         </p>
+        <AntiSpamFields spam={spam} />
         <Button
           variant="secondary"
           onClick={() => void resend()}
@@ -176,6 +202,7 @@ export function RegisterForm() {
           </>
         }
       />
+      <AntiSpamFields spam={spam} />
       <Button type="submit" loading={busy}>
         Créer mon compte
       </Button>

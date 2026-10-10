@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { RequireAuth } from '@/components/establishment/RequireAuth';
 import { MyEstablishmentsList } from '@/components/establishment/MyEstablishmentsList';
+import { ProviderSpaceNav } from '@/components/provider-space/ProviderSpaceNav';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ButtonLink } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
@@ -22,6 +23,7 @@ export default function ProviderSpacePage() {
           redirectTo="/espace-prestataire"
           intro="Connectez-vous avec une adresse e-mail vérifiée pour gérer vos établissements."
         >
+          <ProviderSpaceNav />
           <div>
             <ButtonLink href="/inscription-etablissement" variant="secondary">
               Inscrire un nouvel établissement

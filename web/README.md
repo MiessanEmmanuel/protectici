@@ -38,6 +38,14 @@ Mot de passe : 8 caractères minimum (connexion), 10 (inscription). `pris@exampl
 
 `/inscription-etablissement` (multi-étapes, connexion + e-mail vérifié requis) · `/espace-prestataire` et `/espace-prestataire/[type]/[slug]` · `/admin` (tableau de bord), `/admin/etablissements`, `/admin/etablissements/[type]/[id]`, `/admin/modifications`, `/admin/utilisateurs`, `/admin/referentiels`, `/admin/journal`. Tout fonctionne en mode mock. Les images renvoyées par l'API doivent venir de `NEXT_PUBLIC_API_URL` ou de `NEXT_PUBLIC_MEDIA_ORIGINS` (CSP `img-src`).
 
+## Pages de la phase 3 (vague B)
+
+Publiques : `/dis-moi-tout` (5 étapes, référence DMT copiable) · `/dis-moi-tout/suivi` (référence + e-mail en POST) · `/devis` (`?prestataire=slug` pré-sélectionne) · `/contact` · fiche prestataire : avis paginés, formulaire d'avis, signalement. Compte : `/compte/mes-avis`. Espace prestataire : `/espace-prestataire/avis` et `/espace-prestataire/devis`. Admin : `/admin/avis`, `/admin/dis-moi-tout`, `/admin/devis`, `/admin/messages` + nouveaux compteurs du tableau de bord.
+
+**Antispam** (`src/components/security/`) : champ piège invisible `company_website` sur tous les formulaires publics (y compris inscription et mot de passe oublié) et widget Cloudflare Turnstile **seulement si `NEXT_PUBLIC_TURNSTILE_SITE_KEY` est défini** ; sans clé, aucun script Cloudflare n'est chargé et la CSP ne l'autorise pas. Avec la clé, la CSP (`src/lib/csp.ts`) ajoute `https://challenges.cloudflare.com` à `script-src` et `frame-src` (jamais `unsafe-inline`/`unsafe-eval` en production). Un jeton Turnstile est à usage unique : le formulaire le renouvelle après chaque tentative.
+
+Comptes mock supplémentaires (mot de passe : 8 caractères minimum) : `proprietaire1@example.test` à `proprietaire6@example.test` (rôle prestataire, propriétaires des 6 premières fiches publiées : avis reçus, devis reçus) · e-mail commençant par `client` (3 avis : publié, en attente, rejeté avec motif) · suivi « Dis-moi tout » de démonstration : `DMT-2026-000101` avec `awa.demo@example.test` · `limite@example.test` dans un formulaire public simule un 429.
+
 ## Scripts
 
 | Script | Rôle |
@@ -60,6 +68,7 @@ Voir `.env.example`. Jamais de secret dans une variable `NEXT_PUBLIC_*`.
 | `NEXT_PUBLIC_SITE_URL` | URL publique (sitemap, métadonnées, partage) |
 | `NEXT_PUBLIC_ALLOW_INDEXING` | `1` uniquement en production (sinon `noindex`, `robots.txt` Disallow) |
 | `SESSION_COOKIE_NAME` | nom du cookie de session Laravel (confort UX du proxy `/admin`, `/compte`) |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | clé de SITE Turnstile (publique) ; vide = anti-robot désactivé, aucun script chargé |
 | `NEXT_PUBLIC_MEDIA_ORIGINS` | origines supplémentaires d'images pour la CSP (CDN médias), optionnel |
 
 ## Structure

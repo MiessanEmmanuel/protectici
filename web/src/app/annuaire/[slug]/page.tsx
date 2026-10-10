@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { FavoriteButton } from '@/components/directory/FavoriteButton';
 import { ReviewsList } from '@/components/directory/ReviewsList';
+import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ShareLinks } from '@/components/directory/ShareLinks';
 import { ViewTracker } from '@/components/directory/ViewTracker';
 import { MiniMap } from '@/components/map/MiniMap';
@@ -248,7 +249,7 @@ export default async function ProviderPage({ params, searchParams }: Props) {
             <div className="mt-3">
               {reviews && reviews.data.length > 0 ? (
                 <>
-                  <ReviewsList reviews={reviews.data} />
+                  <ReviewsList reviews={reviews.data} redirectTo={`/annuaire/${provider.slug}`} />
                   <Pagination
                     label="Pagination des avis"
                     currentPage={reviews.meta.current_page}
@@ -262,6 +263,7 @@ export default async function ProviderPage({ params, searchParams }: Props) {
                 <p className="text-muted">Aucun avis publié pour le moment.</p>
               )}
             </div>
+            <ReviewForm slug={provider.slug} providerName={provider.name} />
           </section>
         </div>
 
@@ -320,10 +322,13 @@ export default async function ProviderPage({ params, searchParams }: Props) {
           </Card>
           <Card>
             <p className="font-semibold">Une remarque sur ce prestataire ?</p>
-            <ButtonLink href="/dis-moi-tout" variant="secondary" className="mt-2">
+            <ButtonLink
+              href={buildHref('/dis-moi-tout', { prestataire: provider.slug })}
+              variant="secondary"
+              className="mt-2"
+            >
               Dis-moi tout
             </ButtonLink>
-            <p className="mt-2 text-sm text-muted">Formulaire bientôt disponible.</p>
           </Card>
         </aside>
       </div>

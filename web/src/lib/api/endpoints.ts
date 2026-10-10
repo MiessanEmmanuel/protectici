@@ -1,6 +1,34 @@
 import { ApiError } from './errors';
 import type { Query, Requester } from './http';
 import type {
+  AdminContactMessage,
+  AdminFeedback,
+  AdminFeedbackQuery,
+  AdminFeedbackRow,
+  AdminQuote,
+  AdminQuoteRow,
+  AdminReviewReport,
+  AdminReviewRow,
+  AntiSpamPayload,
+  ContactInput,
+  ContactStatus,
+  FeedbackInput,
+  FeedbackReceipt,
+  FeedbackReply,
+  FeedbackStatus,
+  FeedbackTracking,
+  MyReview,
+  OwnerReview,
+  ProviderQuote,
+  QuoteReceipt,
+  QuoteReplyInput,
+  QuoteRequestInput,
+  QuoteRecipientStatus,
+  QuoteStatus,
+  ReviewInput,
+  ReviewReportReason,
+  ReviewReportStatus,
+  ReviewStatus,
   AdminAuditLog,
   AdminChangeRequestRow,
   AdminDashboard,
@@ -52,6 +80,8 @@ export interface RegisterInput {
   phone?: string;
   consent: boolean;
   turnstile_token?: string;
+  /** Champ piège (doit rester vide). */
+  company_website?: string;
 }
 
 /** Surface de l'API utilisée par l'application (réelle ou mock). */
@@ -60,12 +90,12 @@ export interface Api {
   /** 202 : message générique identique dans tous les cas (anti-énumération). Aucune session ouverte. */
   register(input: RegisterInput, idempotencyKey?: string): Promise<string>;
   /** 202 public, réponse identique dans tous les cas (aucun mot de passe renvoyé). */
-  resendVerificationPublic(email: string): Promise<string>;
+  resendVerificationPublic(email: string, antispam?: AntiSpamPayload): Promise<string>;
   login(input: { email: string; password: string; remember?: boolean }): Promise<LoginResult>;
   twoFactorChallenge(input: { code?: string; recovery_code?: string }): Promise<User>;
   logout(): Promise<void>;
   getUser(): Promise<User | null>;
-  forgotPassword(email: string): Promise<void>;
+  forgotPassword(email: string, antispam?: AntiSpamPayload): Promise<void>;
   resetPassword(input: {
     token: string;
     email: string;
@@ -181,6 +211,82 @@ export interface Api {
   adminListAuditLogs(query?: AuditLogQuery): Promise<Paginated<AdminAuditLog>>;
   adminListNotifications(): Promise<AdminNotification[]>;
   adminMarkNotificationRead(id: number | string): Promise<void>;
+
+  // --- Vague B : avis (contrat §8.1) ---
+  /** 201 : avis `pending`. 409 si déjà un avis, 403 si propriétaire de la fiche. */
+  createReview(slug: string, input: ReviewInput): Promise<MyReview>;
+  listMyReviews(page?: number): Promise<Paginated<MyReview>>;
+  updateMyReview(id: number, patch: Partial<ReviewInput>): Promise<MyReview>;
+  deleteMyReview(id: number): Promise<void>;
+  /** 204 ; rejeu = 204. */
+  reportReview(id: number, input: { reason: ReviewReportReason; details?: string }): Promise<void>;
+  listOwnerReviews(
+    slug: string,
+    query?: { status?: ReviewStatus; page?: number },
+  ): Promise<Paginated<OwnerReview>>;
+  /** Une seule réponse par avis (409 ensuite). */
+  replyToReview(slug: string, reviewId: number, body: string): Promise<void>;
+  adminListReviews(query?: {
+    status?: ReviewStatus;
+    provider?: string;
+    q?: string;
+    page?: number;
+  }): Promise<Paginated<AdminReviewRow>>;
+  /** Idempotent. `reason` (≥ 10 car.) requis pour `reject`. */
+  adminReviewAction(id: number, action: 'approve' | 'reject', reason?: string): Promise<void>;
+  adminDeleteReview(id: number): Promise<void>;
+  adminListReviewReports(query?: {
+    status?: ReviewReportStatus;
+    page?: number;
+  }): Promise<Paginated<AdminReviewReport>>;
+  adminReviewReportAction(id: number, action: 'accept' | 'dismiss'): Promise<void>;
+
+  // --- Vague B : « Dis-moi tout » (contrat §8.2) ---
+  createFeedback(input: FeedbackInput, idempotencyKey: string): Promise<FeedbackReceipt>;
+  /** POST (jamais d'URL) ; 404 générique si référence inconnue OU e-mail faux. */
+  trackFeedback(input: { reference: string; email: string }): Promise<FeedbackTracking>;
+  adminListFeedbacks(query?: AdminFeedbackQuery): Promise<Paginated<AdminFeedbackRow>>;
+  adminGetFeedback(id: number): Promise<AdminFeedback>;
+  adminUpdateFeedback(
+    id: number,
+    patch: { status?: FeedbackStatus; assigned_to?: number | null },
+  ): Promise<AdminFeedback>;
+  adminReplyFeedback(
+    id: number,
+    input: { body: string; is_internal: boolean },
+    idempotencyKey?: string,
+  ): Promise<FeedbackReply>;
+
+  // --- Vague B : devis (contrat §8.3) ---
+  createQuoteRequest(input: QuoteRequestInput, idempotencyKey: string): Promise<QuoteReceipt>;
+  listMyQuotes(query?: {
+    status?: QuoteRecipientStatus;
+    page?: number;
+  }): Promise<Paginated<ProviderQuote>>;
+  /** Passe le destinataire à `viewed` (idempotent). */
+  getMyQuote(id: number): Promise<ProviderQuote>;
+  /** Une seule réponse (409 ensuite). */
+  replyToQuote(id: number, input: QuoteReplyInput): Promise<void>;
+  declineQuote(id: number, reason?: string): Promise<void>;
+  adminListQuotes(query?: {
+    status?: QuoteStatus;
+    q?: string;
+    page?: number;
+  }): Promise<Paginated<AdminQuoteRow>>;
+  adminGetQuote(id: number): Promise<AdminQuote>;
+  /** Idempotent : crée les destinataires manquants (1 à 5 fiches publiées). */
+  adminDispatchQuote(id: number, providerIds: number[]): Promise<AdminQuote>;
+  adminUpdateQuoteStatus(id: number, status: QuoteStatus): Promise<void>;
+
+  // --- Vague B : contact (contrat §8.4) ---
+  sendContact(input: ContactInput, idempotencyKey: string): Promise<string>;
+  adminListContactMessages(query?: {
+    status?: ContactStatus;
+    q?: string;
+    page?: number;
+  }): Promise<Paginated<AdminContactMessage>>;
+  adminUpdateContactMessage(id: number, status: ContactStatus): Promise<void>;
+  adminReplyContactMessage(id: number, body: string): Promise<void>;
 }
 
 function geoQuery(q: { lat?: number; lng?: number; radius_km?: number }): Query {
@@ -242,9 +348,9 @@ export function buildApi(req: Requester): Api {
       });
       return res?.message ?? REGISTER_NEUTRAL_MESSAGE;
     },
-    async resendVerificationPublic(email) {
+    async resendVerificationPublic(email, antispam) {
       const res = await req<{ message?: string }>('POST', '/auth/verification/resend', {
-        body: { email },
+        body: { email, turnstile_token: antispam?.turnstile_token },
       });
       return res?.message ?? RESEND_NEUTRAL_MESSAGE;
     },
@@ -272,8 +378,10 @@ export function buildApi(req: Requester): Api {
         throw e;
       }
     },
-    async forgotPassword(email) {
-      await req('POST', '/auth/forgot-password', { body: { email } });
+    async forgotPassword(email, antispam) {
+      await req('POST', '/auth/forgot-password', {
+        body: { email, turnstile_token: antispam?.turnstile_token },
+      });
     },
     async resetPassword(input) {
       await req('POST', '/auth/reset-password', { body: input });
@@ -526,6 +634,162 @@ export function buildApi(req: Requester): Api {
     },
     async adminMarkNotificationRead(id) {
       await req('POST', `/admin/notifications/${enc(String(id))}/read`);
+    },
+
+    // ---------- Vague B ----------
+    async createReview(slug, input) {
+      const res = await req<{ data: MyReview }>('POST', `/providers/${enc(slug)}/reviews`, {
+        body: input,
+      });
+      return res.data;
+    },
+    listMyReviews(page) {
+      return req<Paginated<MyReview>>('GET', '/me/reviews', { query: { page } });
+    },
+    async updateMyReview(id, patch) {
+      const res = await req<{ data: MyReview }>('PATCH', `/me/reviews/${id}`, { body: patch });
+      return res.data;
+    },
+    async deleteMyReview(id) {
+      await req('DELETE', `/me/reviews/${id}`);
+    },
+    async reportReview(id, input) {
+      await req('POST', `/reviews/${id}/report`, { body: input });
+    },
+    listOwnerReviews(slug, query = {}) {
+      return req<Paginated<OwnerReview>>('GET', `${mine('provider', slug)}/reviews`, {
+        query: { status: query.status, page: query.page },
+      });
+    },
+    async replyToReview(slug, reviewId, body) {
+      await req('POST', `${mine('provider', slug)}/reviews/${reviewId}/reply`, { body: { body } });
+    },
+    adminListReviews(query = {}) {
+      return req<Paginated<AdminReviewRow>>('GET', '/admin/reviews', {
+        query: { status: query.status, provider: query.provider, q: query.q, page: query.page },
+      });
+    },
+    async adminReviewAction(id, action, reason) {
+      await req('POST', `/admin/reviews/${id}/${action}`, {
+        body: reason !== undefined ? { reason } : undefined,
+      });
+    },
+    async adminDeleteReview(id) {
+      await req('DELETE', `/admin/reviews/${id}`);
+    },
+    adminListReviewReports(query = {}) {
+      return req<Paginated<AdminReviewReport>>('GET', '/admin/review-reports', {
+        query: { status: query.status, page: query.page },
+      });
+    },
+    async adminReviewReportAction(id, action) {
+      await req('POST', `/admin/review-reports/${id}/${action}`);
+    },
+
+    async createFeedback(input, idempotencyKey) {
+      const res = await req<{ data: FeedbackReceipt }>('POST', '/feedbacks', {
+        body: input,
+        idempotencyKey,
+      });
+      return res.data;
+    },
+    async trackFeedback(input) {
+      const res = await req<{ data: FeedbackTracking }>('POST', '/feedbacks/track', {
+        body: input,
+      });
+      return res.data;
+    },
+    adminListFeedbacks(query = {}) {
+      return req<Paginated<AdminFeedbackRow>>('GET', '/admin/feedbacks', {
+        query: {
+          status: query.status,
+          action_type: query.action_type,
+          provider: query.provider,
+          assigned_to: query.assigned_to,
+          q: query.q,
+          sort: query.sort,
+          page: query.page,
+        },
+      });
+    },
+    async adminGetFeedback(id) {
+      const res = await req<{ data: AdminFeedback }>('GET', `/admin/feedbacks/${id}`);
+      return res.data;
+    },
+    async adminUpdateFeedback(id, patch) {
+      const res = await req<{ data: AdminFeedback }>('PATCH', `/admin/feedbacks/${id}`, {
+        body: patch,
+      });
+      return res.data;
+    },
+    async adminReplyFeedback(id, input, idempotencyKey) {
+      const res = await req<{ data: FeedbackReply }>('POST', `/admin/feedbacks/${id}/replies`, {
+        body: input,
+        idempotencyKey,
+      });
+      return res.data;
+    },
+
+    async createQuoteRequest(input, idempotencyKey) {
+      const res = await req<{ data: QuoteReceipt }>('POST', '/quote-requests', {
+        body: input,
+        idempotencyKey,
+      });
+      return res.data;
+    },
+    listMyQuotes(query = {}) {
+      return req<Paginated<ProviderQuote>>('GET', '/me/quote-requests', {
+        query: { status: query.status, page: query.page },
+      });
+    },
+    async getMyQuote(id) {
+      const res = await req<{ data: ProviderQuote }>('GET', `/me/quote-requests/${id}`);
+      return res.data;
+    },
+    async replyToQuote(id, input) {
+      await req('POST', `/me/quote-requests/${id}/reply`, { body: input });
+    },
+    async declineQuote(id, reason) {
+      await req('POST', `/me/quote-requests/${id}/decline`, {
+        body: reason ? { reason } : undefined,
+      });
+    },
+    adminListQuotes(query = {}) {
+      return req<Paginated<AdminQuoteRow>>('GET', '/admin/quote-requests', {
+        query: { status: query.status, q: query.q, page: query.page },
+      });
+    },
+    async adminGetQuote(id) {
+      const res = await req<{ data: AdminQuote }>('GET', `/admin/quote-requests/${id}`);
+      return res.data;
+    },
+    async adminDispatchQuote(id, providerIds) {
+      const res = await req<{ data: AdminQuote }>('POST', `/admin/quote-requests/${id}/dispatch`, {
+        body: { provider_ids: providerIds },
+      });
+      return res.data;
+    },
+    async adminUpdateQuoteStatus(id, status) {
+      await req('PATCH', `/admin/quote-requests/${id}`, { body: { status } });
+    },
+
+    async sendContact(input, idempotencyKey) {
+      const res = await req<{ data: { message: string } }>('POST', '/contact', {
+        body: input,
+        idempotencyKey,
+      });
+      return res?.data?.message ?? 'Merci, votre message a bien été envoyé.';
+    },
+    adminListContactMessages(query = {}) {
+      return req<Paginated<AdminContactMessage>>('GET', '/admin/contact-messages', {
+        query: { status: query.status, q: query.q, page: query.page },
+      });
+    },
+    async adminUpdateContactMessage(id, status) {
+      await req('PATCH', `/admin/contact-messages/${id}`, { body: { status } });
+    },
+    async adminReplyContactMessage(id, body) {
+      await req('POST', `/admin/contact-messages/${id}/reply`, { body: { body } });
     },
   };
 }

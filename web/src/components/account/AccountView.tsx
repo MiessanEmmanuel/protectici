@@ -119,6 +119,20 @@ export function AccountView({ justVerified }: { justVerified: boolean }) {
         </div>
       </Card>
 
+      <Card as="section" aria-labelledby="mes-avis">
+        <h2 id="mes-avis" className="text-xl font-bold">
+          Mes avis
+        </h2>
+        <p className="mt-1 text-muted">
+          Consultez, modifiez ou supprimez les avis que vous avez donnés aux prestataires.
+        </p>
+        <div className="mt-4">
+          <ButtonLink href="/compte/mes-avis" variant="secondary">
+            Voir mes avis
+          </ButtonLink>
+        </div>
+      </Card>
+
       <Card as="section" aria-labelledby="favoris">
         <h2 id="favoris" className="text-xl font-bold">
           Mes favoris

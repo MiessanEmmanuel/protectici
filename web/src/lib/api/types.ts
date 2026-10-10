@@ -40,6 +40,8 @@ export interface ReferenceData {
   service_types: Option[];
   state_force_types: Option[];
   procedure_types: Option[];
+  /** Sujets « Dis-moi tout » (courtoisie, ponctualité…). Absent du contrat §4 : voir rapport. */
+  feedback_topics?: Option[];
 }
 
 export interface NamedSlug {
@@ -370,6 +372,12 @@ export interface AdminAuditLog {
 }
 
 export interface AdminDashboard {
+  // Vague B (contrat §8.5)
+  pending_reviews: number;
+  open_review_reports: number;
+  new_feedbacks: number;
+  new_quote_requests: number;
+  new_contact_messages: number;
   pending_providers: number;
   pending_state_forces: number;
   pending_change_requests: number;
@@ -528,4 +536,259 @@ export interface AuditLogQuery {
   from?: string;
   to?: string;
   page?: number;
+}
+
+
+/* ================= Phase 3 — Vague B (contrat §8) ================= */
+
+/** Champs antispam communs aux formulaires publics (§8.0). */
+export interface AntiSpamPayload {
+  turnstile_token?: string;
+  /** Champ piège : doit rester vide. */
+  company_website?: string;
+}
+
+/* --- Avis (§8.1) --- */
+export type ReviewStatus = 'pending' | 'approved' | 'rejected';
+
+export interface MyReview {
+  id: number;
+  provider: { slug: string; name: string };
+  rating: number;
+  title: string | null;
+  body: string;
+  status: ReviewStatus;
+  rejection_reason: string | null;
+  is_visible: boolean;
+  created_at: string;
+  provider_reply: string | null;
+}
+
+export interface ReviewInput {
+  rating: number;
+  title?: string | null;
+  body: string;
+}
+
+export type ReviewReportReason = 'spam' | 'offensive' | 'false_info' | 'other';
+
+export interface OwnerReview {
+  id: number;
+  rating: number;
+  title: string | null;
+  body: string;
+  author: string;
+  status: ReviewStatus;
+  created_at: string;
+  provider_reply: string | null;
+  provider_replied_at: string | null;
+}
+
+export interface AdminReviewRow {
+  id: number;
+  provider: { id: number; slug: string; name: string };
+  author: { id: number; name: string; email: string } | null;
+  rating: number;
+  title: string | null;
+  body: string;
+  status: ReviewStatus;
+  is_visible: boolean;
+  reports_count: number;
+  created_at: string;
+}
+
+export type ReviewReportStatus = 'open' | 'accepted' | 'dismissed';
+
+export interface AdminReviewReport {
+  id: number;
+  review: { id: number; rating: number; body_excerpt: string; provider_name: string };
+  reporter: { id: number; name: string } | null;
+  reason: ReviewReportReason;
+  details: string | null;
+  status: ReviewReportStatus;
+  created_at: string;
+}
+
+/* --- Dis-moi tout (§8.2) --- */
+export type FeedbackCivility = 'M.' | 'Mme' | 'Mlle';
+export type FeedbackActionType = 'encouragement' | 'question' | 'complaint' | 'suggestion';
+export type FeedbackTargetType = 'employee' | 'product' | 'service';
+export type FeedbackStatus = 'new' | 'in_progress' | 'forwarded' | 'resolved' | 'closed';
+
+export interface FeedbackInput extends AntiSpamPayload {
+  civility?: FeedbackCivility | null;
+  last_name: string;
+  first_name: string;
+  email: string;
+  phone?: string | null;
+  provider_slug?: string | null;
+  action_type: FeedbackActionType;
+  target_type: FeedbackTargetType;
+  service_type_id?: number | null;
+  topic_id?: number | null;
+  product_type?: string | null;
+  location?: string | null;
+  comment: string;
+  consent: boolean;
+}
+
+export interface FeedbackReceipt {
+  reference: string;
+  status: FeedbackStatus;
+  message: string;
+}
+
+export interface FeedbackTracking {
+  reference: string;
+  status: FeedbackStatus;
+  created_at: string;
+  provider_name: string | null;
+  replies: { body: string; created_at: string }[];
+}
+
+export interface AdminFeedbackRow {
+  id: number;
+  reference: string;
+  author: { first_name: string; last_name: string; email: string };
+  provider: { id: number; name: string } | null;
+  action_type: FeedbackActionType;
+  target_type: FeedbackTargetType;
+  status: FeedbackStatus;
+  assigned_to: { id: number; name: string } | null;
+  created_at: string;
+}
+
+export interface FeedbackReply {
+  id: number;
+  author: { id: number; name: string } | null;
+  body: string;
+  is_internal: boolean;
+  sent_at: string | null;
+  created_at: string;
+}
+
+export interface AdminFeedback extends AdminFeedbackRow {
+  civility: FeedbackCivility | null;
+  phone: string | null;
+  service_type: Option | null;
+  topic: Option | null;
+  product_type: string | null;
+  location: string | null;
+  comment: string;
+  consent_at: string;
+  resolved_at: string | null;
+  replies: FeedbackReply[];
+}
+
+export interface AdminFeedbackQuery {
+  status?: FeedbackStatus;
+  action_type?: FeedbackActionType;
+  provider?: string;
+  assigned_to?: number;
+  q?: string;
+  sort?: '-created_at' | 'status';
+  page?: number;
+}
+
+/* --- Devis (§8.3) --- */
+export type QuoteRecipientStatus = 'sent' | 'viewed' | 'replied' | 'declined';
+export type QuoteStatus = 'new' | 'sent' | 'answered' | 'closed' | 'cancelled';
+
+export interface QuoteRequestInput extends AntiSpamPayload {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  company_name?: string | null;
+  service_type_id: number;
+  city_id: number;
+  district_id?: number | null;
+  description: string;
+  desired_start_date?: string | null;
+  budget_range?: string | null;
+  provider_slugs?: string[];
+  consent: boolean;
+}
+
+export interface QuoteReceipt {
+  reference: string;
+  message: string;
+}
+
+export interface ProviderQuote {
+  id: number;
+  reference: string;
+  requester: { name: string; email: string; phone: string; company_name: string | null };
+  service: Option;
+  city: { name: string };
+  district: { name: string } | null;
+  description: string;
+  desired_start_date: string | null;
+  budget_range: string | null;
+  status: QuoteRecipientStatus;
+  sent_at: string;
+  viewed_at: string | null;
+  replied_at: string | null;
+  response_message: string | null;
+  quoted_amount: number | null;
+}
+
+export interface QuoteReplyInput {
+  message: string;
+  quoted_amount?: number | null;
+}
+
+export interface AdminQuoteRow {
+  id: number;
+  reference: string;
+  requester_name: string;
+  requester_email: string;
+  service: Option;
+  city: { name: string };
+  status: QuoteStatus;
+  recipients_count: number;
+  created_at: string;
+}
+
+export interface AdminQuoteRecipient {
+  id: number;
+  provider: { id: number; name: string };
+  status: QuoteRecipientStatus;
+  sent_at: string;
+  viewed_at: string | null;
+  replied_at: string | null;
+  response_message: string | null;
+  quoted_amount: number | null;
+}
+
+export interface AdminQuote extends AdminQuoteRow {
+  phone: string;
+  company_name: string | null;
+  description: string;
+  desired_start_date: string | null;
+  budget_range: string | null;
+  recipients: AdminQuoteRecipient[];
+}
+
+/* --- Contact (§8.4) --- */
+export type ContactStatus = 'new' | 'read' | 'answered' | 'archived';
+
+export interface ContactInput extends AntiSpamPayload {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  consent: boolean;
+}
+
+export interface AdminContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: ContactStatus;
+  handled_by: { id: number; name: string } | null;
+  handled_at: string | null;
+  created_at: string;
 }

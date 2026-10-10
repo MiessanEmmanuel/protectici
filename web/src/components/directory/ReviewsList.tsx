@@ -1,8 +1,9 @@
 import type { Review } from '@/lib/api/types';
 import { formatDate } from '@/lib/format';
+import { ReportReviewButton } from '../reviews/ReportReviewButton';
 import { RatingStars } from '../ui/RatingStars';
 
-export function ReviewsList({ reviews }: { reviews: Review[] }) {
+export function ReviewsList({ reviews, redirectTo }: { reviews: Review[]; redirectTo: string }) {
   return (
     <ul className="flex flex-col gap-4">
       {reviews.map((r) => (
@@ -25,6 +26,9 @@ export function ReviewsList({ reviews }: { reviews: Review[] }) {
               <p className="mt-1 whitespace-pre-line">{r.provider_reply}</p>
             </div>
           ) : null}
+          <div className="mt-2 flex justify-end">
+            <ReportReviewButton reviewId={r.id} redirectTo={redirectTo} />
+          </div>
         </li>
       ))}
     </ul>
