@@ -4,7 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\City;
 use App\Models\CompanyType;
+use App\Models\ContactMessage;
 use App\Models\District;
+use App\Models\Feedback;
+use App\Models\FeedbackTopic;
 use App\Models\Partner;
 use App\Models\Post;
 use App\Models\PostCategory;
@@ -13,6 +16,7 @@ use App\Models\Provider;
 use App\Models\ProviderChangeRequest;
 use App\Models\ProviderDocument;
 use App\Models\ProviderExecutive;
+use App\Models\QuoteRequest;
 use App\Models\Review;
 use App\Models\ServiceType;
 use App\Models\StateForce;
@@ -53,6 +57,7 @@ class DemoSeeder extends Seeder
             $accounts = $this->users();
             $providers = $this->providers($accounts['provider']);
             $this->reviews($providers, $accounts['reviewers']);
+            $this->engagement($providers, $accounts['user'], $accounts['admin']);
             $this->establishmentWorkflow($accounts['provider'], $accounts['user'], $providers->first());
             $this->stateForces();
             $this->posts($accounts['editor']);
@@ -362,6 +367,57 @@ class DemoSeeder extends Seeder
                 ]);
             }
         }
+    }
+
+    /**
+     * Vague B : signalements ouverts, dossiers « Dis-moi tout » (tous statuts), devis avec destinataires, messages de contact.
+     *
+     * @param  Collection<int, Provider>  $providers
+     */
+    private function engagement(Collection $providers, User $user, User $admin): void
+    {
+        $public = $providers->where('status', 'approved')->values();
+        $topic = FeedbackTopic::query()->first();
+        $service = ServiceType::query()->first();
+        $city = City::where('slug', 'abidjan')->firstOrFail();
+
+        // Signalements ouverts sur des avis publiés.
+        Review::query()->published()->limit(3)->get()->each(fn (Review $r) => DB::table('review_reports')->insert([
+            'review_id' => $r->id, 'user_id' => $user->id, 'reason' => 'false_info',
+            'details' => 'Signalement factice pour la démonstration.', 'status' => 'open',
+        ]));
+
+        foreach (['new', 'in_progress', 'forwarded', 'resolved', 'closed'] as $i => $status) {
+            Feedback::factory()->create([
+                'provider_id' => $public[$i]->id ?? null,
+                'action_type' => ['complaint', 'question', 'suggestion', 'encouragement', 'complaint'][$i],
+                'target_type' => 'service', 'service_type_id' => $service?->id, 'topic_id' => $topic?->id,
+                'email' => "dossier{$i}@demo.protectici.test",
+                'status' => $status,
+                'assigned_to' => $status === 'new' ? null : $admin->id,
+                'resolved_at' => in_array($status, ['resolved', 'closed'], true) ? now()->subDays(3) : null,
+            ]);
+        }
+
+        foreach ([[1, 'sent'], [2, 'replied'], [0, 'new']] as $i => [$count, $status]) {
+            $quote = QuoteRequest::factory()->create([
+                'email' => "devis{$i}@demo.protectici.test", 'service_type_id' => $service?->id, 'city_id' => $city->id,
+                'status' => $status === 'replied' ? 'answered' : $status,
+            ]);
+            foreach ($public->slice($i * 2, $count) as $n => $provider) {
+                DB::table('quote_request_recipients')->insert([
+                    'quote_request_id' => $quote->id, 'provider_id' => $provider->id,
+                    'status' => $n === 0 && $status === 'replied' ? 'replied' : 'sent',
+                    'replied_at' => $n === 0 && $status === 'replied' ? now() : null,
+                    'response_message' => $n === 0 && $status === 'replied' ? 'Devis factice : nous vous contactons sous 48 h.' : null,
+                    'quoted_amount' => $n === 0 && $status === 'replied' ? 250000 : null,
+                ]);
+            }
+        }
+
+        ContactMessage::factory()->create(['email' => 'contact0@demo.protectici.test', 'status' => 'new']);
+        ContactMessage::factory()->create(['email' => 'contact1@demo.protectici.test', 'status' => 'read']);
+        ContactMessage::factory()->create(['email' => 'contact2@demo.protectici.test', 'status' => 'answered']);
     }
 
     private function stateForces(): void

@@ -57,28 +57,29 @@ return [
             'report' => false,
         ],
 
+        // Médias publics (logos, couvertures, galeries) : bucket R2/S3 lu via AWS_URL (domaine public / CDN du bucket).
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
+            'region' => env('AWS_DEFAULT_REGION', 'auto'),
             'bucket' => env('AWS_BUCKET'),
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
+            'use_path_style_endpoint' => (bool) env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => true,
             'report' => false,
         ],
 
-        // Bucket PRIVÉ des justificatifs (DOCUMENTS_DISK=s3-private) : aucune lecture publique, accès par flux serveur.
+        // Bucket PRIVÉ des justificatifs (DOCUMENTS_DISK=s3-private) : aucune lecture publique, accès par URL signée courte.
         's3-private' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
+            'region' => env('AWS_DEFAULT_REGION', 'auto'),
             'bucket' => env('AWS_PRIVATE_BUCKET'),
             'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'use_path_style_endpoint' => (bool) env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'visibility' => 'private',
             'throw' => true,
             'report' => false,

@@ -16,14 +16,26 @@ class AdminAlert extends Notification
 
     public const KIND_DOCUMENT_UPLOADED = 'document_uploaded';
 
+    public const KIND_REVIEW_SUBMITTED = 'review_submitted';
+
+    public const KIND_REVIEW_REPORTED = 'review_reported';
+
+    public const KIND_FEEDBACK_RECEIVED = 'feedback_received';
+
+    public const KIND_QUOTE_REQUESTED = 'quote_requested';
+
+    public const KIND_CONTACT_RECEIVED = 'contact_received';
+
     /**
      * @param  array{type?: string, id?: int, slug?: string, name?: string}|null  $establishment
+     * @param  array{type: string, id: int, reference?: string}|null  $subject  objet concerné (avis, dossier, devis, message) : identifiants uniquement, jamais de donnée personnelle
      */
     public function __construct(
         public readonly string $kind,
         public readonly string $title,
         public readonly string $message,
         public readonly ?array $establishment = null,
+        public readonly ?array $subject = null,
     ) {}
 
     /** @return array<int, string> */
@@ -40,6 +52,7 @@ class AdminAlert extends Notification
             'title' => $this->title,
             'message' => $this->message,
             'establishment' => $this->establishment,
+            'subject' => $this->subject,
         ];
     }
 }

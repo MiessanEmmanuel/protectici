@@ -4,6 +4,8 @@ namespace App\Notifications\Establishment;
 
 use App\Enums\EstablishmentType;
 use App\Models\User;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -12,8 +14,13 @@ use Illuminate\Notifications\Notification;
  * Ne contient que le nom de la fiche, le statut et, le cas échéant, le motif saisi par l'administration : aucune
  * donnée légale ni coordonnée. Les liens pointent vers le site (pas de lien signé).
  */
-class EstablishmentMail extends Notification
+class EstablishmentMail extends Notification implements ShouldQueueAfterCommit
 {
+    use Queueable;
+
+    /** Mise en file (driver database) : 3 essais ; l'échec d'envoi n'annule jamais l'action métier. */
+    public int $tries = 3;
+
     public const RECEIVED = 'received';
 
     public const APPROVED = 'approved';

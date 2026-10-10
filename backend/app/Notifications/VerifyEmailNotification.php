@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Models\User;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
@@ -11,10 +13,15 @@ use Illuminate\Support\Facades\URL;
 /**
  * Vérification de l'adresse email : lien signé (60 min) vers l'API
  * /api/v1/auth/verify-email/{id}/{hash}, qui redirige ensuite vers le front.
- * Pas de ShouldQueue pour l'instant (pas de worker local).
+ * Envoyée en file d'attente (`php artisan queue:work`).
  */
-class VerifyEmailNotification extends Notification
+class VerifyEmailNotification extends Notification implements ShouldQueueAfterCommit
 {
+    use Queueable;
+
+    /** Mise en file (driver database) : 3 essais ; l'échec d'envoi n'annule jamais l'action métier. */
+    public int $tries = 3;
+
     public const EXPIRE_MINUTES = 60;
 
     /** @return array<int, string> */

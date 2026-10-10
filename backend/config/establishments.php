@@ -24,5 +24,7 @@ return [
         'max_kb' => 10240,
         'max_per_establishment' => 5,
         'max_edge' => 4000,
+        // Durée de validité de l'URL signée de téléchargement (disques S3/R2) : 5 min par défaut, 10 max (security.md §16).
+        'signed_url_ttl_minutes' => max(1, min(10, (int) env('DOCUMENTS_SIGNED_URL_TTL_MINUTES', 5))),
     ],
 ];

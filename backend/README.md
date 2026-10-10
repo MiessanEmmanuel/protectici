@@ -65,3 +65,35 @@ Contrat : `../docs/api-contract.md` §7. Routes : `routes/api/establishments.php
 - **E-mails** : `App\Notifications\Establishment\EstablishmentMail` (reçue, validée, rejetée, suspendue, modification approuvée/rejetée), envoyés une seule fois par transition. Notifications internes : `AdminAlert` (base de données).
 - **Données de démo** : le compte `prestataire@demo.protectici.test` possède 2 fiches `pending`, une demande de modification en attente sur Dauphin Sécurité et un justificatif factice ; `utilisateur@demo.protectici.test` possède une force étatique `pending`. Pour tester l'admin : activer la 2FA du compte `admin@demo.protectici.test` (voir plus haut).
 - Config : `config/establishments.php` (limites, disques). Nettoyage des clés d'idempotence : table `idempotency_keys` (pas encore purgée automatiquement).
+
+## Phase 3 vague B : avis, « Dis-moi tout », devis, contact
+
+Contrat : `../docs/api-contract.md` §8. Routes : `routes/api/engagement.php`.
+
+- **Formulaires publics** (feedbacks, devis, contact) : compte facultatif, `consent` obligatoire (tracé dans `consent_logs`, finalités `feedback`/`quote`/`contact`), champ piège `company_website` (rempli : réponse de succès identique mais rien n'est enregistré ni envoyé), Turnstile si `TURNSTILE_ENABLED=true`, en-tête `Idempotency-Key` (8 à 64 caractères ; même clé + mêmes données = une seule ressource, une clé réutilisée avec un corps différent donne 422). Socle commun : `App\Services\PublicForms\FormSubmission`. Limites dans `config/public_forms.php` (5/h/IP et 10/jour/e-mail ; suivi de dossier 10/h/IP et 5/h/référence ; avis 10/jour/utilisateur), comptées sur les créations réelles seulement.
+- **Avis** : un par utilisateur et prestataire, modérés ; édition ⇒ retour en `pending` et masqué ; réponse unique du propriétaire ; signalements traités par l'admin. La note moyenne est recalculée par le trigger PostgreSQL.
+- **« Dis-moi tout »** : référence `DMT-AAAA-nnnnnn` (`fn_next_reference`) ; suivi par `POST /feedbacks/track` (référence + e-mail, 404 générique identique dans les deux cas d'échec, jamais de réponse interne).
+- **Devis** : référence `DEV-AAAA-nnnnnn` ; l'`id` d'un devis côté prestataire est l'id du **destinataire** (`quote_request_recipients`). Les coordonnées du demandeur ne sont visibles que du destinataire et de l'admin.
+- **E-mails en file d'attente** : toutes les notifications d'e-mail (sauf la réinitialisation de mot de passe, qui contient un jeton secret et reste synchrone) sont `ShouldQueueAfterCommit` (driver `database`, 3 essais). **Un worker est obligatoire** : `php artisan queue:work --tries=3 --max-time=3600` (en production, un service Dockploy dédié ou superviseur). En test, `QUEUE_CONNECTION=sync`. Un échec d'envoi n'annule jamais l'action ; `php artisan queue:failed` liste les échecs.
+- **Notifications internes** : `AdminAlert` (nouvel avis, signalement, dossier, devis, message) via `GET /admin/notifications` ; compteurs ajoutés à `/admin/dashboard`.
+- **Rétention** (planifiée chaque nuit, `routes/console.php`) : `retention:purge-idempotency-keys` (> 48 h), `retention:purge-contact-messages` (> 12 mois), `retention:anonymize-feedbacks` (> 36 mois après clôture), `retention:anonymize-quote-requests` (> 24 mois), `retention:purge-establishment-files` (fiches supprimées > 30 jours) ; `retention:run` les enchaîne à la main. Chaque exécution écrit un événement dans `audit_logs` sans donnée personnelle. Le planificateur exige `php artisan schedule:work` ou un cron `* * * * * php artisan schedule:run`. Vérification : `php artisan schedule:list`.
+
+### Stockage S3 / Cloudflare R2 (staging, production)
+
+`league/flysystem-aws-s3-v3` est installé. Variables d'environnement (secrets uniquement dans Dockploy) :
+
+```
+MEDIA_DISK=s3
+DOCUMENTS_DISK=s3-private
+AWS_ACCESS_KEY_ID=…  AWS_SECRET_ACCESS_KEY=…  AWS_DEFAULT_REGION=auto
+AWS_BUCKET=protectici-media-<env>  AWS_PRIVATE_BUCKET=protectici-private-<env>
+AWS_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+AWS_URL=https://media.<domaine>        # domaine public du bucket médias
+AWS_USE_PATH_STYLE_ENDPOINT=true
+DOCUMENTS_SIGNED_URL_TTL_MINUTES=5     # 1 à 10
+```
+
+1. Cloudflare R2 : créer deux buckets par environnement (médias, privé). 2. Bucket médias : domaine personnalisé comme accès public (pas de `r2.dev` en production), CORS GET/HEAD depuis le site. 3. Bucket privé : rien de public ; l'API redirige (302) l'administrateur vers une URL signée de 5 minutes (`Content-Disposition: attachment`), chaque accès est audité. 4. Jeton API S3 « Object Read & Write » limité aux deux buckets. À valider en staging : R2 ne gère pas les ACL par objet (les managers passent une visibilité `public`/`private` à `put`).
+Sans compte R2, aucun appel réseau n'est fait : les tests utilisent `Storage::fake` et la signature locale d'URL.
+
+Données de démo vague B : signalements ouverts, dossiers « Dis-moi tout » (5 statuts), devis avec destinataires, messages de contact.

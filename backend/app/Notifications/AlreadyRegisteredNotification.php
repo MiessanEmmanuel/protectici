@@ -3,12 +3,19 @@
 namespace App\Notifications;
 
 use App\Models\User;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /** Envoyé quand quelqu'un tente de s'inscrire avec une adresse déjà associée à un compte vérifié. */
-class AlreadyRegisteredNotification extends Notification
+class AlreadyRegisteredNotification extends Notification implements ShouldQueueAfterCommit
 {
+    use Queueable;
+
+    /** Mise en file (driver database) : 3 essais ; l'échec d'envoi n'annule jamais l'action métier. */
+    public int $tries = 3;
+
     /** @return array<int, string> */
     public function via(object $notifiable): array
     {

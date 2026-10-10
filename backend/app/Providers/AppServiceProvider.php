@@ -76,6 +76,18 @@ class AppServiceProvider extends ServiceProvider
         // Limiteurs de l'annuaire public (security.md §18) : clé = IP.
         RateLimiter::for('public-search', fn (Request $r) => Limit::perMinute(60)->by('public-search:'.$r->ip()));
         RateLimiter::for('geocode', fn (Request $r) => Limit::perMinute(30)->by('geocode:'.$r->ip()));
+        // Phase 3 vague B (security.md §18) : avis 10 / jour / utilisateur, signalements 20 / jour / utilisateur,
+        // suivi de dossier 10 / heure / IP et 5 / heure / référence (chaque tentative compte : anti-énumération).
+        RateLimiter::for('review-create', fn (Request $r) => Limit::perDay((int) config('public_forms.reviews_per_day_per_user'))->by('review-create:'.($r->user()?->getAuthIdentifier() ?? $r->ip())));
+        RateLimiter::for('review-report', fn (Request $r) => Limit::perDay(20)->by('review-report:'.($r->user()?->getAuthIdentifier() ?? $r->ip())));
+        RateLimiter::for('feedback-track', function (Request $r) {
+            $reference = is_string($r->input('reference')) ? mb_strtoupper(trim($r->input('reference'))) : '';
+
+            return [
+                Limit::perHour((int) config('public_forms.track_per_hour_per_ip'))->by('feedback-track-ip:'.$r->ip()),
+                Limit::perHour((int) config('public_forms.track_per_hour_per_reference'))->by('feedback-track-ref:'.sha1($reference)),
+            ];
+        });
         RateLimiter::for('provider-view', fn (Request $r) => Limit::perMinute(30)->by('provider-view:'.$r->ip()));
     }
 }

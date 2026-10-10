@@ -33,6 +33,9 @@ class ReviewPolicy
         if (! ($provider->is_visible && $provider->status === 'approved')) {
             return Response::denyAsNotFound();
         }
+        if ($provider->user_id !== null && $provider->user_id === $user->id) {
+            return Response::deny('Vous ne pouvez pas donner d\'avis sur votre propre fiche.');
+        }
         if (Review::query()->where('provider_id', $provider->id)->where('user_id', $user->id)->exists()) {
             return Response::deny('Vous avez déjà donné votre avis sur ce prestataire.');
         }
@@ -44,6 +47,12 @@ class ReviewPolicy
     public function update(User $user, Review $review): bool
     {
         return $user->isAdmin() || ($this->isAuthor($user, $review) && $review->status === 'pending');
+    }
+
+    /** Modification par l'auteur (contrat §8.1) : l'avis repasse en modération, quel que soit son statut. */
+    public function edit(User $user, Review $review): bool
+    {
+        return $this->isAuthor($user, $review) && $review->deleted_at === null;
     }
 
     public function delete(User $user, Review $review): bool
