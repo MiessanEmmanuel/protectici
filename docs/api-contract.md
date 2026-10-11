@@ -262,3 +262,59 @@ Commandes artisan planifiées quotidiennes et testées : purge des clés d'idemp
 ## 8.7 Pages Next.js (vague B)
 
 Publiques : `/dis-moi-tout` (formulaire multi-étapes + écran de confirmation avec référence) · `/dis-moi-tout/suivi` (référence + e-mail) · `/devis` (formulaire ; `?prestataire=slug` pré-sélectionne un prestataire, lien depuis les fiches) · `/contact` · fiche prestataire : **avis réels paginés + formulaire d'avis** (étoiles, titre, texte ; état « en attente de modération » ; modifier/supprimer son avis ; signaler un avis). Compte : `/compte/mes-avis`. Espace prestataire : onglets/pages **« Avis reçus »** (réponse unique) et **« Devis reçus »** (liste, détail, répondre/décliner). Admin : `/admin/avis` (avis + signalements) · `/admin/dis-moi-tout` (liste, détail, réponses, statut, affectation) · `/admin/devis` (liste, détail, acheminement) · `/admin/messages` (contact) · compteurs du tableau de bord. Composant **Turnstile** (script Cloudflare chargé seulement si `NEXT_PUBLIC_TURNSTILE_SITE_KEY` est défini, CSP ajustée en conséquence) + champ piège invisible sur tous les formulaires publics. Les pages « Bientôt disponible » `dis-moi-tout`, `devis`, `contact` sont **retirées**.
+
+---
+
+# 9. Phase 4 — Contenu éditorial et finitions (contrat)
+
+Mêmes conventions que §1. Les tables existent déjà (`post_categories`, `posts`, `post_comments`, `pages`, `partners`, `newsletter_subscribers`, `settings`, `modele.md` §2.8–2.10) : compléter les migrations seulement si une colonne manque. HTML éditorial **toujours nettoyé côté serveur** (liste blanche de balises : p, h2–h4, ul, ol, li, strong, em, a[href http/https/mailto, rel forcé `noopener nofollow ugc`], blockquote, img issus de `media`) ; jamais de script/style/on*/iframe ; le front affiche ce HTML déjà nettoyé et ne fait aucun `dangerouslySetInnerHTML` sur autre chose.
+
+## 9.1 Public (sans authentification, cache court, rate limit lecture §18)
+
+| Méthode | Chemin | Paramètres | Réponse |
+|---|---|---|---|
+| GET | `/blog/categories` | — | `{data: [{slug, name, description\|null, posts_count}]}` (7 catégories visibles) |
+| GET | `/blog/posts` | `category?` (slug), `q?` (plein texte, ≤100), `featured?`, `sort?` (`recent`\|`popular`), `page`, `per_page` (≤24) | liste paginée `PostCard` |
+| GET | `/blog/posts/{slug}` | — | `{data: Post}` ; 404 si non publié ; **incrémente `views_count`** au plus 1 fois / 30 min / (IP hachée + article) |
+| GET | `/blog/posts/{slug}/comments` | `page` | commentaires approuvés (racines + 1 niveau de réponses) |
+| POST | `/blog/posts/{slug}/comments` | `body` (2–2000), `parent_id?` ; **auth + e-mail vérifié** | 201 `{data:{status:"pending"}}` ; modérés ; 5/h/utilisateur ; antispam §8.0 |
+| GET | `/blog/flash` | — | `{data: [{slug, title, published_at}]}` (≤10 articles `is_flash`, récents) |
+| GET | `/pages/{slug}` | — | `{data: {slug, title, body, seo_title, seo_description, updated_at}}` ; slugs : `qui-sommes-nous`, `mentions-legales`, `confidentialite`, `cgu` |
+| GET | `/partners` | `type?` (`partner`\|`client`) | `{data: [{id, type, name, website_url\|null, description\|null, logo_url\|null}]}` |
+| GET | `/settings/public` | — | `{data: { "contact.phone": …, … }}` uniquement `is_public` |
+| POST | `/newsletter/subscribe` | `email`, `consent`, `source?` + antispam | **toujours 202 identique** (anti-énumération) ; e-mail de confirmation (lien signé 24 h) si nouvelle adresse |
+| GET | `/newsletter/confirm` | `?token=` (signé) | 200 `{data:{status:"confirmed"}}` ; lien invalide/expiré → 422 générique |
+| POST | `/newsletter/unsubscribe` | `token` (signé, présent dans chaque e-mail) | 200 idempotent |
+
+**PostCard** : `{slug, title, excerpt, category:{slug,name}, cover_url\|null, cover_alt\|null, published_at, reading_minutes\|null, views_count, is_featured, author_name\|null}`. **Post** = PostCard + `{body (HTML nettoyé), seo_title\|null, seo_description\|null, related: PostCard[≤3]}`.
+
+## 9.2 Back-office contenu (`editor` **ou** `admin` ; 2FA exigée pour `admin`, recommandée pour `editor`)
+
+Préfixe `/content/*` (le rôle `editor` n'a **aucun** accès à `/admin/*` ni aux données personnelles : tests d'autorisation obligatoires, y compris 403 d'un `editor` sur `/admin/*`, `/me/*` d'autrui, annuaire).
+
+| Méthode | Chemin | Corps / paramètres | Notes |
+|---|---|---|---|
+| GET | `/content/posts` | `status?`, `category?`, `q?`, `page` | tous statuts |
+| POST | `/content/posts` | `title`, `category_id`, `excerpt?`, `body`, `status` (`draft`\|`scheduled`\|`published`\|`archived`), `published_at?` (obligatoire si `scheduled`), `is_featured?`, `is_flash?`, `seo_title?`, `seo_description?`, `cover_media_id?` | slug unique généré ; `reading_minutes` calculé ; audit |
+| GET/PATCH/DELETE | `/content/posts/{id}` | idem (partiel) | DELETE = suppression logique ; audit |
+| POST | `/content/media` | `file` (image), `alt` | ré-encodage WebP (déjà en place) ; réponse `{id, url, alt}` |
+| GET | `/content/comments` | `status?` (défaut `pending`), `page` | |
+| PATCH | `/content/comments/{id}` | `status` ∈ `approved\|rejected\|spam` | `is_visible` suit ; audit |
+| GET/PUT | `/content/pages/{slug}` | `title`, `body`, `seo_*`, `is_visible` | admin **uniquement** pour les pages légales (editor : lecture seule) |
+| CRUD | `/content/partners` | `type`, `name`, `website_url?`, `description?`, `sort_order`, `is_visible`, `logo_media_id?` | admin uniquement |
+| GET/PATCH | `/content/categories`, `/content/categories/{id}` | `name`, `description`, `sort_order`, `is_visible` | |
+| GET/PUT | `/admin/settings` | clés autorisées en liste blanche (`contact.phone`, `contact.email`, `social.*`, `site.address`…), `value`, `is_public` | admin + 2FA ; audit |
+| GET | `/admin/newsletter/subscribers` | `status?`, `q?`, `page` | admin ; e-mails visibles ; export CSV **hors scope** |
+
+Publication planifiée : commande artisan planifiée chaque minute (`posts:publish-scheduled`) passant `scheduled` → `published` quand `published_at <= now()`. Rétention : abonnés `pending` > 7 jours purgés ; `unsubscribed` conservés (preuve) sans autre donnée.
+
+Newsletter ↔ Resend : synchronisation **derrière un drapeau de config** (`NEWSLETTER_RESEND_SYNC`, défaut false), testée avec `Http::fake` ; aucun secret dans le repo ; l'envoi d'une campagne est **hors scope** (v2).
+
+## 9.3 Pages Next.js
+
+Publiques (SSR/ISR, métadonnées SEO, `sitemap.ts` étendu, JSON-LD `Article`) : `/blog` (liste, filtre catégorie, recherche, à la une, populaires, pagination) · `/blog/[slug]` (article, articles liés, commentaires + formulaire pour connectés, partage) · `/blog/categorie/[slug]` · `/qui-sommes-nous` · `/nos-partenaires` · `/nos-clients` · `/mentions-legales` · `/confidentialite` · `/cgu` · bandeau **Flash info** défilant (respecte `prefers-reduced-motion`, pause au survol/focus, lisible au clavier) · formulaire newsletter dans le pied de page + `/newsletter/confirmation` (`?token`) + `/newsletter/desinscription` (`?token`) · **bandeau de consentement aux cookies** (refuser aussi visible que accepter ; aucun traceur non essentiel avant accord ; choix mémorisé 6 mois dans un cookie propre, pas de localStorage pour un jeton ; lien de modification dans le pied de page). Les pages « Bientôt disponible » correspondantes sont retirées ; le pied de page et le menu pointent vers les vraies pages ; l'accueil affiche les derniers articles. Contenu en français, aucun lorem/anglais.
+Admin (`editor` + `admin`, navigation filtrée par rôle) : `/admin/blog` (liste, filtres statut) · `/admin/blog/nouveau` et `/admin/blog/[id]` (éditeur riche **sobre** — contenteditable ou bibliothèque légère, sortie HTML restreinte à la liste blanche ; brouillon/planification/publication ; aperçu ; image de couverture) · `/admin/commentaires` · `/admin/categories` · `/admin/pages` · `/admin/partenaires` (admin) · `/admin/parametres` (admin) · `/admin/newsletter` (admin). Compteurs dashboard : ajouter `pending_comments`, `confirmed_subscribers`.
+
+## 9.4 Seeders (français, factices)
+
+7 catégories (noms exacts de `modele.md`), ≥ 18 articles réalistes (sécurité privée, incendie, cybercriminalité, emploi, formation…) répartis, dont publiés/brouillon/planifié, à la une, flash ; quelques commentaires en attente/approuvés ; pages légales complètes (RCCM/agrément fictifs, aucune donnée réelle) ; partenaires et clients fictifs ; paramètres publics ; abonnés fictifs `*.test`. Remplace tout reste de contenu anglais de démonstration.
