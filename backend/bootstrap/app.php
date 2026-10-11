@@ -27,6 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Sanctum SPA : cookies de session + CSRF pour les origines « stateful ».
         $middleware->statefulApi();
 
+        // API uniquement : pas de redirection vers une route « login » (sinon 500 sans en-tête Accept: JSON).
+        $middleware->redirectGuestsTo(fn () => null);
+
         // Global : couvre aussi les 404 et /sanctum/csrf-cookie.
         $middleware->append(SecurityHeaders::class);
 
