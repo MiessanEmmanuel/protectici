@@ -1,14 +1,22 @@
 import { ExternalLink } from '../ui/ExternalLink';
 
 /** Partage : liens simples vers les réseaux (aucun script tiers chargé). */
-export function ShareLinks({ url, title }: { url: string; title: string }) {
+export function ShareLinks({
+  url,
+  title,
+  label = 'Partager cette fiche',
+}: {
+  url: string;
+  title: string;
+  label?: string;
+}) {
   const u = encodeURIComponent(url);
   const t = encodeURIComponent(title);
   const cls =
     'inline-flex min-h-tap items-center rounded-md border border-line px-3 text-sm no-underline hover:bg-primary-soft';
   return (
     <div>
-      <p className="font-semibold">Partager cette fiche</p>
+      <p className="font-semibold">{label}</p>
       <ul className="mt-2 flex flex-wrap gap-2">
         <li>
           <ExternalLink className={cls} href={`https://www.facebook.com/sharer/sharer.php?u=${u}`}>

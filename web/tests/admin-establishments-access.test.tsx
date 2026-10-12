@@ -4,7 +4,11 @@ import type { User } from '@/lib/api/types';
 
 const replace = vi.fn();
 let session: { user: User | null; status: 'loading' | 'anonymous' | 'authenticated' };
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, push: vi.fn() }) }));
+let pathname = '/admin';
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace, push: vi.fn() }),
+  usePathname: () => pathname,
+}));
 vi.mock('@/components/layout/SessionProvider', () => ({ useSession: () => session }));
 
 import { AdminAccessGate } from '@/components/admin/AdminAccessGate';
@@ -31,7 +35,10 @@ function renderGate() {
 }
 
 describe('garde d’accès /admin', () => {
-  beforeEach(() => replace.mockReset());
+  beforeEach(() => {
+    replace.mockReset();
+    pathname = '/admin';
+  });
 
   it('redirige un anonyme vers la connexion', () => {
     session = { user: null, status: 'anonymous' };

@@ -372,6 +372,9 @@ export interface AdminAuditLog {
 }
 
 export interface AdminDashboard {
+  // Phase 4 (contrat §9.3)
+  pending_comments: number;
+  confirmed_subscribers: number;
   // Vague B (contrat §8.5)
   pending_reviews: number;
   open_review_reports: number;
@@ -791,4 +794,228 @@ export interface AdminContactMessage {
   handled_by: { id: number; name: string } | null;
   handled_at: string | null;
   created_at: string;
+}
+
+/* --- Phase 4 : contenu éditorial (contrat §9) --- */
+
+export interface PostCategory {
+  slug: string;
+  name: string;
+  description: string | null;
+  posts_count: number;
+}
+
+export interface PostCard {
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: { slug: string; name: string };
+  cover_url: string | null;
+  cover_alt: string | null;
+  published_at: string;
+  reading_minutes: number | null;
+  views_count: number;
+  is_featured: boolean;
+  author_name: string | null;
+}
+
+export interface Post extends PostCard {
+  /** HTML déjà nettoyé par l'API (liste blanche) : à afficher uniquement via <SanitizedHtml>. */
+  body: string;
+  seo_title: string | null;
+  seo_description: string | null;
+  related: PostCard[];
+}
+
+export interface PostQuery {
+  category?: string;
+  q?: string;
+  featured?: boolean;
+  sort?: 'recent' | 'popular';
+  page?: number;
+  per_page?: number;
+}
+
+/** Forme supposée (non fixée par le contrat) : racines + un niveau de réponses. */
+export interface BlogComment {
+  id: number;
+  author_name: string;
+  body: string;
+  created_at: string;
+  replies: BlogComment[];
+}
+
+export interface FlashItem {
+  slug: string;
+  title: string;
+  published_at: string;
+}
+
+export type LegalPageSlug = 'qui-sommes-nous' | 'mentions-legales' | 'confidentialite' | 'cgu';
+
+export interface SitePage {
+  slug: string;
+  title: string;
+  /** HTML déjà nettoyé par l'API. */
+  body: string;
+  seo_title: string | null;
+  seo_description: string | null;
+  updated_at: string;
+}
+
+export type PartnerType = 'partner' | 'client';
+
+export interface Partner {
+  id: number;
+  type: PartnerType;
+  name: string;
+  website_url: string | null;
+  description: string | null;
+  logo_url: string | null;
+}
+
+export type PublicSettings = Record<string, string | null>;
+
+export interface NewsletterSubscribeInput extends AntiSpamPayload {
+  email: string;
+  consent: boolean;
+  source?: string;
+}
+
+export type PostStatus = 'draft' | 'scheduled' | 'published' | 'archived';
+
+export interface ContentPostRow {
+  id: number;
+  slug: string;
+  title: string;
+  status: PostStatus;
+  category: { id: number; slug: string; name: string };
+  published_at: string | null;
+  is_featured: boolean;
+  is_flash: boolean;
+  views_count: number;
+  author_name: string | null;
+  updated_at: string;
+}
+
+export interface ContentPost extends ContentPostRow {
+  excerpt: string | null;
+  body: string;
+  seo_title: string | null;
+  seo_description: string | null;
+  cover: { id: number; url: string; alt: string | null } | null;
+}
+
+export interface ContentPostInput {
+  title: string;
+  category_id: number;
+  excerpt?: string | null;
+  body: string;
+  status: PostStatus;
+  published_at?: string | null;
+  is_featured: boolean;
+  is_flash: boolean;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  cover_media_id?: number | null;
+}
+
+export interface ContentPostQuery {
+  status?: PostStatus;
+  category?: string;
+  q?: string;
+  page?: number;
+}
+
+export interface MediaUpload {
+  id: number;
+  url: string;
+  alt: string | null;
+}
+
+export type CommentStatus = 'pending' | 'approved' | 'rejected' | 'spam';
+
+export interface ContentComment {
+  id: number;
+  post: { id: number; slug: string; title: string };
+  author_name: string;
+  body: string;
+  status: CommentStatus;
+  parent_id: number | null;
+  created_at: string;
+}
+
+export interface ContentCategory {
+  id: number;
+  slug: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+  is_visible: boolean;
+  posts_count: number;
+}
+
+export interface ContentCategoryInput {
+  name: string;
+  description: string | null;
+  sort_order: number;
+  is_visible: boolean;
+}
+
+export interface ContentPage {
+  slug: string;
+  title: string;
+  body: string;
+  seo_title: string | null;
+  seo_description: string | null;
+  is_visible: boolean;
+  updated_at: string;
+}
+
+export interface ContentPageInput {
+  title: string;
+  body: string;
+  seo_title: string | null;
+  seo_description: string | null;
+  is_visible: boolean;
+}
+
+export interface ContentPartner {
+  id: number;
+  type: PartnerType;
+  name: string;
+  website_url: string | null;
+  description: string | null;
+  sort_order: number;
+  is_visible: boolean;
+  logo_media_id: number | null;
+  logo_url: string | null;
+}
+
+export interface ContentPartnerInput {
+  type: PartnerType;
+  name: string;
+  website_url: string | null;
+  description: string | null;
+  sort_order: number;
+  is_visible: boolean;
+  logo_media_id?: number | null;
+}
+
+export interface AdminSetting {
+  key: string;
+  value: string | null;
+  is_public: boolean;
+}
+
+export type NewsletterStatus = 'pending' | 'confirmed' | 'unsubscribed';
+
+export interface NewsletterSubscriber {
+  id: number;
+  email: string;
+  status: NewsletterStatus;
+  source: string | null;
+  created_at: string;
+  confirmed_at: string | null;
+  unsubscribed_at: string | null;
 }

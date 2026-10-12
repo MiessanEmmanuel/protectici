@@ -14,6 +14,7 @@ import type {
 } from '../api/types';
 import { createWaveAMocks, type MockContext } from './establishments';
 import { createWaveBMocks } from './wave-b';
+import { createContentMocks } from './content';
 import { stateForces } from './forces';
 import { providers } from './providers';
 import { cities, referenceData } from './reference';
@@ -298,13 +299,15 @@ const mockContext: MockContext = {
 };
 const waveA = createWaveAMocks(mockContext);
 const { dashboardCounts, ...waveB } = createWaveBMocks(mockContext);
+const { dashboardCounts: contentCounts, ...contentMocks } = createContentMocks(mockContext);
 
 export const mockApi: Api = {
   ...waveA,
   ...waveB,
+  ...contentMocks,
   async adminDashboard() {
     const base = await waveA.adminDashboard();
-    return { ...base, ...dashboardCounts() };
+    return { ...base, ...dashboardCounts(), ...contentCounts() };
   },
   async register(input: RegisterInput) {
     await delay();

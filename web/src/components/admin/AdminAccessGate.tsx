@@ -1,7 +1,8 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
+import { canAccessAdminPath } from '@/lib/admin-access';
 import { buildHref } from '@/lib/search-params';
 import { useSession } from '../layout/SessionProvider';
 import { ButtonLink } from '../ui/Button';
@@ -11,10 +12,11 @@ import { LoadingBlock } from '../ui/Spinner';
 /**
  * Garde d'accès /admin — confort UX uniquement : chaque appel d'administration est de toute façon
  * autorisé (ou refusé) par l'API Laravel (Policies, rôle admin + 2FA), jamais par ce composant.
- * Le rôle `editor` n'a pas accès à l'administration des établissements (blog uniquement, plus tard).
+ * Le rôle `editor` n'accède qu'aux écrans de contenu (blog, commentaires, catégories, pages) ; la 2FA n'est exigée que pour `admin`.
  */
 export function AdminAccessGate({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, status } = useSession();
 
   useEffect(() => {
@@ -29,24 +31,26 @@ export function AdminAccessGate({ children }: { children: ReactNode }) {
     );
   }
 
-  if (user.role !== 'admin') {
+  if (!canAccessAdminPath(user.role, pathname)) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
         <ErrorState
           title="Accès refusé"
           action={
-            <ButtonLink href="/" variant="secondary">
-              Retour à l’accueil
+            <ButtonLink href={user.role === 'editor' ? '/admin/blog' : '/'} variant="secondary">
+              {user.role === 'editor' ? 'Aller à la gestion du blog' : 'Retour à l’accueil'}
             </ButtonLink>
           }
         >
-          Cette zone est réservée aux administrateurs.
+          {user.role === 'editor'
+            ? 'Cet écran est réservé aux administrateurs. Vous pouvez gérer le blog, les commentaires, les catégories et les pages.'
+            : 'Cette zone est réservée aux administrateurs.'}
         </ErrorState>
       </div>
     );
   }
 
-  if (!user.two_factor_enabled) {
+  if (user.role === 'admin' && !user.two_factor_enabled) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
         <ErrorState

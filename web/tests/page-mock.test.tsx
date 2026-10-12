@@ -47,7 +47,8 @@ describe("page d'accueil en mode mock", () => {
     render(await HomePage());
     expect(screen.getByRole('search', { name: 'Rechercher un prestataire' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Prestataires populaires' })).toBeInTheDocument();
-    expect(screen.getByText('Bientôt disponible')).toBeInTheDocument();
+    expect(screen.queryByText('Bientôt disponible')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Derniers articles' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Inscrire mon établissement' })).toHaveAttribute(
       'href',
       '/inscription-etablissement',

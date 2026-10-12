@@ -13,9 +13,14 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Permet une compilation de vérification sans toucher au dossier du serveur de développement.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   reactStrictMode: true,
+  async redirects() {
+    return [{ source: '/a-propos', destination: '/qui-sommes-nous', permanent: true }];
+  },
   async headers() {
     const headers = [...securityHeaders];
     if (process.env.NEXT_PUBLIC_ALLOW_INDEXING !== '1') {

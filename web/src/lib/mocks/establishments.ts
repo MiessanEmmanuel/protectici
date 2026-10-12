@@ -773,6 +773,8 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
         new_feedbacks: 0,
         new_quote_requests: 0,
         new_contact_messages: 0,
+        pending_comments: 0,
+        confirmed_subscribers: 0,
         pending_providers: records.filter((r) => r.type === 'provider' && r.status === 'pending').length,
         pending_state_forces: records.filter((r) => r.type === 'state_force' && r.status === 'pending').length,
         pending_change_requests: records.reduce((n, r) => n + r.change_requests.filter((c) => c.status === 'pending').length, 0),

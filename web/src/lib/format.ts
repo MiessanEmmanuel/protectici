@@ -50,3 +50,12 @@ export function formatDateTime(iso: string): string {
     timeZone: 'UTC',
   }).format(new Date(iso));
 }
+
+/** Heure (HH:mm, heure d'Abidjan = UTC) d'une date ISO. */
+export function formatTime(iso: string): string {
+  return new Intl.DateTimeFormat('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  }).format(new Date(iso));
+}

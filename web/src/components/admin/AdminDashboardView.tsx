@@ -49,6 +49,11 @@ export function AdminDashboardView() {
                   href="/admin/etablissements?type=state_force&status=pending"
                 />
                 <Counter
+                  label="Commentaires du blog à modérer"
+                  value={d.pending_comments}
+                  href="/admin/commentaires"
+                />
+                <Counter
                   label="Demandes de modification"
                   value={d.pending_change_requests}
                   href="/admin/modifications"
@@ -60,6 +65,11 @@ export function AdminDashboardView() {
                 En chiffres
               </h2>
               <ul className="grid gap-4 sm:grid-cols-3">
+                <Counter
+                  label="Abonnés confirmés à la newsletter"
+                  value={d.confirmed_subscribers}
+                  href="/admin/newsletter"
+                />
                 <Counter label="Utilisateurs" value={d.users_total} href="/admin/utilisateurs" />
                 <Counter label="Prestataires validés" value={d.providers_approved} />
                 <Counter label="Forces étatiques validées" value={d.state_forces_approved} />

@@ -197,8 +197,7 @@ export function RegisterForm() {
         label={
           <>
             J’accepte que mes données soient traitées pour la gestion de mon compte, conformément à
-            la <Link href="/confidentialite">politique de confidentialité</Link> (bientôt
-            disponible).
+            la <Link href="/confidentialite">politique de confidentialité</Link>.
           </>
         }
       />

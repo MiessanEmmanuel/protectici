@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PostCardItem } from '@/components/content/PostCardItem';
 import { NearbyForces } from '@/components/directory/NearbyForces';
 import { ProviderCard } from '@/components/directory/ProviderCard';
 import { Container } from '@/components/ui/Container';
@@ -6,7 +7,6 @@ import { Button, ButtonLink } from '@/components/ui/Button';
 import { EmptyState, ErrorState } from '@/components/ui/EmptyState';
 import { Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Tag';
 import { serverApi } from '@/lib/api/server';
 import { safe } from '@/lib/safe';
 
@@ -16,10 +16,11 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [[reference, refError], [home, homeError], [forces]] = await Promise.all([
+  const [[reference, refError], [home, homeError], [forces], [latestPosts]] = await Promise.all([
     safe(serverApi.getReferenceData()),
     safe(serverApi.getHome()),
     safe(serverApi.listStateForces({ per_page: 3, sort: 'name' })),
+    safe(serverApi.listPosts({ per_page: 3, sort: 'recent' })),
   ]);
 
   return (
@@ -134,6 +135,26 @@ export default async function HomePage() {
         <NearbyForces initial={forces?.data ?? []} />
       </Container>
 
+      {latestPosts && latestPosts.data.length > 0 ? (
+        <Container as="section" aria-labelledby="titre-articles" className="py-10">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 id="titre-articles" className="text-2xl font-bold">
+              Derniers articles
+            </h2>
+            <ButtonLink href="/blog" variant="secondary">
+              Voir tout le blog
+            </ButtonLink>
+          </div>
+          <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {latestPosts.data.map((post) => (
+              <li key={post.slug}>
+                <PostCardItem post={post} />
+              </li>
+            ))}
+          </ul>
+        </Container>
+      ) : null}
+
       <Container as="section" aria-labelledby="titre-inscription" className="py-10">
         <div className="flex flex-col gap-4 rounded-lg bg-accent p-6 text-on-accent sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -142,10 +163,7 @@ export default async function HomePage() {
             </h2>
             <p className="mt-1 max-w-prose">
               Faites référencer votre établissement et gagnez en visibilité auprès des particuliers
-              et des entreprises.{' '}
-              <Badge tone="neutral" className="align-middle">
-                Bientôt disponible
-              </Badge>
+              et des entreprises.
             </p>
           </div>
           <ButtonLink

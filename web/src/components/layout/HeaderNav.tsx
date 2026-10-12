@@ -11,6 +11,7 @@ const links = [
   { href: '/', label: 'Accueil' },
   { href: '/annuaire', label: 'Prestataires' },
   { href: '/forces-etatiques', label: 'Forces étatiques' },
+  { href: '/blog', label: 'Blog' },
   { href: '/devis', label: 'Demande de devis' },
   { href: '/dis-moi-tout', label: 'Dis-moi tout' },
   { href: '/contact', label: 'Contact' },
@@ -68,9 +69,9 @@ export function HeaderNav() {
           <li className="mt-2 flex flex-col gap-2 lg:mt-0 lg:ml-2 lg:flex-row lg:items-center">
             {status === 'authenticated' && user ? (
               <>
-                {user.role === 'admin' ? (
-                  <Link href="/admin" className={link}>
-                    Administration
+                {user.role === 'admin' || user.role === 'editor' ? (
+                  <Link href={user.role === 'editor' ? '/admin/blog' : '/admin'} className={link}>
+                    {user.role === 'editor' ? 'Gestion du blog' : 'Administration'}
                   </Link>
                 ) : null}
                 {user.role === 'provider' ? (

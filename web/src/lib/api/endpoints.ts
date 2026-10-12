@@ -1,4 +1,5 @@
 import { ApiError } from './errors';
+import { buildContentApi, type ContentApi } from './content-endpoints';
 import type { Query, Requester } from './http';
 import type {
   AdminContactMessage,
@@ -85,7 +86,7 @@ export interface RegisterInput {
 }
 
 /** Surface de l'API utilisée par l'application (réelle ou mock). */
-export interface Api {
+export interface Api extends ContentApi {
   // Authentification
   /** 202 : message générique identique dans tous les cas (anti-énumération). Aucune session ouverte. */
   register(input: RegisterInput, idempotencyKey?: string): Promise<string>;
@@ -341,6 +342,7 @@ export const REGISTER_NEUTRAL_MESSAGE =
 
 export function buildApi(req: Requester): Api {
   return {
+    ...buildContentApi(req),
     async register(input, idempotencyKey) {
       const res = await req<{ message?: string }>('POST', '/auth/register', {
         body: input,
