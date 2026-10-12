@@ -10,7 +10,7 @@ import {
   type EstablishmentDraft,
   type StepId,
 } from '@/lib/establishment-schemas';
-import { POSITIONS } from '@/lib/labels';
+import { LEGAL_FORMS, POSITIONS } from '@/lib/labels';
 import { useAsyncAction } from '@/lib/use-async';
 import { LocationFields } from '../../establishment/LocationFields';
 import { Button } from '../../ui/Button';
@@ -72,9 +72,12 @@ export function toDraft(e: AdminEstablishment): EstablishmentDraft {
 }
 
 function payload(d: EstablishmentDraft): Record<string, unknown> {
-  const { type: _type, consent: _consent, submitter_role: _role, ...rest } = buildCreateInput(
-    d,
-  ) as unknown as Record<string, unknown>;
+  const {
+    type: _type,
+    consent: _consent,
+    submitter_role: _role,
+    ...rest
+  } = buildCreateInput(d) as unknown as Record<string, unknown>;
   void _type;
   void _consent;
   void _role;
@@ -178,7 +181,10 @@ export function AdminEstablishmentEditForm({
     }
     setErrors(found);
     if (Object.keys(found).length > 0) return;
-    const patch = computePatch(initial, draft, { initial: establishment.is_featured, current: featured });
+    const patch = computePatch(initial, draft, {
+      initial: establishment.is_featured,
+      current: featured,
+    });
     if (Object.keys(patch).length === 0) {
       setInfo('Aucune modification à enregistrer.');
       return;
@@ -197,10 +203,20 @@ export function AdminEstablishmentEditForm({
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-6" aria-label="Modifier la fiche">
+    <form
+      onSubmit={submit}
+      noValidate
+      className="flex flex-col gap-6"
+      aria-label="Modifier la fiche"
+    >
       <Card as="fieldset" className="flex flex-col gap-4">
         <legend className="px-1 text-lg font-bold">Identité</legend>
-        <Input label={isProvider ? 'Raison sociale' : 'Nom de la structure'} required {...str('name')} error={err('name')} />
+        <Input
+          label={isProvider ? 'Raison sociale' : 'Nom de la structure'}
+          required
+          {...str('name')}
+          error={err('name')}
+        />
         {isProvider ? (
           <>
             <CheckGroup
@@ -251,7 +267,13 @@ export function AdminEstablishmentEditForm({
             />
           </>
         )}
-        <Textarea label="Description" rows={5} maxLength={5000} {...str('description')} error={err('description')} />
+        <Textarea
+          label="Description"
+          rows={5}
+          maxLength={5000}
+          {...str('description')}
+          error={err('description')}
+        />
       </Card>
 
       <Card as="fieldset" className="flex flex-col gap-4">
@@ -278,14 +300,25 @@ export function AdminEstablishmentEditForm({
           <legend className="px-1 text-lg font-bold">Informations légales</legend>
           <div className="grid gap-4 sm:grid-cols-2">
             <Input label="Numéro RCCM" {...str('rccm')} error={err('rccm')} />
-            <Input label="Forme juridique" {...str('legal_form')} error={err('legal_form')} />
+            <Select label="Forme juridique" {...str('legal_form')} error={err('legal_form')}>
+              <option value="">Non précisée</option>
+              {Object.entries(LEGAL_FORMS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </Select>
             <Input
               label="Capital social (FCFA)"
               inputMode="numeric"
               {...str('share_capital')}
               error={err('share_capital')}
             />
-            <Input label="Numéro d’agrément" {...str('approval_number')} error={err('approval_number')} />
+            <Input
+              label="Numéro d’agrément"
+              {...str('approval_number')}
+              error={err('approval_number')}
+            />
             <Input
               label="Fin de validité de l’agrément"
               type="date"
@@ -293,7 +326,13 @@ export function AdminEstablishmentEditForm({
               error={err('approval_expires_at')}
             />
           </div>
-          <Textarea label="Objet social" rows={3} maxLength={1000} {...str('corporate_purpose')} error={err('corporate_purpose')} />
+          <Textarea
+            label="Objet social"
+            rows={3}
+            maxLength={1000}
+            {...str('corporate_purpose')}
+            error={err('corporate_purpose')}
+          />
 
           <fieldset className="flex flex-col gap-3">
             <legend className="font-semibold">Dirigeants</legend>
@@ -310,7 +349,9 @@ export function AdminEstablishmentEditForm({
                 <Select
                   label={`Fonction du dirigeant ${i + 1}`}
                   value={x.position}
-                  onChange={(e) => setExecutive(i, { position: e.target.value as ExecutivePosition })}
+                  onChange={(e) =>
+                    setExecutive(i, { position: e.target.value as ExecutivePosition })
+                  }
                   error={err(`executives.${i}.position`)}
                 >
                   {(Object.keys(POSITIONS) as ExecutivePosition[]).map((p) => (
@@ -335,7 +376,9 @@ export function AdminEstablishmentEditForm({
                 <div>
                   <Button
                     variant="secondary"
-                    onClick={() => set({ executives: draft.executives.filter((_, idx) => idx !== i) })}
+                    onClick={() =>
+                      set({ executives: draft.executives.filter((_, idx) => idx !== i) })
+                    }
                   >
                     Retirer le dirigeant {i + 1}
                   </Button>
@@ -350,7 +393,12 @@ export function AdminEstablishmentEditForm({
                     set({
                       executives: [
                         ...draft.executives,
-                        { full_name: '', position: 'general_manager', position_label: '', is_visible: true },
+                        {
+                          full_name: '',
+                          position: 'general_manager',
+                          position_label: '',
+                          is_visible: true,
+                        },
                       ],
                     })
                   }
@@ -366,18 +414,64 @@ export function AdminEstablishmentEditForm({
       <Card as="fieldset" className="flex flex-col gap-4">
         <legend className="px-1 text-lg font-bold">Contacts</legend>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input label="Téléphone" type="tel" required={isProvider} {...str('phone')} error={err('phone')} />
-          <Input label="Second téléphone" type="tel" {...str('phone_alt')} error={err('phone_alt')} />
-          <Input label="Téléphone d’urgence" type="tel" {...str('emergency_phone')} error={err('emergency_phone')} />
+          <Input
+            label="Téléphone"
+            type="tel"
+            required={isProvider}
+            {...str('phone')}
+            error={err('phone')}
+          />
+          <Input
+            label="Second téléphone"
+            type="tel"
+            {...str('phone_alt')}
+            error={err('phone_alt')}
+          />
+          <Input
+            label="Téléphone d’urgence"
+            type="tel"
+            {...str('emergency_phone')}
+            error={err('emergency_phone')}
+          />
           <Input label="Adresse e-mail" type="email" {...str('email')} error={err('email')} />
           {isProvider ? (
             <>
-              <Input label="Site web" type="url" {...str('website_url')} error={err('website_url')} />
-              <Input label="Facebook" type="url" {...str('facebook_url')} error={err('facebook_url')} />
-              <Input label="Instagram" type="url" {...str('instagram_url')} error={err('instagram_url')} />
-              <Input label="X (Twitter)" type="url" {...str('twitter_url')} error={err('twitter_url')} />
-              <Input label="LinkedIn" type="url" {...str('linkedin_url')} error={err('linkedin_url')} />
-              <Input label="Numéro WhatsApp" type="tel" {...str('whatsapp_number')} error={err('whatsapp_number')} />
+              <Input
+                label="Site web"
+                type="url"
+                {...str('website_url')}
+                error={err('website_url')}
+              />
+              <Input
+                label="Facebook"
+                type="url"
+                {...str('facebook_url')}
+                error={err('facebook_url')}
+              />
+              <Input
+                label="Instagram"
+                type="url"
+                {...str('instagram_url')}
+                error={err('instagram_url')}
+              />
+              <Input
+                label="X (Twitter)"
+                type="url"
+                {...str('twitter_url')}
+                error={err('twitter_url')}
+              />
+              <Input
+                label="LinkedIn"
+                type="url"
+                {...str('linkedin_url')}
+                error={err('linkedin_url')}
+              />
+              <Input
+                label="Numéro WhatsApp"
+                type="tel"
+                {...str('whatsapp_number')}
+                error={err('whatsapp_number')}
+              />
               <Input
                 label="Tarif de départ (FCFA)"
                 inputMode="numeric"

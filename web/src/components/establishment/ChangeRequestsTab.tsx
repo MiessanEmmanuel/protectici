@@ -3,9 +3,14 @@
 import { useState } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { ApiError, describeError } from '@/lib/api/errors';
-import type { ChangeRequest, EstablishmentType, MyEstablishment, ReferenceData } from '@/lib/api/types';
+import type {
+  ChangeRequest,
+  EstablishmentType,
+  MyEstablishment,
+  ReferenceData,
+} from '@/lib/api/types';
 import { formatDateTime } from '@/lib/format';
-import { FIELD_LABELS } from '@/lib/labels';
+import { FIELD_LABELS, LEGAL_FORMS } from '@/lib/labels';
 import { useAsyncAction } from '@/lib/use-async';
 import { Button } from '../ui/Button';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
@@ -31,7 +36,10 @@ function currentValues(est: MyEstablishment): Values {
   return out;
 }
 
-const STATUS: Record<ChangeRequest['status'], { label: string; tone: 'accent' | 'success' | 'danger' }> = {
+const STATUS: Record<
+  ChangeRequest['status'],
+  { label: string; tone: 'accent' | 'success' | 'danger' }
+> = {
   pending: { label: 'En attente', tone: 'accent' },
   approved: { label: 'Acceptée', tone: 'success' },
   rejected: { label: 'Refusée', tone: 'danger' },
@@ -67,7 +75,13 @@ export function ChangeRequestsTab({ est, reference, readOnly, reload }: TabProps
       </section>
 
       {pending ? (
-        <PendingRequest est={est} request={pending} reference={reference} readOnly={readOnly} reload={reload} />
+        <PendingRequest
+          est={est}
+          request={pending}
+          reference={reference}
+          readOnly={readOnly}
+          reload={reload}
+        />
       ) : null}
 
       <RequestForm
@@ -231,7 +245,8 @@ function RequestForm({
       if (next === (current[f] ?? '').trim()) continue;
       if (f === 'name' && next === '') found[f] = 'Le nom est obligatoire.';
       else if (f === 'share_capital') {
-        if (next !== '' && !/^\d+$/.test(next)) found[f] = 'Le capital social doit être un nombre entier positif.';
+        if (next !== '' && !/^\d+$/.test(next))
+          found[f] = 'Le capital social doit être un nombre entier positif.';
         else changes[f] = next === '' ? null : Number(next);
       } else if (f === 'force_type_id') {
         if (next === '') found[f] = 'Choisissez le type de structure.';
@@ -297,7 +312,13 @@ function RequestForm({
           const error = errors[f];
           if (f === 'force_type_id') {
             return (
-              <Select key={f} label={label} value={values[f] ?? ''} error={error} onChange={(e) => set(f, e.target.value)}>
+              <Select
+                key={f}
+                label={label}
+                value={values[f] ?? ''}
+                error={error}
+                onChange={(e) => set(f, e.target.value)}
+              >
                 {reference.state_force_types.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name}
@@ -306,9 +327,35 @@ function RequestForm({
               </Select>
             );
           }
+          if (f === 'legal_form') {
+            return (
+              <Select
+                key={f}
+                label={label}
+                value={values[f] ?? ''}
+                error={error}
+                onChange={(e) => set(f, e.target.value)}
+              >
+                <option value="">Non précisée</option>
+                {Object.entries(LEGAL_FORMS).map(([value, optionLabel]) => (
+                  <option key={value} value={value}>
+                    {optionLabel}
+                  </option>
+                ))}
+              </Select>
+            );
+          }
           if (f === 'corporate_purpose') {
             return (
-              <Textarea key={f} label={label} rows={3} maxLength={1000} value={values[f] ?? ''} error={error} onChange={(e) => set(f, e.target.value)} />
+              <Textarea
+                key={f}
+                label={label}
+                rows={3}
+                maxLength={1000}
+                value={values[f] ?? ''}
+                error={error}
+                onChange={(e) => set(f, e.target.value)}
+              />
             );
           }
           return (
@@ -317,7 +364,7 @@ function RequestForm({
               label={label}
               value={values[f] ?? ''}
               error={error}
-              maxLength={f === 'name' ? 255 : f === 'legal_form' ? 100 : 50}
+              maxLength={f === 'name' ? 255 : 50}
               inputMode={f === 'share_capital' ? 'numeric' : undefined}
               onChange={(e) => set(f, e.target.value)}
             />

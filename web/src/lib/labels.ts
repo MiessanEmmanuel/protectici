@@ -29,7 +29,6 @@ export function positionLabel(e: Executive): string {
   return e.position === 'other' && e.position_label ? e.position_label : POSITIONS[e.position];
 }
 
-
 export const STATUS_LABELS: Record<EstablishmentStatus, string> = {
   draft: 'Brouillon',
   pending: 'En attente de validation',
@@ -191,3 +190,19 @@ export const CONTACT_STATUS_LABELS: Record<ContactStatus, string> = {
   answered: 'Répondu',
   archived: 'Archivé',
 };
+
+/** Formes juridiques acceptées par l'API (valeurs d'`EstablishmentSchema::LEGAL_FORMS`). */
+export const LEGAL_FORMS: Record<string, string> = {
+  sarl: 'SARL',
+  sa: 'SA',
+  sas: 'SAS',
+  suarl: 'SUARL',
+  ei: 'Entreprise individuelle',
+  association: 'Association',
+  other: 'Autre',
+};
+
+export function legalFormLabel(value: string | null | undefined): string {
+  if (!value) return '';
+  return LEGAL_FORMS[value.toLowerCase()] ?? value;
+}

@@ -23,13 +23,14 @@ it('renvoie les référentiels visibles avec les quartiers', function () {
     $r = $this->getJson('/api/v1/reference-data')->assertOk();
     $d = $r->json('data');
 
-    expect(array_keys($d))->toBe(['cities', 'company_types', 'service_types', 'state_force_types', 'procedure_types']);
+    expect(array_keys($d))->toBe(['cities', 'company_types', 'service_types', 'state_force_types', 'procedure_types', 'feedback_topics']);
     expect($d['cities'])->toHaveCount(1);
     expect(array_keys($d['cities'][0]))->toBe(['id', 'name', 'slug', 'lat', 'lng', 'districts']);
     expect($d['cities'][0]['lat'])->toBe(5.36);
     expect($d['cities'][0]['districts'])->toHaveCount(2);
     expect(collect($d['cities'][0]['districts'])->firstWhere('slug', 'angre'))->toBe(['id' => $quartier->id, 'name' => 'Angré', 'slug' => 'angre', 'parent_id' => $commune->id]);
     expect($d['company_types'])->toBe([]);
+    expect($d['feedback_topics'])->toBeArray();
     expect($d['service_types'][0])->toBe(['id' => $service->id, 'slug' => $service->slug, 'name' => $service->name]);
     expect($r->headers->get('Cache-Control'))->toContain('public')->toContain('max-age=300');
 });

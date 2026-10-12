@@ -18,6 +18,13 @@ const LABELS: Record<string, string> = {
   'site.address': 'Adresse du siège',
   'social.facebook': 'Page Facebook',
   'social.linkedin': 'Page LinkedIn',
+  'site.name': 'Nom du site',
+  'site.tagline': 'Slogan',
+  'social.twitter': 'Compte X (Twitter)',
+  'social.instagram': 'Compte Instagram',
+  'social.youtube': 'Chaîne YouTube',
+  'social.tiktok': 'Compte TikTok',
+  'social.whatsapp': 'WhatsApp',
 };
 
 /** Paramètres du site (clés en liste blanche côté API ; les valeurs publiques alimentent pied de page et contact). */

@@ -225,8 +225,7 @@ describe('espace prestataire : gestion d’une fiche', () => {
     manager('garde-lagune-securite');
     await u.click(await screen.findByRole('tab', { name: 'Modifications sensibles' }));
     const legal = screen.getByLabelText('Forme juridique');
-    await u.clear(legal);
-    await u.type(legal, 'SAS');
+    await u.selectOptions(legal, 'sas');
     await u.click(screen.getByRole('button', { name: 'Envoyer la demande' }));
     expect(await screen.findByText('Une demande de modification est déjà en attente.')).toBeInTheDocument();
   });

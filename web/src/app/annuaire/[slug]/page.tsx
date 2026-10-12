@@ -21,7 +21,7 @@ import { Badge, Tag } from '@/components/ui/Tag';
 import { serverApi } from '@/lib/api/server';
 import { SITE_URL } from '@/lib/env';
 import { formatFcfa, formatPhone, telHref } from '@/lib/format';
-import { positionLabel } from '@/lib/labels';
+import { legalFormLabel, positionLabel } from '@/lib/labels';
 import { safe } from '@/lib/safe';
 import { buildHref } from '@/lib/search-params';
 
@@ -125,7 +125,7 @@ export default async function ProviderPage({ params, searchParams }: Props) {
 
   const legal = provider.legal;
   const legalRows: [string, string | null][] = [
-    ['Forme juridique', legal.legal_form],
+    ['Forme juridique', legalFormLabel(legal.legal_form)],
     ['Capital social', legal.share_capital !== null ? formatFcfa(legal.share_capital) : null],
     ['N° RCCM', legal.rccm],
     ['N° d’agrément', legal.approval_number],

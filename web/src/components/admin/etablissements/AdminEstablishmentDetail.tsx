@@ -16,6 +16,7 @@ import {
   COLLECTION_LABELS,
   DOCUMENT_TYPE_LABELS,
   eventLabel,
+  legalFormLabel,
   POSITIONS,
   SUBMITTER_LABELS,
   TYPE_LABELS,
@@ -63,11 +64,14 @@ function friendly(e: unknown): unknown {
 }
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
-  const empty = children === null || children === undefined || children === '' || children === false;
+  const empty =
+    children === null || children === undefined || children === '' || children === false;
   return (
     <div className="grid gap-1 sm:grid-cols-[14rem_1fr] sm:gap-3">
       <dt className="font-semibold">{label}</dt>
-      <dd className="break-words">{empty ? <span className="text-muted">Non renseigné</span> : children}</dd>
+      <dd className="break-words">
+        {empty ? <span className="text-muted">Non renseigné</span> : children}
+      </dd>
     </div>
   );
 }
@@ -135,10 +139,15 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
 
   async function toggleFeatured(current: boolean) {
     try {
-      await guarded(async () => {
-        const updated = await clientApi.adminUpdateEstablishment(type, id, { is_featured: !current });
-        state.setData(updated);
-      }, current ? 'Fiche retirée de la une.' : 'Fiche mise en avant.');
+      await guarded(
+        async () => {
+          const updated = await clientApi.adminUpdateEstablishment(type, id, {
+            is_featured: !current,
+          });
+          state.setData(updated);
+        },
+        current ? 'Fiche retirée de la une.' : 'Fiche mise en avant.',
+      );
     } catch (e) {
       setPageError(errorMessage(e));
     }
@@ -236,7 +245,11 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                     </Button>
                   ) : null}
                   {e.status === 'approved' ? (
-                    <Button variant="secondary" disabled={busy} onClick={() => setDialog('suspend')}>
+                    <Button
+                      variant="secondary"
+                      disabled={busy}
+                      onClick={() => setDialog('suspend')}
+                    >
                       Suspendre
                     </Button>
                   ) : null}
@@ -246,16 +259,28 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                     </Button>
                   ) : null}
                   {e.type === 'provider' && e.status === 'approved' && !e.is_verified ? (
-                    <Button variant="secondary" disabled={busy} onClick={() => void quick('verify')}>
+                    <Button
+                      variant="secondary"
+                      disabled={busy}
+                      onClick={() => void quick('verify')}
+                    >
                       Vérifier
                     </Button>
                   ) : null}
                   {e.type === 'provider' && e.is_verified ? (
-                    <Button variant="secondary" disabled={busy} onClick={() => void quick('unverify')}>
+                    <Button
+                      variant="secondary"
+                      disabled={busy}
+                      onClick={() => void quick('unverify')}
+                    >
                       Retirer la vérification
                     </Button>
                   ) : null}
-                  <Button variant="secondary" disabled={busy} onClick={() => void toggleFeatured(e.is_featured)}>
+                  <Button
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => void toggleFeatured(e.is_featured)}
+                  >
                     {e.is_featured ? 'Retirer de la une' : 'Mettre en avant'}
                   </Button>
                   {!editing ? (
@@ -294,7 +319,9 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                       <Row label="Description">{e.description}</Row>
                       {e.type === 'provider' ? (
                         <>
-                          <Row label="Types d’entreprise">{ids('company_type_ids', e.company_type_ids)}</Row>
+                          <Row label="Types d’entreprise">
+                            {ids('company_type_ids', e.company_type_ids)}
+                          </Row>
                           <Row label="Services">{ids('service_type_ids', e.service_type_ids)}</Row>
                           <Row label="En service">{yesNo(e.is_in_service)}</Row>
                           <Row label="Déposée par">
@@ -306,7 +333,9 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                           <Row label="Type de structure">
                             {forceType?.name ?? (e.force_type_id ? `n° ${e.force_type_id}` : null)}
                           </Row>
-                          <Row label="Démarches">{ids('procedure_type_ids', e.procedure_type_ids)}</Row>
+                          <Row label="Démarches">
+                            {ids('procedure_type_ids', e.procedure_type_ids)}
+                          </Row>
                         </>
                       )}
                       <Row label="Soumise le">{formatDateTime(e.submitted_at)}</Row>
@@ -335,7 +364,7 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                       </p>
                       <dl className="flex flex-col gap-2">
                         <Row label="Numéro RCCM">{e.rccm}</Row>
-                        <Row label="Forme juridique">{e.legal_form}</Row>
+                        <Row label="Forme juridique">{legalFormLabel(e.legal_form)}</Row>
                         <Row label="Capital social">
                           {e.share_capital !== null && e.share_capital !== undefined
                             ? formatFcfa(e.share_capital)
@@ -372,8 +401,12 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
 
                   <Section title="Localisation" id="s-localisation">
                     <dl className="flex flex-col gap-2">
-                      <Row label="Ville">{city?.name ?? (e.city_id ? `n° ${e.city_id}` : null)}</Row>
-                      <Row label="Quartier">{district?.name ?? (e.district_id ? `n° ${e.district_id}` : null)}</Row>
+                      <Row label="Ville">
+                        {city?.name ?? (e.city_id ? `n° ${e.city_id}` : null)}
+                      </Row>
+                      <Row label="Quartier">
+                        {district?.name ?? (e.district_id ? `n° ${e.district_id}` : null)}
+                      </Row>
                       <Row label="Adresse">{e.address}</Row>
                       <Row label="Repères géographiques">{e.geo_description}</Row>
                       <Row label="Plus Code">{e.plus_code}</Row>
@@ -411,7 +444,9 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                           </Row>
                           <Row label="Numéro WhatsApp">{e.whatsapp_number}</Row>
                           <Row label="Tarif de départ">
-                            {e.price_from !== null && e.price_from !== undefined ? formatFcfa(e.price_from) : null}
+                            {e.price_from !== null && e.price_from !== undefined
+                              ? formatFcfa(e.price_from)
+                              : null}
                           </Row>
                         </>
                       ) : (
@@ -439,7 +474,9 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                           loading="lazy"
                           className="h-28 w-full rounded-md border border-line object-cover"
                         />
-                        <span className="text-sm text-muted">{COLLECTION_LABELS[m.collection]}</span>
+                        <span className="text-sm text-muted">
+                          {COLLECTION_LABELS[m.collection]}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -448,7 +485,8 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
 
               <Section title="Justificatifs" id="s-justificatifs">
                 <p className="text-sm text-muted">
-                  Documents privés. Chaque téléchargement est journalisé (qui, quand) dans l’historique.
+                  Documents privés. Chaque téléchargement est journalisé (qui, quand) dans
+                  l’historique.
                 </p>
                 {e.documents.length === 0 ? (
                   <p className="text-muted">Aucun justificatif déposé.</p>
@@ -496,7 +534,15 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                     {e.change_requests.map((c) => (
                       <li key={c.id} className="flex flex-col gap-2">
                         <p className="text-sm text-muted">
-                          <Badge tone={c.status === 'approved' ? 'success' : c.status === 'rejected' ? 'danger' : 'accent'}>
+                          <Badge
+                            tone={
+                              c.status === 'approved'
+                                ? 'success'
+                                : c.status === 'rejected'
+                                  ? 'danger'
+                                  : 'accent'
+                            }
+                          >
                             {CR_LABELS[c.status]}
                           </Badge>{' '}
                           demandée le {formatDateTime(c.created_at)}
@@ -536,8 +582,8 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                 onConfirm={() => act('approve')}
               >
                 <p>
-                  La fiche <strong>{e.name}</strong> sera publiée et son propriétaire sera prévenu par
-                  e-mail.
+                  La fiche <strong>{e.name}</strong> sera publiée et son propriétaire sera prévenu
+                  par e-mail.
                 </p>
               </ConfirmDialog>
               <ConfirmDialog

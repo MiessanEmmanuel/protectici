@@ -7,6 +7,7 @@ use App\Http\Resources\CityResource;
 use App\Http\Resources\OptionResource;
 use App\Models\City;
 use App\Models\CompanyType;
+use App\Models\FeedbackTopic;
 use App\Models\ProcedureType;
 use App\Models\ServiceType;
 use App\Models\StateForceType;
@@ -29,6 +30,7 @@ class ReferenceDataController extends Controller
                 'service_types' => OptionResource::collection(ServiceType::visible()->ordered()->get())->resolve($request),
                 'state_force_types' => OptionResource::collection(StateForceType::visible()->ordered()->get())->resolve($request),
                 'procedure_types' => OptionResource::collection(ProcedureType::visible()->ordered()->get())->resolve($request),
+                'feedback_topics' => OptionResource::collection(FeedbackTopic::visible()->ordered()->get())->resolve($request),
             ]), true);
         });
 

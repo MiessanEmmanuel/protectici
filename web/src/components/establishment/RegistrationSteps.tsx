@@ -2,13 +2,16 @@
 
 import type { ReactNode } from 'react';
 import type { ReferenceData } from '@/lib/api/types';
-import {
-  normalizePhone,
-  type EstablishmentDraft,
-  type StepId,
-} from '@/lib/establishment-schemas';
+import { normalizePhone, type EstablishmentDraft, type StepId } from '@/lib/establishment-schemas';
 import { DOCUMENT_RULES, formatBytes, MAX_DOCUMENTS } from '@/lib/files';
-import { DOCUMENT_TYPE_LABELS, POSITIONS, SUBMITTER_LABELS, TYPE_LABELS } from '@/lib/labels';
+import {
+  DOCUMENT_TYPE_LABELS,
+  LEGAL_FORMS,
+  legalFormLabel,
+  POSITIONS,
+  SUBMITTER_LABELS,
+  TYPE_LABELS,
+} from '@/lib/labels';
 import { formatFcfa } from '@/lib/format';
 import type { DocumentType } from '@/lib/api/types';
 import { useState } from 'react';
@@ -183,17 +186,20 @@ function LegalStep(p: StepProps) {
   return (
     <div className="flex flex-col gap-5">
       <p className="rounded-md bg-surface-alt p-3 text-sm text-muted">
-        Ces informations légales sont utilisées pour la vérification par notre équipe. Elles ne
-        sont pas affichées publiquement sans nécessité.
+        Ces informations légales sont utilisées pour la vérification par notre équipe. Elles ne sont
+        pas affichées publiquement sans nécessité.
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         <Input {...bind(p, 'rccm')} label="Numéro RCCM" maxLength={50} />
-        <Input {...bind(p, 'legal_form')} label="Forme juridique" hint="Par exemple SARL, SA, SAS." maxLength={100} />
-        <Input
-          {...bind(p, 'share_capital')}
-          label="Capital social (FCFA)"
-          inputMode="numeric"
-        />
+        <Select {...bind(p, 'legal_form')} label="Forme juridique">
+          <option value="">Non précisée</option>
+          {Object.entries(LEGAL_FORMS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </Select>
+        <Input {...bind(p, 'share_capital')} label="Capital social (FCFA)" inputMode="numeric" />
         <Input {...bind(p, 'approval_number')} label="Numéro d’agrément" maxLength={50} />
         <Input
           {...bind(p, 'approval_expires_at')}
@@ -252,7 +258,12 @@ function ContactsStep(p: StepProps) {
       ) : (
         <>
           <Input {...bind(p, 'whatsapp_number')} label="Numéro WhatsApp" type="tel" />
-          <Input {...bind(p, 'website_url')} label="Site web" type="url" hint="Commence par https://" />
+          <Input
+            {...bind(p, 'website_url')}
+            label="Site web"
+            type="url"
+            hint="Commence par https://"
+          />
           <div className="grid gap-4 sm:grid-cols-2">
             <Input {...bind(p, 'facebook_url')} label="Page Facebook" type="url" />
             <Input {...bind(p, 'instagram_url')} label="Compte Instagram" type="url" />
@@ -372,7 +383,9 @@ function ReviewStep(p: StepProps) {
     <div className="flex flex-col gap-5">
       <dl className="divide-y divide-line rounded-lg border border-line px-4">
         <Row label="Type">{d.type ? TYPE_LABELS[d.type] : ''}</Row>
-        <Row label="Votre qualité">{d.submitter_role ? SUBMITTER_LABELS[d.submitter_role] : ''}</Row>
+        <Row label="Votre qualité">
+          {d.submitter_role ? SUBMITTER_LABELS[d.submitter_role] : ''}
+        </Row>
         <Row label="En service">{d.is_in_service ? 'Oui' : 'Non'}</Row>
         <Row label={force ? 'Nom de la structure' : 'Raison sociale'}>{d.name}</Row>
         {force ? (
@@ -384,7 +397,9 @@ function ReviewStep(p: StepProps) {
           </>
         ) : (
           <>
-            <Row label="Types d’entreprise">{names(p.reference.company_types, d.company_type_ids)}</Row>
+            <Row label="Types d’entreprise">
+              {names(p.reference.company_types, d.company_type_ids)}
+            </Row>
             <Row label="Services">{names(p.reference.service_types, d.service_type_ids)}</Row>
           </>
         )}
@@ -397,8 +412,10 @@ function ReviewStep(p: StepProps) {
         {!force ? (
           <>
             <Row label="Numéro RCCM">{d.rccm}</Row>
-            <Row label="Forme juridique">{d.legal_form}</Row>
-            <Row label="Capital social">{d.share_capital ? formatFcfa(Number(d.share_capital)) : ''}</Row>
+            <Row label="Forme juridique">{legalFormLabel(d.legal_form)}</Row>
+            <Row label="Capital social">
+              {d.share_capital ? formatFcfa(Number(d.share_capital)) : ''}
+            </Row>
             <Row label="Objet social">{d.corporate_purpose}</Row>
             <Row label="Numéro d’agrément">{d.approval_number}</Row>
             <Row label="Expiration de l’agrément">{d.approval_expires_at}</Row>
@@ -407,8 +424,9 @@ function ReviewStep(p: StepProps) {
                 <ul>
                   {d.executives.map((e, i) => (
                     <li key={i}>
-                      {e.full_name} ({e.position === 'other' ? e.position_label : POSITIONS[e.position]}
-                      ) : {e.is_visible ? 'visible publiquement' : 'non visible publiquement'}
+                      {e.full_name} (
+                      {e.position === 'other' ? e.position_label : POSITIONS[e.position]}) :{' '}
+                      {e.is_visible ? 'visible publiquement' : 'non visible publiquement'}
                     </li>
                   ))}
                 </ul>
@@ -434,7 +452,9 @@ function ReviewStep(p: StepProps) {
             <Row label="Instagram">{d.instagram_url}</Row>
             <Row label="X (Twitter)">{d.twitter_url}</Row>
             <Row label="LinkedIn">{d.linkedin_url}</Row>
-            <Row label="Tarif de départ">{d.price_from ? formatFcfa(Number(d.price_from)) : ''}</Row>
+            <Row label="Tarif de départ">
+              {d.price_from ? formatFcfa(Number(d.price_from)) : ''}
+            </Row>
           </>
         )}
         <Row label="Justificatifs">
