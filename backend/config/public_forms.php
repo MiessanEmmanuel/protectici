@@ -8,8 +8,11 @@ return [
     'limits' => [
         'feedback' => ['ip_per_hour' => (int) env('FEEDBACK_PER_IP_PER_HOUR', 5), 'email_per_day' => (int) env('FEEDBACK_PER_EMAIL_PER_DAY', 10)],
         'quote' => ['ip_per_hour' => (int) env('QUOTE_PER_IP_PER_HOUR', 5), 'email_per_day' => (int) env('QUOTE_PER_EMAIL_PER_DAY', 10)],
+        'newsletter' => ['ip_per_hour' => (int) env('NEWSLETTER_PER_IP_PER_HOUR', 5), 'email_per_day' => (int) env('NEWSLETTER_PER_EMAIL_PER_DAY', 5)],
         'contact' => ['ip_per_hour' => (int) env('CONTACT_PER_IP_PER_HOUR', 5), 'email_per_day' => (int) env('CONTACT_PER_EMAIL_PER_DAY', 10)],
     ],
+    'comments_per_hour_per_user' => (int) env('COMMENTS_PER_HOUR_PER_USER', 5),
+    'newsletter_link_per_hour_per_ip' => (int) env('NEWSLETTER_LINK_PER_HOUR_PER_IP', 20),
     'reviews_per_day_per_user' => (int) env('REVIEWS_PER_DAY_PER_USER', 10),
     'track_per_hour_per_ip' => (int) env('FEEDBACK_TRACK_PER_IP_PER_HOUR', 10),
     'track_per_hour_per_reference' => (int) env('FEEDBACK_TRACK_PER_REFERENCE_PER_HOUR', 5),

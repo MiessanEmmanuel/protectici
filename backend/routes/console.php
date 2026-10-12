@@ -11,6 +11,10 @@ foreach ([
     'retention:anonymize-feedbacks' => '03:20',
     'retention:anonymize-quote-requests' => '03:30',
     'retention:purge-establishment-files' => '03:40',
+    'retention:purge-pending-subscribers' => '03:50',
 ] as $command => $time) {
     Schedule::command($command)->dailyAt($time)->onOneServer()->withoutOverlapping();
 }
+
+// Publication planifiée des articles (contrat §9.2) : chaque minute, une seule exécution à la fois.
+Schedule::command('posts:publish-scheduled')->everyMinute()->onOneServer()->withoutOverlapping();

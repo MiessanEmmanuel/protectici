@@ -122,9 +122,9 @@ it('ne fait rien et n\'écrit aucun audit quand rien n\'est à purger', function
     Storage::disk('private')->assertExists('documents/safe.pdf');
 });
 
-it('planifie les cinq commandes de rétention, une exécution à la fois', function () {
+it('planifie les six commandes de rétention, une exécution à la fois', function () {
     $events = collect(Schedule::events())->filter(fn ($e) => str_contains($e->command, 'retention:'));
-    expect($events)->toHaveCount(5);
+    expect($events)->toHaveCount(6);
     foreach ($events as $event) {
         expect($event->onOneServer)->toBeTrue()->and($event->withoutOverlapping)->toBeTrue();
     }

@@ -34,6 +34,9 @@ class DashboardStats
             'new_feedbacks' => Feedback::query()->where('status', 'new')->count(),
             'new_quote_requests' => QuoteRequest::query()->where('status', 'new')->count(),
             'new_contact_messages' => DB::table('contact_messages')->where('status', 'new')->count(),
+            // Phase 4 (contrat §9.3) : commentaires à modérer et abonnés confirmés.
+            'pending_comments' => DB::table('post_comments as pc')->join('posts as p', 'p.id', '=', 'pc.post_id')->whereNull('pc.deleted_at')->whereNull('p.deleted_at')->where('pc.status', 'pending')->count(),
+            'confirmed_subscribers' => DB::table('newsletter_subscribers')->where('status', 'confirmed')->count(),
         ];
     }
 

@@ -20,6 +20,10 @@ return [
 
     'resend' => [
         'key' => env('RESEND_API_KEY'),
+        // Synchronisation des abonnés confirmés vers une Audience Resend (contrat §9.2) : désactivée par défaut.
+        'newsletter_sync' => (bool) env('NEWSLETTER_RESEND_SYNC', false),
+        'audience_id' => env('RESEND_AUDIENCE_ID'),
+        'api_url' => 'https://api.resend.com',
     ],
 
     'ses' => [

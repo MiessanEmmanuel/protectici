@@ -8,9 +8,6 @@ use App\Models\ContactMessage;
 use App\Models\District;
 use App\Models\Feedback;
 use App\Models\FeedbackTopic;
-use App\Models\Partner;
-use App\Models\Post;
-use App\Models\PostCategory;
 use App\Models\ProcedureType;
 use App\Models\Provider;
 use App\Models\ProviderChangeRequest;
@@ -60,9 +57,9 @@ class DemoSeeder extends Seeder
             $this->engagement($providers, $accounts['user'], $accounts['admin']);
             $this->establishmentWorkflow($accounts['provider'], $accounts['user'], $providers->first());
             $this->stateForces();
-            $this->posts($accounts['editor']);
-            $this->partners();
         });
+
+        $this->call(ContentSeeder::class);
     }
 
     /** @return array{admin: User, editor: User, provider: User, user: User, reviewers: Collection<int, User>} */
@@ -500,50 +497,5 @@ class DemoSeeder extends Seeder
             $sync[$id] = ['notes' => fake()->boolean(40) ? 'Se munir d\'une pièce d\'identité en cours de validité.' : null];
         }
         $force->procedureTypes()->sync($procedureIds === [] ? [] : $sync);
-    }
-
-    private function posts(User $editor): void
-    {
-        $categories = PostCategory::pluck('id', 'slug');
-        $articles = [
-            ['Comment choisir une société de gardiennage à Abidjan', 'actualites', 'Agrément, assurance, formation des agents : les points à vérifier avant de signer.', true, false],
-            ['Vidéosurveillance à domicile : les erreurs à éviter', 'anti-intrusion', 'Emplacement des caméras, stockage des images, conformité : l\'essentiel pour bien s\'équiper.', false, false],
-            ['Alarmes anti-intrusion : comprendre les différents capteurs', 'anti-intrusion', 'Détecteurs d\'ouverture, volumétriques, sirènes : comment composer un système fiable.', false, false],
-            ['Cybercriminalité : protéger ses comptes en ligne', 'cybercriminalite', 'Mots de passe solides, double authentification et réflexes face à l\'hameçonnage.', false, true],
-            ['Prévention incendie dans les commerces : les gestes essentiels', 'securite-incendie', 'Extincteurs, issues de secours, formation du personnel : les bases de la prévention.', false, false],
-            ['Métiers de la sécurité privée : se former en Côte d\'Ivoire', 'formation', 'Panorama des formations, des certifications et des débouchés du secteur.', false, false],
-        ];
-
-        foreach ($articles as $i => [$title, $category, $excerpt, $featured, $flash]) {
-            $post = Post::withTrashed()->firstOrNew(['slug' => Str::slug($title)]);
-            $post->forceFill([
-                'author_id' => $editor->id,
-                'category_id' => $categories[$category],
-                'title' => $title,
-                'excerpt' => $excerpt,
-                'body' => '<p>'.$excerpt.'</p><p>Article de démonstration (contenu fictif) : le texte définitif sera rédigé par l\'équipe éditoriale de ProtectIci.</p>',
-                'status' => 'published',
-                'published_at' => now()->subDays(10 - $i),
-                'is_featured' => $featured,
-                'is_flash' => $flash,
-                'is_visible' => true,
-                'views_count' => fake()->numberBetween(20, 900),
-                'reading_minutes' => 3,
-            ])->save();
-        }
-    }
-
-    private function partners(): void
-    {
-        $rows = [
-            ['partner', 'Association démo des acteurs de la sécurité'],
-            ['partner', 'Centre de formation démo'],
-            ['client', 'Groupe hôtelier démo'],
-            ['client', 'Centre commercial démo'],
-        ];
-        foreach ($rows as $i => [$type, $name]) {
-            $partner = Partner::withTrashed()->firstOrNew(['name' => $name]);
-            $partner->forceFill(['type' => $type, 'sort_order' => $i, 'is_visible' => true])->save();
-        }
     }
 }

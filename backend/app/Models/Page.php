@@ -6,7 +6,18 @@ use Database\Factories\PageFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $slug
+ * @property string $title
+ * @property string $body
+ * @property string|null $seo_title
+ * @property string|null $seo_description
+ * @property bool $is_visible
+ * @property Carbon|null $updated_at
+ */
 class Page extends Model
 {
     /** @use HasFactory<PageFactory> */

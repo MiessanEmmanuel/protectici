@@ -216,8 +216,8 @@ class ReferenceSeeder extends Seeder
         $pages = [
             'qui-sommes-nous' => 'Qui sommes-nous',
             'mentions-legales' => 'Mentions légales',
-            'politique-de-confidentialite' => 'Politique de confidentialité',
-            'conditions-generales-d-utilisation' => 'Conditions générales d\'utilisation',
+            'confidentialite' => 'Politique de confidentialité',
+            'cgu' => 'Conditions générales d\'utilisation',
         ];
 
         Page::unguarded(function () use ($pages) {

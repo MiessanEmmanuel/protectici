@@ -8,8 +8,30 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $slug
+ * @property string $title
+ * @property string|null $excerpt
+ * @property string $body
+ * @property string $status
+ * @property int $category_id
+ * @property int|null $author_id
+ * @property bool $is_featured
+ * @property bool $is_flash
+ * @property bool $is_visible
+ * @property int $views_count
+ * @property int|null $reading_minutes
+ * @property string|null $seo_title
+ * @property string|null $seo_description
+ * @property Carbon|null $published_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class Post extends Model
 {
     /** @use HasFactory<PostFactory> */
@@ -51,6 +73,12 @@ class Post extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    /** @return MorphOne<Media, $this> */
+    public function cover(): MorphOne
+    {
+        return $this->morphOne(Media::class, 'mediable')->where('collection', 'cover');
     }
 
     /** @return HasMany<PostComment, $this> */

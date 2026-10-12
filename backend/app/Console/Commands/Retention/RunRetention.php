@@ -14,6 +14,7 @@ class RunRetention extends RetentionCommand
         'retention:anonymize-feedbacks',
         'retention:anonymize-quote-requests',
         'retention:purge-establishment-files',
+        'retention:purge-pending-subscribers',
     ];
 
     public function handle(): int

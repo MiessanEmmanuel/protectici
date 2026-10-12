@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Models\ContactMessage;
 use App\Models\Feedback;
 use App\Models\Media;
+use App\Models\NewsletterSubscriber;
 use App\Models\Page;
 use App\Models\Partner;
 use App\Models\Post;
+use App\Models\PostCategory;
 use App\Models\PostComment;
 use App\Models\Provider;
 use App\Models\ProviderChangeRequest;
@@ -57,6 +59,8 @@ class AppServiceProvider extends ServiceProvider
             'provider_document' => ProviderDocument::class,
             'media' => Media::class,
             'setting' => Setting::class,
+            'post_category' => PostCategory::class,
+            'newsletter_subscriber' => NewsletterSubscriber::class,
         ]);
 
         // Détection des oublis hors production (security.md §13).
@@ -67,11 +71,22 @@ class AppServiceProvider extends ServiceProvider
 
         // Zone d'administration : rôle admin actif uniquement (l'éditeur n'y a aucun accès, security.md §12).
         Gate::define('admin-area', fn (User $user): bool => $user->isAdmin() && $user->is_active);
+        // Back-office éditorial : rôle editor OU admin, comptes actifs (security.md §12).
+        Gate::define('content-area', fn (User $user): bool => $user->isStaff() && $user->is_active);
         // Inscription d'un établissement : compte actif et e-mail vérifié.
         Gate::define('register-establishment', fn (User $user): bool => $user->is_active && $user->hasVerifiedEmail());
 
         // Administration : 120 / minute / administrateur.
         RateLimiter::for('admin-api', fn (Request $r) => Limit::perMinute(120)->by('admin|'.($r->user()?->getAuthIdentifier() ?? $r->ip())));
+
+        RateLimiter::for('content-api', fn (Request $r) => Limit::perMinute(120)->by('content|'.($r->user()?->getAuthIdentifier() ?? $r->ip())));
+        RateLimiter::for('content-upload', fn (Request $r) => Limit::perHour(60)->by('content-upload|'.($r->user()?->getAuthIdentifier() ?? $r->ip())));
+
+        // Phase 4 (security.md §18) : lecture publique 60/min/IP ; commentaires 5/h/utilisateur ;
+        // liens de newsletter (confirmation / désinscription) 20/h/IP.
+        RateLimiter::for('public-read', fn (Request $r) => Limit::perMinute(60)->by('public-read:'.$r->ip()));
+        RateLimiter::for('blog-comment', fn (Request $r) => Limit::perHour((int) config('public_forms.comments_per_hour_per_user'))->by('blog-comment:'.($r->user()?->getAuthIdentifier() ?? $r->ip())));
+        RateLimiter::for('newsletter-link', fn (Request $r) => Limit::perHour((int) config('public_forms.newsletter_link_per_hour_per_ip'))->by('newsletter-link:'.$r->ip()));
 
         // Limiteurs de l'annuaire public (security.md §18) : clé = IP.
         RateLimiter::for('public-search', fn (Request $r) => Limit::perMinute(60)->by('public-search:'.$r->ip()));
