@@ -39,6 +39,7 @@ x-backend-env: &backend-env
   RESEND_AUDIENCE_ID: ${RESEND_AUDIENCE_ID:-}
   TURNSTILE_ENABLED: ${TURNSTILE_ENABLED:-true}
   TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+  SSR_SHARED_SECRET: ${SSR_SHARED_SECRET:?}
   NOMINATIM_USER_AGENT: ${NOMINATIM_USER_AGENT:?}
   IP_HASH_SECRET: ${IP_HASH_SECRET:?}
   FILESYSTEM_DISK: s3
@@ -120,6 +121,7 @@ services:
     environment:
       API_INTERNAL_URL: http://backend:8080
       SESSION_COOKIE_NAME: protectici_session
+      SSR_SHARED_SECRET: ${SSR_SHARED_SECRET:?}
     depends_on:
       backend: { condition: service_healthy }
     expose: ["3000"]

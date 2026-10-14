@@ -39,6 +39,12 @@ return [
         ],
     ],
 
+    // Rendu serveur Next.js (conteneur `web`) : secret partagé qui ouvre un plafond de lecture publique distinct.
+    'ssr' => [
+        'secret' => env('SSR_SHARED_SECRET'),
+        'per_minute' => (int) env('SSR_RATE_PER_MINUTE', 1200),
+    ],
+
     'turnstile' => [
         'enabled' => (bool) env('TURNSTILE_ENABLED', true),
         'secret' => env('TURNSTILE_SECRET_KEY'),

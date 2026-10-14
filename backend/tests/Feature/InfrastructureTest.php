@@ -1,5 +1,8 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use Illuminate\Support\Facades\URL;
+
 it('renvoie une 404 JSON générique sans trace', function () {
     $response = $this->getJson('/api/v1/inexistant');
 
@@ -23,4 +26,43 @@ it('refuse une origine CORS non listée et accepte le front', function () {
 
     $ko = $this->withHeaders(['Origin' => 'https://evil.example', 'Access-Control-Request-Method' => 'GET'])->options('/api/v1/inexistant');
     expect($ko->headers->get('Access-Control-Allow-Origin'))->not->toBe('*')->not->toBe('https://evil.example');
+});
+
+it('rend le cookie de session Secure par défaut en production même sans variable SESSION_SECURE_COOKIE', function () {
+    $saved = [$_ENV['SESSION_SECURE_COOKIE'] ?? null, $_SERVER['SESSION_SECURE_COOKIE'] ?? null, $_ENV['APP_ENV'] ?? null, $_SERVER['APP_ENV'] ?? null];
+    unset($_ENV['SESSION_SECURE_COOKIE'], $_SERVER['SESSION_SECURE_COOKIE']);
+    putenv('SESSION_SECURE_COOKIE');
+    $_ENV['APP_ENV'] = $_SERVER['APP_ENV'] = 'production';
+
+    try {
+        $config = require config_path('session.php');
+        expect($config['secure'])->toBeTrue()
+            ->and($config['http_only'])->toBeTrue()
+            ->and($config['same_site'])->toBe('lax');
+    } finally {
+        [$a, $b, $c, $d] = $saved;
+        $_ENV['APP_ENV'] = $c;
+        $_SERVER['APP_ENV'] = $d;
+        if ($a !== null) {
+            $_ENV['SESSION_SECURE_COOKIE'] = $a;
+        }
+        if ($b !== null) {
+            $_SERVER['SESSION_SECURE_COOKIE'] = $b;
+        }
+    }
+});
+
+it('ancre les URL générées sur APP_URL en production (injection d\'en-tête Host)', function () {
+    config(['app.url' => 'https://api.exemple.test']);
+    app()['env'] = 'production';
+
+    try {
+        AppServiceProvider::pinRootUrl();
+        $url = URL::temporarySignedRoute('auth.verification.verify', now()->addMinutes(5), ['id' => 1, 'hash' => 'x']);
+
+        expect($url)->toStartWith('https://api.exemple.test/');
+    } finally {
+        app()['env'] = 'testing';
+        URL::forceRootUrl(null);
+    }
 });

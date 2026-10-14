@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -42,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        self::pinRootUrl();
+
         // Morph map obligatoire (modele.md §1.4, §8) : jamais de nom de classe en base.
         Relation::enforceMorphMap([
             'user' => User::class,
@@ -84,12 +87,12 @@ class AppServiceProvider extends ServiceProvider
 
         // Phase 4 (security.md §18) : lecture publique 60/min/IP ; commentaires 5/h/utilisateur ;
         // liens de newsletter (confirmation / désinscription) 20/h/IP.
-        RateLimiter::for('public-read', fn (Request $r) => Limit::perMinute(60)->by('public-read:'.$r->ip()));
+        RateLimiter::for('public-read', fn (Request $r) => self::publicReadLimit($r, 'public-read'));
         RateLimiter::for('blog-comment', fn (Request $r) => Limit::perHour((int) config('public_forms.comments_per_hour_per_user'))->by('blog-comment:'.($r->user()?->getAuthIdentifier() ?? $r->ip())));
         RateLimiter::for('newsletter-link', fn (Request $r) => Limit::perHour((int) config('public_forms.newsletter_link_per_hour_per_ip'))->by('newsletter-link:'.$r->ip()));
 
         // Limiteurs de l'annuaire public (security.md §18) : clé = IP.
-        RateLimiter::for('public-search', fn (Request $r) => Limit::perMinute(60)->by('public-search:'.$r->ip()));
+        RateLimiter::for('public-search', fn (Request $r) => self::publicReadLimit($r, 'public-search'));
         RateLimiter::for('geocode', fn (Request $r) => Limit::perMinute(30)->by('geocode:'.$r->ip()));
         // Phase 3 vague B (security.md §18) : avis 10 / jour / utilisateur, signalements 20 / jour / utilisateur,
         // suivi de dossier 10 / heure / IP et 5 / heure / référence (chaque tentative compte : anti-énumération).
@@ -104,5 +107,35 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
         RateLimiter::for('provider-view', fn (Request $r) => Limit::perMinute(30)->by('provider-view:'.$r->ip()));
+    }
+
+    /**
+     * Lecture publique : 60 / minute / IP pour les navigateurs. Les rendus serveur de Next.js arrivent tous de l'IP
+     * du conteneur `web` : sans distinction, tout le site partagerait ce plafond (auto-déni de service). Une requête
+     * qui présente le secret partagé SSR_SHARED_SECRET (comparaison en temps constant, jamais exposé au navigateur)
+     * dispose d'un seau distinct et plus large. Secret vide = mécanisme désactivé.
+     */
+    private static function publicReadLimit(Request $request, string $name): Limit
+    {
+        $secret = (string) config('services.ssr.secret');
+        $given = (string) $request->header('X-SSR-Secret', '');
+
+        if ($secret !== '' && $given !== '' && hash_equals($secret, $given)) {
+            return Limit::perMinute((int) config('services.ssr.per_minute', 1200))->by($name.':ssr');
+        }
+
+        return Limit::perMinute(60)->by($name.':'.$request->ip());
+    }
+
+    /**
+     * Anti « Host header injection » : en production/staging, les URL générées par l'API (liens signés de
+     * vérification d'e-mail, notamment) partent toujours de APP_URL et jamais de l'en-tête Host de la requête.
+     */
+    public static function pinRootUrl(): void
+    {
+        if (app()->environment(['production', 'staging']) && (string) config('app.url') !== '') {
+            URL::forceRootUrl((string) config('app.url'));
+            URL::forceScheme(parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https');
+        }
     }
 }

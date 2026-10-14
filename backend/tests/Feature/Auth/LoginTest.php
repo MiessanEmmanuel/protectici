@@ -161,3 +161,14 @@ it('stocke les mots de passe en Argon2id', function () {
 
     expect($raw)->toStartWith('$argon2id$');
 });
+
+it('plafonne aussi la connexion par IP (30 / minute) contre le password spraying sur des comptes différents', function () {
+    for ($i = 1; $i <= 30; $i++) {
+        $this->postJson('/api/v1/auth/login', ['email' => "spray{$i}@example.test", 'password' => 'Mauvais-mdp-123!'])
+            ->assertStatus(422);
+    }
+
+    $this->postJson('/api/v1/auth/login', ['email' => 'spray31@example.test', 'password' => 'Mauvais-mdp-123!'])
+        ->assertStatus(429)
+        ->assertExactJson(['message' => 'Trop de requêtes. Veuillez réessayer plus tard.']);
+});

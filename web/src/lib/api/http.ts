@@ -31,6 +31,8 @@ export interface RequesterConfig {
   fetchImpl?: typeof fetch;
   /** Côté serveur : renvoie l'en-tête Cookie de la requête entrante (ou null). */
   getCookieHeader?: () => Promise<string | null>;
+  /** Côté serveur : en-têtes fixes ajoutés à chaque appel (ex. secret partagé du rendu serveur). Jamais côté navigateur. */
+  serverHeaders?: () => Record<string, string>;
   /** Lecture du cookie XSRF-TOKEN (par défaut document.cookie côté navigateur). */
   readXsrfCookie?: () => string | null;
   timeoutMs?: number;
@@ -149,6 +151,8 @@ export function createRequester(config: RequesterConfig): Requester {
       }
       if (options.idempotencyKey) headers['Idempotency-Key'] = options.idempotencyKey;
     }
+
+    if (isServer && config.serverHeaders) Object.assign(headers, config.serverHeaders());
 
     if (isServer && config.getCookieHeader) {
       const cookie = await config.getCookieHeader();

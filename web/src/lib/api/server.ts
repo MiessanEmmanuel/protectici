@@ -19,6 +19,15 @@ async function getCookieHeader(): Promise<string | null> {
     .join('; ');
 }
 
+/**
+ * Secret partagé avec l'API (variable SERVEUR, jamais NEXT_PUBLIC_*) : permet à l'API de distinguer le rendu serveur
+ * (une seule IP pour tous les visiteurs) des navigateurs, pour lui appliquer un plafond de lecture distinct.
+ */
+function serverHeaders(): Record<string, string> {
+  const secret = process.env.SSR_SHARED_SECRET;
+  return secret ? { 'X-SSR-Secret': secret } : {};
+}
+
 export const serverApi: Api = USE_MOCKS
   ? mockApi
-  : buildApi(createRequester({ baseUrl: serverApiUrl(), getCookieHeader, timeoutMs: 8000 }));
+  : buildApi(createRequester({ baseUrl: serverApiUrl(), getCookieHeader, serverHeaders, timeoutMs: 8000 }));

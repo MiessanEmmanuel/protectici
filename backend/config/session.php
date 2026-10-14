@@ -167,7 +167,8 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Secure par défaut hors local/testing (un oubli de variable ne doit jamais produire un cookie non sécurisé).
+    'secure' => env('SESSION_SECURE_COOKIE', in_array(env('APP_ENV', 'production'), ['production', 'staging'], true)),
 
     /*
     |--------------------------------------------------------------------------

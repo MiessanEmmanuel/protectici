@@ -36,8 +36,12 @@ class AuthRateLimitServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Connexion : 5 / minute / (IP + email normalisé). Verrouillage progressif : LoginThrottle.
-        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)
-            ->by('login|'.self::normalizedEmail($request).'|'.$request->ip()));
+        // Plafond par IP (toutes adresses confondues) : bloque le « password spraying » (un mot de passe, N comptes)
+        // qui échappe au plafond par couple (IP + email) et épargne le CPU (Argon2id).
+        RateLimiter::for('login', fn (Request $request) => [
+            Limit::perMinute(5)->by('login|'.self::normalizedEmail($request).'|'.$request->ip()),
+            Limit::perMinute(30)->by('login-ip|'.$request->ip()),
+        ]);
 
         // Comptes admin/editor : 3 / minute. Appliqué dans le service de connexion (pas en
         // middleware) pour ne pas révéler le rôle via l'en-tête X-RateLimit-Limit.

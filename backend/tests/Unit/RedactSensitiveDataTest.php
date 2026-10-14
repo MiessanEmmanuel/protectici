@@ -23,3 +23,9 @@ it('masque toujours les e-mails et les jetons de signature', function () {
 
     expect($out)->toContain('[email]')->toContain('signature=[redacted]')->toContain('expires=1790000000');
 });
+
+it('applique le masquage à tous les canaux de journalisation réels (stderr de production inclus)', function () {
+    foreach (['single', 'daily', 'monthly', 'stderr', 'syslog', 'errorlog', 'papertrail', 'slack'] as $channel) {
+        expect(config("logging.channels.{$channel}.tap"))->toContain(RedactSensitiveData::class);
+    }
+});

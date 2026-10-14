@@ -158,3 +158,27 @@ it('liste les prestataires populaires (limite)', function () {
     $this->getJson('/api/v1/providers/popular?limit=21')->assertUnprocessable();
     $this->getJson('/api/v1/providers/popular')->assertOk()->assertJsonCount(4, 'data');
 });
+
+it('plafonne la lecture publique à 60/min/IP mais distingue le rendu serveur Next.js par secret partagé', function () {
+    config(['services.ssr.secret' => 'secret-de-test-ssr', 'services.ssr.per_minute' => 1200]);
+
+    foreach (range(1, 60) as $i) {
+        $this->getJson('/api/v1/providers')->assertOk();
+    }
+    $this->getJson('/api/v1/providers')->assertStatus(429);
+
+    // Mauvais secret : même seau que les navigateurs (déjà plein).
+    $this->withHeaders(['X-SSR-Secret' => 'mauvais'])->getJson('/api/v1/providers')->assertStatus(429);
+
+    // Bon secret : seau distinct, non saturé par les visiteurs.
+    $this->withHeaders(['X-SSR-Secret' => 'secret-de-test-ssr'])->getJson('/api/v1/providers')->assertOk();
+});
+
+it('ignore l\'en-tête SSR quand aucun secret n\'est configuré', function () {
+    config(['services.ssr.secret' => '']);
+
+    foreach (range(1, 60) as $i) {
+        $this->withHeaders(['X-SSR-Secret' => ''])->getJson('/api/v1/providers')->assertOk();
+    }
+    $this->withHeaders(['X-SSR-Secret' => ''])->getJson('/api/v1/providers')->assertStatus(429);
+});
