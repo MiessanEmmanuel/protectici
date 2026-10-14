@@ -1,0 +1,21 @@
+{
+	# TLS et HTTPS sont gérés par Cloudflare + le proxy Dockploy (Traefik) : ici HTTP interne uniquement.
+	auto_https off
+	admin off
+	frankenphp
+	order php_server before file_server
+}
+
+:8080 {
+	root * /app/public
+	encode zstd gzip
+	# Aucun en-tête révélant la pile technique.
+	header -Server
+	header -X-Powered-By
+	# Seul public/ est la racine : .env, storage/ et vendor/ ne sont jamais servis.
+	php_server
+	log {
+		output stderr
+		format console
+	}
+}

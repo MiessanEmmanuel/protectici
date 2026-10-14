@@ -1,0 +1,102 @@
+# Développement / référence : stack complète en local, `docker compose up --build`.
+# Ports hôte 8100 (API) et 3100 (web) pour ne pas entrer en conflit avec d'autres projets.
+# Les cookies Sanctum fonctionnent car localhost:3100 et localhost:8100 partagent l'hôte « localhost ».
+# Valeurs de dev uniquement (aucun secret réel). Production : voir docker-compose.prod.yml.
+
+x-backend-env: &backend-env
+  APP_NAME: ProtectIci
+  APP_ENV: local
+  APP_KEY: ${APP_KEY:?générer avec « php artisan key:generate --show »}
+  APP_DEBUG: "false"
+  APP_URL: http://localhost:8100
+  FRONTEND_URL: http://localhost:3100
+  DB_CONNECTION: pgsql
+  DB_HOST: db
+  DB_PORT: "5432"
+  DB_DATABASE: protectici_dev
+  DB_USERNAME: protectici
+  DB_PASSWORD: ${DB_PASSWORD:-dev_only_password}
+  DB_SSLMODE: disable
+  SESSION_DRIVER: database
+  SESSION_DOMAIN: localhost
+  SESSION_SECURE_COOKIE: "false"
+  SANCTUM_STATEFUL_DOMAINS: localhost:3100
+  CORS_ALLOWED_ORIGINS: http://localhost:3100
+  QUEUE_CONNECTION: database
+  CACHE_STORE: database
+  MAIL_MAILER: log
+  TURNSTILE_ENABLED: "false"
+  IP_HASH_SECRET: ${IP_HASH_SECRET:-dev_only_secret}
+  LOG_CHANNEL: stderr
+
+services:
+  db:
+    image: postgis/postgis:18-3.6
+    environment:
+      POSTGRES_DB: protectici_dev
+      POSTGRES_USER: protectici
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dev_only_password}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U protectici -d protectici_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Aucun port publié : la base n'est joignable que depuis le réseau Docker.
+
+  backend:
+    build: ./backend
+    environment:
+      <<: *backend-env
+      RUN_MIGRATIONS: "true"
+    depends_on:
+      db: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:8100:8080"
+    volumes:
+      - storage:/app/storage/app
+
+  worker:
+    build: ./backend
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600"]
+    environment: *backend-env
+    depends_on:
+      db: { condition: service_healthy }
+    volumes:
+      - storage:/app/storage/app
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'queue:work' >/dev/null"]
+      interval: 30s
+    restart: unless-stopped
+
+  scheduler:
+    build: ./backend
+    command: ["php", "artisan", "schedule:work"]
+    environment: *backend-env
+    depends_on:
+      db: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'schedule:work' >/dev/null"]
+      interval: 30s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8100
+        NEXT_PUBLIC_SITE_URL: http://localhost:3100
+        NEXT_PUBLIC_ALLOW_INDEXING: "0"
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ""
+    environment:
+      API_INTERNAL_URL: http://backend:8080
+      SESSION_COOKIE_NAME: protectici_session
+    depends_on:
+      backend: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:3100:3000"
+
+volumes:
+  pgdata:
+  storage:

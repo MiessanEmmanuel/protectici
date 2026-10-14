@@ -15,6 +15,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Permet une compilation de vérification sans toucher au dossier du serveur de développement.
   distDir: process.env.NEXT_DIST_DIR || '.next',
+  // Image Docker : serveur autonome minimal (.next/standalone).
+  output: 'standalone',
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   reactStrictMode: true,
