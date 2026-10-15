@@ -206,8 +206,9 @@ footer .legal{grid-column:1 / -1;border-top:2px solid currentColor;padding-top:1
 .pal .sw{display:inline-flex}.pal .sw i{width:10px;height:14px;display:block}
 
 /* Apparition par blocs */
-.rv{clip-path:inset(0 0 100% 0);transition:clip-path .7s cubic-bezier(.7,0,.2,1)}
-.rv.in{clip-path:inset(0 0 0 0)}
+/* Contenu visible par défaut ; l'animation ne s'active que si le script tourne. */
+.anim .rv:not(.in){clip-path:inset(0 0 100% 0)}
+.anim .rv{transition:clip-path .7s cubic-bezier(.7,0,.2,1)}
 @media (prefers-reduced-motion:reduce){.rv{clip-path:none;transition:none}.flash ul{animation:none;flex-wrap:wrap;width:auto}.flash li[aria-hidden]{display:none}.flash .tag i{animation:none}*{transition:none!important}}
 </style>
 </head>
@@ -382,8 +383,13 @@ footer .legal{grid-column:1 / -1;border-top:2px solid currentColor;padding-top:1
 const f=document.getElementById('flash'),b=f.querySelector('button');
 b.addEventListener('click',()=>{const p=f.classList.toggle('paused');b.setAttribute('aria-pressed',p);b.textContent=p?'Reprendre':'Pause';});
 document.querySelectorAll('.pal button').forEach(x=>x.addEventListener('click',()=>{document.documentElement.dataset.palette=x.dataset.p;document.querySelectorAll('.pal button').forEach(y=>y.setAttribute('aria-pressed',y===x));}));
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
-document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const els=[...document.querySelectorAll('.rv')], show=()=>els.forEach(e=>e.classList.add('in'));
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:0,rootMargin:'0px 0px -8% 0px'});
+  els.forEach(el=>{const r=el.getBoundingClientRect(); if(r.top<innerHeight) el.classList.add('in'); else io.observe(el);});
+  document.documentElement.classList.add('anim');
+  setTimeout(show,4000); // filet de sécurité : rien ne reste jamais masqué
+}
 </script>
 </body>
 </html>
