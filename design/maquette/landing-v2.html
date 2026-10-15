@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProtectIci — Maquette accueil v2 (à valider)</title>
+<meta name="description" content="Maquette de la page d'accueil ProtectIci : style sécurité, confiance, animations sobres.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* =========================================================================
+   Jetons — identité ProtectIci (logo) : bleu #0343A4, or #EAAB13, nuit #001029.
+   L'or ne sert jamais de couleur de texte sur fond clair (contraste 2,03).
+   ========================================================================= */
+:root{
+  --blue-900:#001029; --blue-800:#021a44; --blue-700:#022b6e; --blue-600:#0343A4; --blue-500:#1a5fc4;
+  --blue-100:#e6eefb; --blue-50:#f3f7fd;
+  --gold-500:#EAAB13; --gold-400:#f3c24a; --gold-100:#fdf3d8;
+  --ok-600:#0f7a43; --ok-100:#e3f5ea; --alert-600:#b42318;
+  --ink:#0b1730; --ink-2:#3b4a63; --ink-3:#5f6f87; --line:#dbe3ee; --surface:#ffffff; --bg:#f6f8fc;
+  --radius:14px; --radius-sm:10px; --shadow:0 1px 2px rgba(0,16,41,.06),0 8px 24px rgba(0,16,41,.07);
+  --shadow-lg:0 20px 50px rgba(0,16,41,.18);
+  --font-display:"Barlow Condensed",system-ui,sans-serif; --font-body:"IBM Plex Sans",system-ui,sans-serif; --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font-body);font-size:16px;line-height:1.55;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block} a{color:inherit} button{font:inherit;cursor:pointer}
+.container{width:min(1200px,100% - 32px);margin-inline:auto}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid var(--gold-500);outline-offset:3px;border-radius:6px}
+.skip{position:absolute;left:16px;top:-60px;background:var(--gold-500);color:var(--blue-900);padding:10px 16px;border-radius:8px;font-weight:700;z-index:100}
+.skip:focus{top:12px}
+svg.i{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+h1,h2,h3{font-family:var(--font-display);letter-spacing:.01em;line-height:1.05;margin:0;text-wrap:balance}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--blue-600);display:inline-flex;gap:8px;align-items:center}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--gold-500)}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 20px;border-radius:999px;border:1.5px solid transparent;font-weight:600;text-decoration:none;transition:transform .2s var(--ease),background .2s,box-shadow .2s,color .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn-gold{background:var(--gold-500);color:var(--blue-900);box-shadow:0 6px 18px rgba(234,171,19,.35)}
+.btn-gold:hover{background:var(--gold-400)}
+.btn-blue{background:var(--blue-600);color:#fff} .btn-blue:hover{background:var(--blue-700)}
+.btn-ghost{border-color:rgba(255,255,255,.35);color:#fff} .btn-ghost:hover{background:rgba(255,255,255,.08)}
+.btn-line{border-color:var(--line);color:var(--ink);background:#fff} .btn-line:hover{border-color:var(--blue-600);color:var(--blue-600)}
+
+/* ---------- Barre utilitaire ---------- */
+.util{background:var(--blue-900);color:#c9d6ee;font-size:.85rem}
+.util .container{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:38px}
+.util a{text-decoration:none} .util a:hover{color:#fff}
+.util .urg{display:flex;align-items:center;gap:8px;color:#fff;font-weight:600}
+.util .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:ping 2s infinite}
+.util .soc{display:flex;gap:14px} .util .soc svg{width:16px;height:16px}
+@media (max-width:640px){.util .hide-sm{display:none}}
+
+/* ---------- Flash info ---------- */
+.flash{background:var(--blue-800);color:#fff;border-bottom:1px solid rgba(255,255,255,.08)}
+.flash .container{display:flex;align-items:center;gap:14px;min-height:48px}
+.flash .tag{flex:none;display:inline-flex;align-items:center;gap:8px;background:var(--gold-500);color:var(--blue-900);font-family:var(--font-display);font-weight:800;letter-spacing:.08em;font-size:1rem;padding:4px 12px;border-radius:6px;text-transform:uppercase}
+.flash .tag .live{width:8px;height:8px;border-radius:50%;background:var(--alert-600);animation:blink 1.4s infinite}
+.flash .track{flex:1;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.flash ul{display:flex;gap:44px;list-style:none;margin:0;padding:0;width:max-content;animation:ticker 48s linear infinite}
+.flash .track:hover ul,.flash .track:focus-within ul,.flash.paused ul{animation-play-state:paused}
+.flash li a{display:inline-flex;gap:10px;align-items:baseline;text-decoration:none;white-space:nowrap;font-size:.95rem}
+.flash li a:hover{text-decoration:underline;text-underline-offset:3px}
+.flash time{font-family:var(--font-mono);color:var(--gold-400);font-weight:600;font-size:.85rem}
+.flash .pause{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;display:grid;place-items:center}
+.flash .pause:hover{background:rgba(255,255,255,.1)}
+@keyframes ticker{to{transform:translateX(-50%)}}
+@keyframes blink{50%{opacity:.25}}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}80%,100%{box-shadow:0 0 0 8px rgba(34,197,94,0)}}
+
+/* ---------- En-tête ---------- */
+.head{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line);transition:box-shadow .25s}
+.head.scrolled{box-shadow:0 6px 24px rgba(0,16,41,.08)}
+.head .container{display:flex;align-items:center;gap:24px;min-height:72px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand img{width:44px;height:44px}
+.brand .wm{font-family:var(--font-display);font-weight:800;font-size:1.65rem;letter-spacing:.12em;line-height:1}
+.brand .wm b{color:var(--blue-600)} .brand .wm span{color:#a8790a}
+.nav{display:flex;gap:4px;margin-left:auto}
+.nav a{padding:10px 12px;border-radius:8px;text-decoration:none;font-weight:500;color:var(--ink-2);position:relative}
+.nav a:hover{color:var(--blue-600);background:var(--blue-50)}
+.nav a[aria-current]{color:var(--blue-600)}
+.nav a[aria-current]::after{content:"";position:absolute;left:12px;right:12px;bottom:4px;height:2px;background:var(--gold-500);border-radius:2px}
+.head .cta{display:flex;gap:10px}
+.burger{display:none;margin-left:auto;width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:#fff}
+@media (max-width:1020px){.nav,.head .cta .btn-line{display:none}.burger{display:grid;place-items:center}.head .cta{margin-left:0}}
+@media (max-width:520px){.head .cta{display:none}}
+
+/* ---------- Hero ---------- */
+.hero{position:relative;overflow:hidden;color:#fff;background:radial-gradient(1200px 600px at 85% 10%,rgba(26,95,196,.55),transparent 60%),linear-gradient(160deg,var(--blue-900) 0%,var(--blue-800) 55%,var(--blue-700) 100%)}
+.hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(ellipse at 70% 40%,#000 20%,transparent 70%)}
+.hero .container{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;padding:72px 0 96px}
+.hero h1{font-size:clamp(2.6rem,5.6vw,4.6rem);font-weight:800;text-transform:uppercase}
+.hero h1 em{font-style:normal;color:var(--gold-500)}
+.hero p.lead{font-size:1.15rem;color:#c9d6ee;max-width:56ch;margin:18px 0 28px}
+.hero .eyebrow{color:var(--gold-400)}
+.search{background:#fff;color:var(--ink);border-radius:18px;padding:10px;display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:6px;box-shadow:var(--shadow-lg)}
+.search label{display:flex;flex-direction:column;gap:2px;padding:8px 14px;border-radius:12px;transition:background .2s}
+.search label:hover,.search label:focus-within{background:var(--blue-50)}
+.search label span{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.search input,.search select{border:0;background:transparent;font:inherit;font-size:1rem;color:var(--ink);padding:2px 0;outline:none;min-width:0}
+.search .go{min-height:56px;border-radius:12px;border:0;padding:0 22px;background:var(--blue-600);color:#fff;font-weight:700;display:flex;align-items:center;gap:8px}
+.search .go:hover{background:var(--blue-700)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chips a{font-size:.88rem;color:#dbe6f8;text-decoration:none;border:1px solid rgba(255,255,255,.2);padding:6px 12px;border-radius:999px;transition:background .2s,border-color .2s}
+.chips a:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.4)}
+.hero .near{display:inline-flex;align-items:center;gap:8px;margin-top:22px;color:#fff;font-weight:600;text-decoration:none;border-bottom:1px dashed rgba(255,255,255,.4);padding-bottom:2px}
+@media (max-width:980px){.hero .container{grid-template-columns:1fr;padding:48px 0 72px}.search{grid-template-columns:1fr}.radar-wrap{display:none}}
+
+/* Radar / bouclier animé */
+.radar-wrap{position:relative;aspect-ratio:1;max-width:460px;justify-self:end;width:100%}
+.radar{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(3,67,164,.35) 0,rgba(3,67,164,.08) 55%,transparent 70%);border:1px solid rgba(255,255,255,.12)}
+.radar::before,.radar::after{content:"";position:absolute;inset:16%;border-radius:50%;border:1px solid rgba(255,255,255,.12)}
+.radar::after{inset:33%}
+.sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(234,171,19,.35),rgba(234,171,19,0) 22%);animation:spin 6s linear infinite;mask-image:radial-gradient(circle closest-side,#000 97%,transparent 100%)}
+.blip{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--gold-500);box-shadow:0 0 0 0 rgba(234,171,19,.6);animation:pingg 2.4s infinite}
+.blip.b2{animation-delay:.8s;background:#7fb0ff} .blip.b3{animation-delay:1.6s}
+.shield{position:absolute;inset:30%;display:grid;place-items:center;filter:drop-shadow(0 18px 30px rgba(0,0,0,.35))}
+.shield img{width:100%;animation:float 6s ease-in-out infinite}
+.hud{position:absolute;background:rgba(0,16,41,.72);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(6px);border-radius:12px;padding:10px 14px;font-size:.82rem;color:#dbe6f8;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.hud strong{display:block;color:#fff;font-size:.95rem}
+.hud .ok{width:30px;height:30px;border-radius:8px;background:rgba(34,197,94,.18);color:#4ade80;display:grid;place-items:center}
+.hud.h1{left:-6%;top:14%} .hud.h2{right:-4%;bottom:12%}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pingg{0%{box-shadow:0 0 0 0 rgba(234,171,19,.55)}80%,100%{box-shadow:0 0 0 18px rgba(234,171,19,0)}}
+@keyframes float{50%{transform:translateY(-8px)}}
+
+/* ---------- Bande de confiance ---------- */
+.trust{margin-top:-44px;position:relative;z-index:2}
+.trust .grid{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);overflow:hidden}
+.trust .item{display:flex;gap:14px;align-items:flex-start;padding:22px}
+.trust .item+.item{border-left:1px solid var(--line)}
+.trust .ic{width:44px;height:44px;border-radius:12px;background:var(--blue-50);color:var(--blue-600);display:grid;place-items:center;flex:none}
+.trust strong{display:block;font-size:1rem} .trust p{margin:2px 0 0;color:var(--ink-3);font-size:.9rem}
+@media (max-width:900px){.trust .grid{grid-template-columns:1fr 1fr}.trust .item:nth-child(3){border-left:0}.trust .item:nth-child(n+3){border-top:1px solid var(--line)}}
+@media (max-width:540px){.trust .grid{grid-template-columns:1fr}.trust .item+.item{border-left:0;border-top:1px solid var(--line)}}
+
+/* ---------- Sections ---------- */
+section.block{padding:88px 0}
+.sec-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:28px}
+.sec-head h2{font-size:clamp(2rem,3.6vw,2.8rem);font-weight:800;text-transform:uppercase;margin-top:8px}
+.sec-head p{margin:8px 0 0;color:var(--ink-3);max-width:60ch}
+.link-more{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--blue-600);text-decoration:none;white-space:nowrap}
+.link-more:hover{gap:10px}
+.link-more,.link-more svg{transition:gap .2s var(--ease)}
+
+/* 2/3 – 1/3 */
+.split{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:980px){.split{grid-template-columns:1fr}}
+aside.rail{display:flex;flex-direction:column;gap:20px;position:sticky;top:92px}
+@media (max-width:980px){aside.rail{position:static}}
+
+/* Cartes prestataires */
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+@media (max-width:640px){.cards{grid-template-columns:1fr}}
+.pcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:14px;transition:transform .25s var(--ease),box-shadow .25s,border-color .25s;position:relative}
+.pcard:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#c5d4ea}
+.pcard .top{display:flex;gap:14px;align-items:center}
+.logo-ph{width:56px;height:56px;border-radius:12px;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:1.35rem;color:#fff;flex:none}
+.pcard h3{font-family:var(--font-body);font-size:1.08rem;font-weight:700;letter-spacing:0;line-height:1.25}
+.pcard h3 a{text-decoration:none} .pcard h3 a::after{content:"";position:absolute;inset:0;border-radius:var(--radius)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--ink-3);font-size:.88rem}
+.meta span{display:inline-flex;gap:5px;align-items:center} .meta svg{width:15px;height:15px}
+.badge{display:inline-flex;gap:5px;align-items:center;font-size:.76rem;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+.badge.ver{background:var(--ok-100);color:var(--ok-600)} .badge.ver svg{width:14px;height:14px}
+.badge.agr{background:var(--blue-100);color:var(--blue-700)}
+.stars{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--ink)}
+.stars svg{width:15px;height:15px;fill:var(--gold-500);stroke:var(--gold-500)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{font-size:.8rem;background:var(--bg);border:1px solid var(--line);padding:3px 10px;border-radius:999px;color:var(--ink-2)}
+.pcard .foot{display:flex;justify-content:space-between;align-items:center;border-top:1px dashed var(--line);padding-top:12px;font-size:.88rem}
+.pcard .foot .arrow{color:var(--blue-600);font-weight:600;display:inline-flex;gap:6px;align-items:center}
+
+/* Panneaux d'aside */
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+.panel h3{font-size:1.5rem;font-weight:800;text-transform:uppercase;margin-bottom:6px}
+.panel p{margin:0 0 14px;color:var(--ink-3);font-size:.93rem}
+.panel.dark{background:linear-gradient(160deg,var(--blue-900),var(--blue-700));color:#fff;border-color:transparent}
+.panel.dark p{color:#c9d6ee}
+.sos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.sos a{display:flex;flex-direction:column;gap:2px;padding:12px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);text-decoration:none;transition:background .2s}
+.sos a:hover{background:rgba(255,255,255,.13)}
+.sos b{font-family:var(--font-mono);font-size:1.35rem;color:var(--gold-400)} .sos small{color:#c9d6ee;font-size:.8rem}
+.near-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.near-list li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.12);font-size:.92rem}
+.near-list li span{color:#c9d6ee;font-family:var(--font-mono);font-size:.82rem;white-space:nowrap}
+.dmt{position:relative;overflow:hidden}
+.dmt::after{content:"";position:absolute;right:-40px;bottom:-40px;width:140px;height:140px;border-radius:50%;background:var(--gold-100)}
+.dmt > *{position:relative;z-index:1}
+.dmt .kinds{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.dmt .kinds span{font-size:.8rem;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:#fff}
+.nl form{display:flex;gap:8px;flex-wrap:wrap}
+.nl input{flex:1;min-width:0;min-height:46px;border:1.5px solid var(--line);border-radius:999px;padding:0 16px;font:inherit}
+.nl input:focus{border-color:var(--blue-600);outline:none;box-shadow:0 0 0 4px var(--blue-100)}
+.nl small{display:block;margin-top:8px;color:var(--ink-3);font-size:.78rem}
+
+/* Comment ça marche */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;counter-reset:s}
+@media (max-width:860px){.steps{grid-template-columns:1fr}}
+.step{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:26px;position:relative}
+.step::before{counter-increment:s;content:"0" counter(s);font-family:var(--font-display);font-weight:800;font-size:3.4rem;line-height:1;color:var(--blue-100);position:absolute;right:20px;top:14px}
+.step .ic{width:48px;height:48px;border-radius:12px;background:var(--blue-600);color:#fff;display:grid;place-items:center;margin-bottom:16px}
+.step h3{font-family:var(--font-body);font-size:1.12rem;font-weight:700;letter-spacing:0;margin-bottom:6px}
+.step p{margin:0;color:var(--ink-3)}
+
+/* Chiffres */
+.stats{background:var(--blue-900);color:#fff;position:relative;overflow:hidden}
+.stats::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.08) 1px,transparent 1px);background-size:22px 22px}
+.stats .container{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;padding:64px 0}
+.stat b{display:block;font-family:var(--font-display);font-weight:800;font-size:clamp(2.6rem,5vw,3.8rem);line-height:1;color:#fff}
+.stat b sup{color:var(--gold-500);font-size:.5em;vertical-align:top}
+.stat span{color:#c9d6ee}
+@media (max-width:760px){.stats .container{grid-template-columns:1fr 1fr}}
+
+/* Forces étatiques */
+.forces{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media (max-width:900px){.forces{grid-template-columns:1fr 1fr}}
+.force{display:flex;flex-direction:column;gap:10px;padding:20px;border-radius:var(--radius);background:#fff;border:1px solid var(--line);text-decoration:none;transition:border-color .2s,transform .25s var(--ease)}
+.force:hover{border-color:var(--blue-600);transform:translateY(-2px)}
+.force .ic{width:42px;height:42px;border-radius:50%;background:var(--blue-50);color:var(--blue-600);display:grid;place-items:center}
+.force strong{font-size:1.02rem} .force span{color:var(--ink-3);font-size:.88rem}
+
+/* Blog 2/3 – 1/3 */
+.feature{display:grid;grid-template-columns:1.1fr 1fr;background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:box-shadow .25s}
+.feature:hover{box-shadow:var(--shadow)}
+.feature .media{min-height:280px;background:linear-gradient(135deg,var(--blue-700),var(--blue-900));position:relative;display:grid;place-items:center;color:rgba(255,255,255,.2)}
+.feature .media svg{width:120px;height:120px;stroke-width:1}
+.feature .body{padding:26px;display:flex;flex-direction:column;gap:10px}
+.cat{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--blue-600);font-weight:600}
+.feature h3{font-family:var(--font-body);font-size:1.4rem;font-weight:700;letter-spacing:0;line-height:1.25}
+.feature h3 a{text-decoration:none} .feature h3 a:hover{color:var(--blue-600)}
+.feature p{margin:0;color:var(--ink-3)}
+.byline{font-size:.85rem;color:var(--ink-3);display:flex;gap:12px;margin-top:auto}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.mini article{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.mini h4{margin:6px 0 0;font-size:1.02rem;line-height:1.3} .mini h4 a{text-decoration:none} .mini h4 a:hover{color:var(--blue-600)}
+@media (max-width:760px){.feature,.mini{grid-template-columns:1fr}}
+.top-list{list-style:none;margin:0;padding:0;counter-reset:t}
+.top-list li{display:grid;grid-template-columns:34px 1fr;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.top-list li:first-child{border-top:0}
+.top-list li::before{counter-increment:t;content:counter(t);font-family:var(--font-display);font-weight:800;font-size:1.8rem;line-height:1;color:var(--blue-600)}
+.top-list a{text-decoration:none;font-weight:600;line-height:1.35} .top-list a:hover{color:var(--blue-600)}
+.top-list small{display:block;color:var(--ink-3);font-weight:400;margin-top:3px}
+
+/* Bande établissements */
+.join{position:relative;overflow:hidden;border-radius:22px;background:linear-gradient(120deg,var(--blue-600),var(--blue-800));color:#fff;padding:48px;display:grid;grid-template-columns:1.4fr 1fr;gap:32px;align-items:center}
+.join::after{content:"";position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;border:40px solid rgba(234,171,19,.18)}
+.join h2{font-size:clamp(2rem,3.6vw,2.8rem);font-weight:800;text-transform:uppercase}
+.join p{color:#dbe6f8;margin:10px 0 0}
+.join ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;position:relative;z-index:1}
+.join li{display:flex;gap:10px;align-items:center}
+.join li svg{color:var(--gold-500)}
+.join .acts{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+@media (max-width:860px){.join{grid-template-columns:1fr;padding:32px}}
+
+/* Partenaires */
+.logos{overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.logos ul{display:flex;gap:56px;list-style:none;margin:0;padding:8px 0;width:max-content;animation:ticker 40s linear infinite}
+.logos:hover ul,.logos:focus-within ul{animation-play-state:paused}
+.logos li{font-family:var(--font-display);font-weight:700;font-size:1.5rem;letter-spacing:.08em;text-transform:uppercase;color:#8d9ab0;white-space:nowrap;display:flex;align-items:center;gap:10px}
+.logos li svg{width:26px;height:26px}
+
+/* Pied de page */
+footer{background:var(--blue-900);color:#c9d6ee;margin-top:88px}
+footer .container{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px;padding:64px 0 32px}
+footer h4{color:#fff;font-family:var(--font-display);font-size:1.15rem;letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px}
+footer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px}
+footer a{text-decoration:none} footer a:hover{color:#fff;text-decoration:underline;text-underline-offset:3px}
+footer .legal{border-top:1px solid rgba(255,255,255,.1);padding:18px 0;font-size:.85rem;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media (max-width:860px){footer .container{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){footer .container{grid-template-columns:1fr}}
+
+/* Bandeau maquette */
+.proto{position:fixed;right:16px;bottom:16px;z-index:60;background:var(--blue-900);color:#fff;border:1px solid rgba(255,255,255,.2);padding:10px 14px;border-radius:12px;font-size:.82rem;box-shadow:var(--shadow-lg);max-width:320px}
+.proto b{color:var(--gold-400)}
+
+/* Apparition au défilement */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+.stagger > *{opacity:0;transform:translateY(14px) scale(.98);transition:opacity .45s var(--ease),transform .45s var(--ease)}
+.stagger.in > *{opacity:1;transform:none}
+.stagger.in > *:nth-child(2){transition-delay:.07s}.stagger.in > *:nth-child(3){transition-delay:.14s}.stagger.in > *:nth-child(4){transition-delay:.21s}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .reveal,.stagger > *{opacity:1;transform:none}
+  .flash ul{flex-wrap:wrap;width:auto;row-gap:6px}
+  .flash ul li[aria-hidden]{display:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu principal</a>
+
+<!-- Icônes SVG (trait, style Lucide) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-badge" viewBox="0 0 24 24"><path d="M12 2l2.4 1.8 3-.2.9 2.9 2.5 1.7-1 2.8 1 2.8-2.5 1.7-.9 2.9-3-.2L12 22l-2.4-1.8-3 .2-.9-2.9L3.2 15.8l1-2.8-1-2.8 2.5-1.7.9-2.9 3 .2z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3.3.4 1.5 1.4 2.8 2.5 2.8z"/></symbol>
+  <symbol id="i-siren" viewBox="0 0 24 24"><path d="M7 18v-6a5 5 0 0 1 10 0v6M5 21h14v-3H5zM21 12h1M18.5 4.5 18 5M2 12h1M12 2v1M4.9 4.9l.7.7"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="m7 4 13 8-13 8z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M16 8 22 5v14l-6-3"/><rect x="2" y="6" width="14" height="12" rx="2"/></symbol>
+  <symbol id="i-dog" viewBox="0 0 24 24"><path d="M10 5.2C10 3.9 8.9 2.8 7.5 3 4.8 3.3 2.7 6.6 3.4 9.7c.2.9 1.5 1.3 2.2.6M14.3 5.2c0-1.3 1.1-2.4 2.5-2.2 2.7.3 4.8 3.6 4.1 6.7-.2.9-1.5 1.3-2.2.6M8 14v.5M16 14v.5M11.3 17.5h1.4L12 18.6z"/><path d="M4.4 11.1C4.1 12.3 4 13.5 4 14.8 4 18.6 7.6 21 12 21s8-2.4 8-6.2c0-1.3-.1-2.5-.4-3.7"/></symbol>
+  <symbol id="i-fb" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></symbol>
+  <symbol id="i-in" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M4 4l16 16M20 4 4 20"/></symbol>
+</svg>
+
+<div class="proto" role="note"><b>Maquette à valider</b> — accueil v2 · contenu factice · aucune donnée réelle.</div>
+
+<!-- Barre utilitaire -->
+<div class="util">
+  <div class="container">
+    <span class="urg"><span class="dot" aria-hidden="true"></span> Assistance 24h/24 · <a href="tel:+2250709445111">+225 07 09 44 51 11</a></span>
+    <span class="hide-sm">Abidjan Plateau, immeuble Eden</span>
+    <nav class="soc" aria-label="Réseaux sociaux">
+      <a href="#" aria-label="Facebook"><svg class="i"><use href="#i-fb"/></svg></a>
+      <a href="#" aria-label="LinkedIn"><svg class="i"><use href="#i-in"/></svg></a>
+      <a href="#" aria-label="X (Twitter)"><svg class="i"><use href="#i-x"/></svg></a>
+    </nav>
+  </div>
+</div>
+
+<!-- Flash info -->
+<div class="flash" id="flash" role="region" aria-label="Flash info">
+  <div class="container">
+    <span class="tag"><span class="live" aria-hidden="true"></span>Flash info</span>
+    <div class="track">
+      <ul>
+        <li><a href="#"><time datetime="09:42">09H42</time> Abidjan : renforcement des patrouilles de nuit à Cocody et Marcory</a></li>
+        <li><a href="#"><time datetime="10:15">10H15</time> Arnaques au mobile money : les signes qui doivent alerter</a></li>
+        <li><a href="#"><time datetime="11:30">11H30</time> Nouvelle session de formation des agents de sécurité incendie à Yamoussoukro</a></li>
+        <li><a href="#"><time datetime="13:05">13H05</time> Comment vérifier l’agrément d’une société de gardiennage</a></li>
+        <li><a href="#"><time datetime="14:20">14H20</time> Cybersécurité : activez la double authentification sur vos comptes</a></li>
+        <!-- duplication pour la boucle continue (masquée aux lecteurs d'écran) -->
+        <li aria-hidden="true"><a href="#" tabindex="-1"><time>09H42</time> Abidjan : renforcement des patrouilles de nuit à Cocody et Marcory</a></li>
+        <li aria-hidden="true"><a href="#" tabindex="-1"><time>10H15</time> Arnaques au mobile money : les signes qui doivent alerter</a></li>
+        <li aria-hidden="true"><a href="#" tabindex="-1"><time>11H30</time> Nouvelle session de formation des agents de sécurité incendie à Yamoussoukro</a></li>
+        <li aria-hidden="true"><a href="#" tabindex="-1"><time>13H05</time> Comment vérifier l’agrément d’une société de gardiennage</a></li>
+        <li aria-hidden="true"><a href="#" tabindex="-1"><time>14H20</time> Cybersécurité : activez la double authentification sur vos comptes</a></li>
+      </ul>
+    </div>
+    <button class="pause" type="button" aria-pressed="false" aria-label="Mettre en pause le défilement"><svg class="i"><use href="#i-pause"/></svg></button>
+  </div>
+</div>
+
+<!-- En-tête -->
+<header class="head" id="head">
+  <div class="container">
+    <a class="brand" href="#" aria-label="ProtectIci — accueil">
+      <img src="../assets/elephant-icon-192.png" alt="" width="44" height="44">
+      <span class="wm"><span>PROTECT</span><b>ICI</b></span>
+    </a>
+    <nav class="nav" aria-label="Navigation principale">
+      <a href="#" aria-current="page">Accueil</a>
+      <a href="#prestataires">Prestataires</a>
+      <a href="#forces">Forces étatiques</a>
+      <a href="#blog">Blog</a>
+      <a href="#">Dis-moi tout</a>
+      <a href="#">Contact</a>
+    </nav>
+    <div class="cta">
+      <a class="btn btn-line" href="#">Se connecter</a>
+      <a class="btn btn-blue" href="#">Demander un devis</a>
+    </div>
+    <button class="burger" type="button" aria-label="Ouvrir le menu"><svg class="i"><use href="#i-menu"/></svg></button>
+  </div>
+</header>
+
+<main id="contenu">
+  <!-- Hero -->
+  <section class="hero" aria-labelledby="hero-t">
+    <div class="container">
+      <div class="reveal">
+        <span class="eyebrow">Sécurité &amp; sûreté privées · Côte d’Ivoire</span>
+        <h1 id="hero-t" style="margin-top:14px">Protégez ce qui compte avec des <em>professionnels vérifiés</em></h1>
+        <p class="lead">Comparez les entreprises de sécurité agréées, trouvez la force de l’ordre la plus proche et partagez votre expérience. Chaque fiche est contrôlée par notre équipe avant publication.</p>
+        <form class="search" role="search" aria-label="Rechercher un prestataire" onsubmit="return false">
+          <label><span>Quoi ?</span><input type="search" name="q" placeholder="Gardiennage, vidéosurveillance…" aria-label="Service ou entreprise"></label>
+          <label><span>Où ?</span>
+            <select name="city" aria-label="Ville"><option>Toutes les villes</option><option>Abidjan</option><option>Yamoussoukro</option><option>Bouaké</option><option>San-Pédro</option></select></label>
+          <label><span>Type</span>
+            <select name="type" aria-label="Type d’entreprise"><option>Tous les types</option><option>Entreprise agréée</option><option>Centre de formation</option><option>Vente de matériel</option></select></label>
+          <button class="go" type="submit"><svg class="i"><use href="#i-search"/></svg>Rechercher</button>
+        </form>
+        <div class="chips" aria-label="Recherches fréquentes">
+          <a href="#">Gardiennage armé</a><a href="#">Vidéosurveillance</a><a href="#">Brigade canine</a><a href="#">Sécurité incendie</a><a href="#">Escorte</a>
+        </div>
+        <a class="near" href="#forces"><svg class="i"><use href="#i-pin"/></svg>Trouver le commissariat le plus proche de moi</a>
+      </div>
+      <div class="radar-wrap" aria-hidden="true">
+        <div class="radar"></div><div class="sweep"></div>
+        <span class="blip" style="left:22%;top:30%"></span><span class="blip b2" style="left:70%;top:24%"></span><span class="blip b3" style="left:62%;top:72%"></span>
+        <div class="shield"><img src="../assets/elephant-icon-192.png" alt=""></div>
+        <div class="hud h1"><span class="ok"><svg class="i"><use href="#i-check"/></svg></span><div><strong>Fiche vérifiée</strong>Agrément contrôlé</div></div>
+        <div class="hud h2"><span class="ok"><svg class="i"><use href="#i-pin"/></svg></span><div><strong>3 prestataires</strong>à moins de 2 km</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Confiance -->
+  <div class="trust container" role="list" aria-label="Nos garanties">
+    <div class="grid stagger">
+      <div class="item" role="listitem"><span class="ic"><svg class="i"><use href="#i-badge"/></svg></span><div><strong>Fiches vérifiées</strong><p>Chaque établissement est validé manuellement.</p></div></div>
+      <div class="item" role="listitem"><span class="ic"><svg class="i"><use href="#i-file"/></svg></span><div><strong>Agréments contrôlés</strong><p>RCCM et n° d’agrément vérifiés.</p></div></div>
+      <div class="item" role="listitem"><span class="ic"><svg class="i"><use href="#i-star"/></svg></span><div><strong>Avis modérés</strong><p>Un avis par client, relu avant publication.</p></div></div>
+      <div class="item" role="listitem"><span class="ic"><svg class="i"><use href="#i-lock"/></svg></span><div><strong>Données protégées</strong><p>Vos informations ne sont jamais revendues.</p></div></div>
+    </div>
+  </div>
+
+  <!-- 2/3 – 1/3 : prestataires + aside urgence / dis-moi tout / newsletter -->
+  <section class="block" id="prestataires" aria-labelledby="pop-t">
+    <div class="container split">
+      <div>
+        <div class="sec-head reveal">
+          <div><span class="eyebrow">Annuaire</span><h2 id="pop-t">Prestataires populaires</h2><p>Les entreprises les plus consultées et les mieux notées ce mois-ci.</p></div>
+          <a class="link-more" href="#">Tout l’annuaire <svg class="i"><use href="#i-arrow"/></svg></a>
+        </div>
+        <div class="cards stagger">
+          <article class="pcard">
+            <div class="top"><span class="logo-ph" style="background:#0343A4">DS</span><div><h3><a href="#">Dauphin Sécurité</a></h3><div class="meta"><span><svg class="i"><use href="#i-pin"/></svg>Abidjan · Plateau</span></div></div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="badge ver"><svg class="i"><use href="#i-check"/></svg>Vérifié</span><span class="badge agr">Agréé</span></div>
+            <div class="tags"><span>Gardiennage armé</span><span>Garde rapprochée</span><span>Intervention</span></div>
+            <div class="foot"><span class="stars"><svg class="i"><use href="#i-star"/></svg>4,6 <small style="color:var(--ink-3);font-weight:400">(38 avis)</small></span><span class="arrow">Voir la fiche <svg class="i"><use href="#i-arrow"/></svg></span></div>
+          </article>
+          <article class="pcard">
+            <div class="top"><span class="logo-ph" style="background:#022b6e">SG</span><div><h3><a href="#">Sentinelle Garde</a></h3><div class="meta"><span><svg class="i"><use href="#i-pin"/></svg>Abidjan · Cocody</span></div></div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="badge ver"><svg class="i"><use href="#i-check"/></svg>Vérifié</span><span class="badge agr">Agréé</span></div>
+            <div class="tags"><span>Vidéosurveillance</span><span>Alarme</span><span>Télésurveillance</span></div>
+            <div class="foot"><span class="stars"><svg class="i"><use href="#i-star"/></svg>4,8 <small style="color:var(--ink-3);font-weight:400">(52 avis)</small></span><span class="arrow">Voir la fiche <svg class="i"><use href="#i-arrow"/></svg></span></div>
+          </article>
+          <article class="pcard">
+            <div class="top"><span class="logo-ph" style="background:#1a5fc4">BC</span><div><h3><a href="#">Bouclier Canin</a></h3><div class="meta"><span><svg class="i"><use href="#i-pin"/></svg>Yamoussoukro</span></div></div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="badge ver"><svg class="i"><use href="#i-check"/></svg>Vérifié</span></div>
+            <div class="tags"><span>Brigade canine</span><span>Détection</span><span>Événementiel</span></div>
+            <div class="foot"><span class="stars"><svg class="i"><use href="#i-star"/></svg>4,4 <small style="color:var(--ink-3);font-weight:400">(17 avis)</small></span><span class="arrow">Voir la fiche <svg class="i"><use href="#i-arrow"/></svg></span></div>
+          </article>
+          <article class="pcard">
+            <div class="top"><span class="logo-ph" style="background:#001029">RI</span><div><h3><a href="#">Rempart Incendie</a></h3><div class="meta"><span><svg class="i"><use href="#i-pin"/></svg>San-Pédro</span></div></div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="badge ver"><svg class="i"><use href="#i-check"/></svg>Vérifié</span><span class="badge agr">Agréé</span></div>
+            <div class="tags"><span>Sécurité incendie</span><span>Formation</span><span>Audit</span></div>
+            <div class="foot"><span class="stars"><svg class="i"><use href="#i-star"/></svg>4,7 <small style="color:var(--ink-3);font-weight:400">(24 avis)</small></span><span class="arrow">Voir la fiche <svg class="i"><use href="#i-arrow"/></svg></span></div>
+          </article>
+        </div>
+      </div>
+
+      <aside class="rail" aria-label="Urgences et services">
+        <div class="panel dark reveal">
+          <h3>Urgence</h3>
+          <p>En cas de danger immédiat, appelez directement les services de l’État.</p>
+          <div class="sos">
+            <a href="tel:110"><b>110</b><small>Police secours</small></a>
+            <a href="tel:180"><b>180</b><small>Sapeurs-pompiers</small></a>
+            <a href="tel:185"><b>185</b><small>SAMU</small></a>
+            <a href="tel:+2250709445111"><b style="font-size:1rem;line-height:1.9">24h/24</b><small>Assistance ProtectIci</small></a>
+          </div>
+          <p style="font-size:.78rem;margin:0 0 10px">Numéros d’urgence à confirmer avant la mise en ligne.</p>
+          <ul class="near-list" aria-label="Forces étatiques les plus proches (exemple)">
+            <li>Commissariat du 1er arrondissement <span>0,8 km</span></li>
+            <li>Brigade de gendarmerie du Plateau <span>1,4 km</span></li>
+            <li>Caserne de sapeurs-pompiers d’Indénié <span>2,1 km</span></li>
+          </ul>
+        </div>
+        <div class="panel dmt reveal">
+          <span class="eyebrow">Dis-moi tout</span>
+          <h3 style="margin-top:8px">Votre avis compte</h3>
+          <p>Un agent remarquable, une prestation décevante ? Racontez-nous, nous suivons chaque dossier.</p>
+          <div class="kinds"><span>Encouragement</span><span>Question</span><span>Plainte</span><span>Suggestion</span></div>
+          <a class="btn btn-blue" href="#"><svg class="i"><use href="#i-msg"/></svg>Partager mon expérience</a>
+        </div>
+        <div class="panel nl reveal">
+          <h3>Newsletter</h3>
+          <p>Conseils de sécurité et alertes, une fois par mois.</p>
+          <form onsubmit="return false"><label class="sr-only" for="nl">Adresse e-mail</label><input id="nl" type="email" placeholder="vous@exemple.ci" autocomplete="email"><button class="btn btn-gold" type="submit">S’abonner</button></form>
+          <small>Double confirmation par e-mail · désinscription en un clic.</small>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Chiffres -->
+  <section class="stats" aria-label="ProtectIci en chiffres">
+    <div class="container stagger">
+      <div class="stat"><b data-count="370">0</b><span>prestataires vérifiés</span></div>
+      <div class="stat"><b data-count="25">0</b><span>types de services</span></div>
+      <div class="stat"><b data-count="120">0</b><span>forces étatiques référencées</span></div>
+      <div class="stat"><b data-count="4.7" data-dec="1">0</b><span>note moyenne des avis <sup>/5</sup></span></div>
+    </div>
+  </section>
+
+  <!-- Comment ça marche -->
+  <section class="block" aria-labelledby="how-t">
+    <div class="container">
+      <div class="sec-head reveal"><div><span class="eyebrow">Simple et transparent</span><h2 id="how-t">Comment ça marche</h2></div></div>
+      <div class="steps stagger">
+        <div class="step"><span class="ic"><svg class="i"><use href="#i-search"/></svg></span><h3>Recherchez</h3><p>Filtrez par service, ville, quartier ou par proximité sur la carte.</p></div>
+        <div class="step"><span class="ic"><svg class="i"><use href="#i-eye"/></svg></span><h3>Comparez</h3><p>Agrément, avis vérifiés, tarifs de départ et dirigeants : tout est sur la fiche.</p></div>
+        <div class="step"><span class="ic"><svg class="i"><use href="#i-file"/></svg></span><h3>Demandez un devis</h3><p>Une seule demande, jusqu’à cinq prestataires. Réponse suivie par notre équipe.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Forces étatiques -->
+  <section class="block" id="forces" style="padding-top:0" aria-labelledby="f-t">
+    <div class="container">
+      <div class="sec-head reveal"><div><span class="eyebrow">Forces étatiques</span><h2 id="f-t">Quelle démarche ?</h2><p>Trouvez la structure compétente la plus proche selon votre besoin.</p></div><a class="link-more" href="#">Toutes les structures <svg class="i"><use href="#i-arrow"/></svg></a></div>
+      <div class="forces stagger">
+        <a class="force" href="#"><span class="ic"><svg class="i"><use href="#i-file"/></svg></span><strong>Déposer une plainte</strong><span>Commissariats et brigades</span></a>
+        <a class="force" href="#"><span class="ic"><svg class="i"><use href="#i-eye"/></svg></span><strong>Signaler un fait suspect</strong><span>Police et gendarmerie</span></a>
+        <a class="force" href="#"><span class="ic"><svg class="i"><use href="#i-shield"/></svg></span><strong>Déclaration de perte</strong><span>Pièces et documents</span></a>
+        <a class="force" href="#"><span class="ic"><svg class="i"><use href="#i-siren"/></svg></span><strong>Constat d’accident</strong><span>Unités de circulation</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2/3 – 1/3 : blog + aside les plus lus -->
+  <section class="block" id="blog" style="padding-top:0" aria-labelledby="b-t">
+    <div class="container split">
+      <div>
+        <div class="sec-head reveal"><div><span class="eyebrow">Blog &amp; dossiers</span><h2 id="b-t">À la une</h2></div><a class="link-more" href="#">Tous les articles <svg class="i"><use href="#i-arrow"/></svg></a></div>
+        <article class="feature reveal">
+          <div class="media" aria-hidden="true"><svg class="i"><use href="#i-shield"/></svg></div>
+          <div class="body">
+            <span class="cat">Actualités</span>
+            <h3><a href="#">Comment choisir une société de gardiennage à Abidjan</a></h3>
+            <p>Agrément, assurance, formation des agents : les points à vérifier avant de signer un contrat.</p>
+            <div class="byline"><span>2 sept. 2026</span><span>· 5 min de lecture</span></div>
+          </div>
+        </article>
+        <div class="mini stagger">
+          <article><span class="cat">Cybercriminalité</span><h4><a href="#">Protéger ses comptes en ligne : les bons réflexes</a></h4></article>
+          <article><span class="cat">Sécurité incendie</span><h4><a href="#">Prévention incendie dans les commerces : l’essentiel</a></h4></article>
+        </div>
+      </div>
+      <aside class="rail" aria-label="Articles les plus lus">
+        <div class="panel reveal">
+          <h3>Les plus lus</h3>
+          <ol class="top-list">
+            <li><a href="#">Arnaques par mobile money : les signes qui doivent alerter<small>Cybercriminalité · 1 240 vues</small></a></li>
+            <li><a href="#">Métiers de la sécurité privée : se former en Côte d’Ivoire<small>Formation · 980 vues</small></a></li>
+            <li><a href="#">Domotique : sécuriser sa maison connectée<small>Domotique · 760 vues</small></a></li>
+            <li><a href="#">Alarme ou télésurveillance : que choisir ?<small>Anti-intrusion · 640 vues</small></a></li>
+          </ol>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Établissements -->
+  <section class="container reveal" aria-labelledby="j-t">
+    <div class="join">
+      <div style="position:relative;z-index:1">
+        <span class="eyebrow" style="color:var(--gold-400)">Professionnels</span>
+        <h2 id="j-t" style="margin-top:10px">Votre entreprise de sécurité mérite d’être trouvée</h2>
+        <p>Inscrivez votre établissement gratuitement. Après vérification, votre fiche est publiée et vous recevez les demandes de devis.</p>
+        <div class="acts"><a class="btn btn-gold" href="#">Inscrire mon établissement <svg class="i"><use href="#i-arrow"/></svg></a><a class="btn btn-ghost" href="#">En savoir plus</a></div>
+      </div>
+      <ul>
+        <li><svg class="i"><use href="#i-check"/></svg>Fiche complète : services, zones, contacts</li>
+        <li><svg class="i"><use href="#i-check"/></svg>Badge « vérifié » après contrôle de l’agrément</li>
+        <li><svg class="i"><use href="#i-check"/></svg>Réponse aux avis et aux demandes de devis</li>
+        <li><svg class="i"><use href="#i-check"/></svg>Espace prestataire sécurisé (double authentification)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Partenaires -->
+  <section class="block" aria-labelledby="p-t" style="padding-bottom:0">
+    <div class="container">
+      <div class="sec-head reveal" style="justify-content:center;text-align:center"><div><span class="eyebrow">Ils nous font confiance</span><h2 id="p-t">Partenaires &amp; clients</h2></div></div>
+      <div class="logos" aria-label="Partenaires (exemples fictifs)">
+        <ul>
+          <li><svg class="i"><use href="#i-shield"/></svg>Groupe Lagune</li><li><svg class="i"><use href="#i-badge"/></svg>Clinique Sainte-Aurore</li><li><svg class="i"><use href="#i-users"/></svg>Les Palmiers</li><li><svg class="i"><use href="#i-cam"/></svg>Assur’Ivoire</li><li><svg class="i"><use href="#i-flame"/></svg>Port-Sûr</li><li><svg class="i"><use href="#i-lock"/></svg>Banque du Golfe</li>
+          <li aria-hidden="true"><svg class="i"><use href="#i-shield"/></svg>Groupe Lagune</li><li aria-hidden="true"><svg class="i"><use href="#i-badge"/></svg>Clinique Sainte-Aurore</li><li aria-hidden="true"><svg class="i"><use href="#i-users"/></svg>Les Palmiers</li><li aria-hidden="true"><svg class="i"><use href="#i-cam"/></svg>Assur’Ivoire</li><li aria-hidden="true"><svg class="i"><use href="#i-flame"/></svg>Port-Sûr</li><li aria-hidden="true"><svg class="i"><use href="#i-lock"/></svg>Banque du Golfe</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <div>
+      <a class="brand" href="#" aria-label="ProtectIci — accueil"><img src="../assets/elephant-icon-192.png" alt="" width="44" height="44"><span class="wm" style="color:#fff"><span style="color:var(--gold-500)">PROTECT</span><b style="color:#7fb0ff">ICI</b></span></a>
+      <p style="margin:14px 0">Première plateforme d’information et de services dédiée à la sécurité et à la sûreté privées en Côte d’Ivoire.</p>
+      <p style="margin:0"><a href="tel:+2250709445111">+225 07 09 44 51 11</a> · <a href="mailto:info@protectici.ci">info@protectici.ci</a></p>
+    </div>
+    <div><h4>Annuaire</h4><ul><li><a href="#">Prestataires</a></li><li><a href="#">Forces étatiques</a></li><li><a href="#">Inscrire un établissement</a></li><li><a href="#">Demande de devis</a></li></ul></div>
+    <div><h4>ProtectIci</h4><ul><li><a href="#">Qui sommes-nous</a></li><li><a href="#">Nos partenaires</a></li><li><a href="#">Nos clients</a></li><li><a href="#">Contact</a></li></ul></div>
+    <div><h4>Informations</h4><ul><li><a href="#">Mentions légales</a></li><li><a href="#">Confidentialité</a></li><li><a href="#">CGU</a></li><li><a href="#">Gérer mes cookies</a></li></ul></div>
+  </div>
+  <div class="container legal"><span>© 2022–2026 ProtectIci — Une plateforme FYG Technologies</span><span>Fiches vérifiées · Avis modérés · Données protégées</span></div>
+</footer>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // En-tête : ombre au défilement
+  const head = document.getElementById('head');
+  addEventListener('scroll', () => head.classList.toggle('scrolled', scrollY > 8), { passive: true });
+  // Flash info : bouton pause accessible
+  const flash = document.getElementById('flash'), btn = flash.querySelector('.pause');
+  btn.addEventListener('click', () => {
+    const p = flash.classList.toggle('paused');
+    btn.setAttribute('aria-pressed', p); btn.setAttribute('aria-label', p ? 'Reprendre le défilement' : 'Mettre en pause le défilement');
+    btn.innerHTML = `<svg class="i"><use href="#i-${p ? 'play' : 'pause'}"/></svg>`;
+  });
+  // Apparitions + compteurs
+  const count = el => {
+    const end = parseFloat(el.dataset.count), dec = +(el.dataset.dec || 0);
+    if (reduce) { el.textContent = end.toLocaleString('fr-FR', { minimumFractionDigits: dec }); return; }
+    const t0 = performance.now(), d = 1400;
+    const step = t => { const k = Math.min(1, (t - t0) / d), v = end * (1 - Math.pow(1 - k, 3));
+      el.textContent = v.toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + (k === 1 && !dec ? '+' : '');
+      if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  };
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add('in');
+    e.target.querySelectorAll('[data-count]').forEach(count);
+    io.unobserve(e.target);
+  }), { threshold: .15 });
+  document.querySelectorAll('.reveal,.stagger').forEach(el => io.observe(el));
+})();
+</script>
+</body>
+</html>
