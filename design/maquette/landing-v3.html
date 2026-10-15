@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProtectIci — Maquette accueil v3 (institutionnel)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Direction « institutionnel strict » : angles droits, aucun dégradé, aucune ombre portée,
+   noir / blanc / gris + le bleu du logo pour les liens et les actions uniquement. */
+:root{
+  --ink:#0b0c0c; --ink-2:#505a5f; --line:#b1b4b6; --line-soft:#d8dadb; --grey:#f3f2f1; --white:#fff;
+  --blue:#0343A4; --blue-dark:#022d6e; --blue-visited:#4c2c92;
+  --font:"Public Sans",Arial,sans-serif;
+  --w:1100px;
+}
+*{box-sizing:border-box;border-radius:0}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--font);font-size:19px;line-height:1.45;color:var(--ink);background:var(--white);font-variant-numeric:tabular-nums}
+@media (max-width:640px){body{font-size:17px}}
+.w{width:min(var(--w),100% - 32px);margin-inline:auto}
+a{color:var(--blue);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.15em}
+a:hover{color:var(--blue-dark);text-decoration-thickness:3px}
+:focus-visible{outline:3px solid var(--ink);outline-offset:0;box-shadow:0 0 0 6px #fff}
+a:focus-visible{outline:none;background:var(--ink);color:#fff;text-decoration:none;box-shadow:0 -2px var(--ink),0 4px var(--ink)}
+h1,h2,h3{margin:0;font-weight:800;line-height:1.1;letter-spacing:-.01em}
+h1{font-size:clamp(2.1rem,5vw,3.2rem)}
+h2{font-size:clamp(1.5rem,3vw,2.1rem)}
+h3{font-size:1.2rem;font-weight:700}
+p{margin:0 0 1em}
+.lead{font-size:1.25em;max-width:38ch}
+.muted{color:var(--ink-2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.skip{position:absolute;left:-9999px}.skip:focus{left:16px;top:8px;z-index:10;background:var(--ink);color:#fff;padding:10px}
+
+/* En-tête noir + filet bleu */
+.top{background:var(--ink);color:#fff;border-bottom:10px solid var(--blue)}
+.top .w{display:flex;align-items:center;gap:32px;min-height:64px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:800;font-size:1.35rem;letter-spacing:.06em}
+.logo:hover{color:#fff;text-decoration:underline;text-decoration-thickness:3px}
+.logo img{width:36px;height:36px;background:#fff;padding:3px}
+.top nav{display:flex;gap:24px;margin-left:auto;flex-wrap:wrap}
+.top nav a{color:#fff;font-weight:700;font-size:.9em;text-decoration:none;padding:20px 0 17px;border-bottom:3px solid transparent}
+.top nav a:hover,.top nav a[aria-current]{border-bottom-color:#fff;text-decoration:none}
+.top .acc{color:#fff;font-size:.9em;font-weight:700}
+@media (max-width:860px){.top nav{display:none}.top .acc{margin-left:auto}}
+
+/* Bandeau de phase (maquette) */
+.phase{border-bottom:1px solid var(--line)}
+.phase .w{display:flex;gap:12px;align-items:center;padding:10px 0;font-size:.8em}
+.tag{display:inline-block;background:var(--blue);color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:.85em;padding:3px 8px}
+
+/* Flash info */
+.flash{background:var(--grey);border-bottom:1px solid var(--line)}
+.flash .w{display:flex;align-items:stretch;gap:0;min-height:48px}
+.flash .lbl{flex:none;display:flex;align-items:center;background:var(--ink);color:#fff;font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:.8em;padding:0 14px}
+.flash .track{flex:1;overflow:hidden;display:flex;align-items:center;border-right:1px solid var(--line)}
+.flash ul{display:flex;list-style:none;margin:0;padding:0;width:max-content;animation:tick 60s linear infinite}
+.flash.paused ul,.flash .track:hover ul,.flash .track:focus-within ul{animation-play-state:paused}
+.flash li{padding:0 28px;border-left:1px solid var(--line);white-space:nowrap;font-size:.88em}
+.flash li:first-child{border-left:0}
+.flash time{font-weight:800;margin-right:8px}
+.flash li a{color:var(--ink);text-decoration:none} .flash li a:hover{text-decoration:underline}
+.flash button{flex:none;border:0;background:transparent;font:inherit;font-size:.8em;font-weight:700;color:var(--blue);text-decoration:underline;padding:0 14px;cursor:pointer}
+@keyframes tick{to{transform:translateX(-50%)}}
+
+/* Hero + recherche */
+.hero{padding:56px 0 48px;border-bottom:1px solid var(--line)}
+.hero .lead{margin-top:20px}
+form.search{display:grid;grid-template-columns:2fr 1.2fr 1.2fr auto;gap:16px;align-items:end;margin-top:32px;max-width:1000px}
+.field label{display:block;font-weight:700;margin-bottom:6px}
+.field .hint{display:block;font-weight:400;color:var(--ink-2);font-size:.85em}
+.field input,.field select{width:100%;height:48px;border:2px solid var(--ink);padding:0 10px;font:inherit;font-size:1em;background:#fff;color:var(--ink);appearance:none}
+.field select{background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);background-position:calc(100% - 18px) 21px,calc(100% - 12px) 21px;background-size:6px 6px;background-repeat:no-repeat;padding-right:34px}
+.field input:focus,.field select:focus{outline:3px solid var(--blue);outline-offset:0;box-shadow:inset 0 0 0 2px var(--ink)}
+.btn{display:inline-block;height:48px;border:0;background:var(--blue);color:#fff;font:inherit;font-weight:700;padding:0 22px;cursor:pointer;box-shadow:0 3px 0 var(--blue-dark);text-decoration:none;line-height:48px}
+.btn:hover{background:var(--blue-dark);color:#fff;text-decoration:none}
+.btn:active{transform:translateY(3px);box-shadow:none}
+.btn.sec{background:var(--grey);color:var(--ink);box-shadow:0 3px 0 var(--line)}
+.btn.sec:hover{background:#dbdad9;color:var(--ink)}
+.after-search{margin-top:24px;display:flex;gap:28px;flex-wrap:wrap;font-size:.95em}
+@media (max-width:860px){form.search{grid-template-columns:1fr}.btn{width:100%;text-align:center}}
+
+/* Grille 2/3 – 1/3 */
+.sec{padding:56px 0;border-bottom:1px solid var(--line)}
+.row{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:48px}
+@media (max-width:860px){.row{grid-template-columns:1fr;gap:40px}}
+.sec h2{margin-bottom:8px}
+.sec .intro{color:var(--ink-2);margin-bottom:24px}
+
+/* Liste de prestataires : lignes séparées par des filets, pas de cartes */
+.list{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink)}
+.list li{padding:20px 0;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:1fr auto;gap:4px 24px}
+.list h3 a{font-weight:700}
+.list .meta{grid-column:1;color:var(--ink-2);font-size:.88em;margin:0}
+.list .svc{grid-column:1;font-size:.88em;margin:6px 0 0}
+.list .side{grid-column:2;grid-row:1 / span 3;text-align:right;font-size:.88em;white-space:nowrap}
+.list .side strong{display:block;font-size:1.25em}
+.verified{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.85em;margin-top:8px}
+.verified::before{content:"";width:16px;height:16px;background:var(--ink);-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M6.4 11.2 3.2 8l1.1-1.1 2.1 2.1 5.3-5.3L12.8 4.8z"/></svg>') center/16px no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M6.4 11.2 3.2 8l1.1-1.1 2.1 2.1 5.3-5.3L12.8 4.8z"/></svg>') center/16px no-repeat}
+@media (max-width:520px){.list li{grid-template-columns:1fr}.list .side{grid-column:1;grid-row:auto;text-align:left}}
+.more{display:inline-block;margin-top:20px;font-weight:700}
+
+/* Colonne latérale */
+aside > * + *{margin-top:36px}
+.inset{border-left:8px solid var(--ink);padding:4px 0 4px 20px}
+.inset h2,.box h2{font-size:1.35rem;margin-bottom:10px}
+.nums{list-style:none;margin:12px 0 0;padding:0}
+.nums li{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line-soft)}
+.nums a{font-size:1.6em;font-weight:800;color:var(--ink);text-decoration:none}
+.nums a:hover{text-decoration:underline}
+.box{background:var(--grey);padding:24px}
+.box p{font-size:.92em}
+.near{list-style:none;margin:0;padding:0;font-size:.9em}
+.near li{padding:8px 0;border-bottom:1px solid var(--line-soft);display:flex;justify-content:space-between;gap:12px}
+.near span{color:var(--ink-2);white-space:nowrap}
+
+/* Démarches */
+.links{display:grid;grid-template-columns:1fr 1fr;gap:0 48px;list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.links li{border-bottom:1px solid var(--line-soft);padding:16px 0}
+.links a{font-weight:700;font-size:1.05em}
+.links p{margin:4px 0 0;color:var(--ink-2);font-size:.88em}
+@media (max-width:640px){.links{grid-template-columns:1fr}}
+
+/* Vérification */
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+ol.steps li{counter-increment:s;border-top:4px solid var(--blue);padding-top:16px}
+ol.steps li::before{content:"Étape " counter(s);display:block;font-weight:800;font-size:.8em;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin-bottom:6px}
+ol.steps h3{margin-bottom:6px} ol.steps p{font-size:.92em;color:var(--ink-2);margin:0}
+@media (max-width:760px){ol.steps{grid-template-columns:1fr}}
+
+/* Actualités */
+.news{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink)}
+.news li{padding:20px 0;border-bottom:1px solid var(--line-soft)}
+.news .cat{font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
+.news h3{margin:4px 0 6px} .news p{margin:0;font-size:.92em}
+.news time{font-size:.8em;color:var(--ink-2)}
+.news li.lead-item h3{font-size:1.6rem}
+ol.top5{margin:0;padding:0 0 0 1.4em;font-size:.95em}
+ol.top5 li{padding:8px 0;border-bottom:1px solid var(--line-soft)}
+ol.top5 li::marker{font-weight:800}
+
+/* Professionnels */
+.pro{background:var(--grey);padding:48px 0}
+.pro .w{display:grid;grid-template-columns:2fr 1fr;gap:48px;align-items:center}
+.pro ul{margin:16px 0 0;padding-left:1.2em;font-size:.95em}
+.pro .act{display:flex;flex-direction:column;gap:16px;align-items:flex-start}
+@media (max-width:860px){.pro .w{grid-template-columns:1fr}}
+
+/* Pied de page */
+footer{border-top:1px solid var(--line);background:var(--grey);font-size:.85em;padding:40px 0 24px;margin-top:0}
+footer .cols{display:grid;grid-template-columns:repeat(4,1fr);gap:32px}
+footer h2{font-size:1.05rem;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+footer ul{list-style:none;margin:0;padding:0} footer li{margin:0 0 8px}
+footer a{color:var(--ink)}
+footer .legal{margin-top:32px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--ink-2)}
+@media (max-width:760px){footer .cols{grid-template-columns:1fr 1fr}}
+
+@media (prefers-reduced-motion:reduce){
+  .flash ul{animation:none;flex-wrap:wrap;width:auto}
+  .flash li[aria-hidden]{display:none}
+  .btn:active{transform:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu principal</a>
+
+<header class="top">
+  <div class="w">
+    <a class="logo" href="#"><img src="../assets/elephant-icon-192.png" alt="" width="36" height="36">PROTECTICI</a>
+    <nav aria-label="Navigation principale">
+      <a href="#" aria-current="page">Prestataires</a>
+      <a href="#demarches">Forces étatiques</a>
+      <a href="#">Demande de devis</a>
+      <a href="#">Dis-moi tout</a>
+      <a href="#actualites">Actualités</a>
+    </nav>
+    <a class="acc" href="#">Se connecter</a>
+  </div>
+</header>
+
+<div class="phase"><div class="w"><span class="tag">Maquette</span><span>Proposition v3 « institutionnel » à valider. Contenus et noms fictifs.</span></div></div>
+
+<div class="flash" id="flash" role="region" aria-label="Flash info">
+  <div class="w">
+    <span class="lbl">Flash info</span>
+    <div class="track">
+      <ul>
+        <li><a href="#"><time datetime="09:42">09H42</time>Abidjan : patrouilles de nuit renforcées à Cocody et Marcory</a></li>
+        <li><a href="#"><time datetime="10:15">10H15</time>Arnaques au mobile money : les signes qui doivent alerter</a></li>
+        <li><a href="#"><time datetime="11:30">11H30</time>Formation des agents de sécurité incendie à Yamoussoukro</a></li>
+        <li><a href="#"><time datetime="13:05">13H05</time>Vérifier l’agrément d’une société de gardiennage</a></li>
+        <li aria-hidden="true"><a href="#" tabindex="-1"><time>09H42</time>Abidjan : patrouilles de nuit renforcées à Cocody et Marcory</a></li>
+        <li aria-hidden="true"><a href="#" tabindex="-1"><time>10H15</time>Arnaques au mobile money : les signes qui doivent alerter</a></li>
+        <li aria-hidden="true"><a href="#" tabindex="-1"><time>11H30</time>Formation des agents de sécurité incendie à Yamoussoukro</a></li>
+        <li aria-hidden="true"><a href="#" tabindex="-1"><time>13H05</time>Vérifier l’agrément d’une société de gardiennage</a></li>
+      </ul>
+    </div>
+    <button type="button" aria-pressed="false">Pause</button>
+  </div>
+</div>
+
+<main id="main">
+  <section class="hero">
+    <div class="w">
+      <h1>Trouver un prestataire de sécurité agréé en Côte d’Ivoire</h1>
+      <p class="lead">L’annuaire des entreprises de sécurité et de sûreté privées, des centres de formation et des forces de l’État. Chaque fiche est vérifiée avant d’être publiée.</p>
+      <form class="search" role="search" onsubmit="return false">
+        <div class="field"><label for="q">Service ou entreprise <span class="hint">Par exemple : gardiennage, vidéosurveillance</span></label><input id="q" name="q" type="search"></div>
+        <div class="field"><label for="city">Ville</label><select id="city"><option>Toutes les villes</option><option>Abidjan</option><option>Yamoussoukro</option><option>Bouaké</option><option>San-Pédro</option></select></div>
+        <div class="field"><label for="type">Type d’établissement</label><select id="type"><option>Tous les types</option><option>Entreprise agréée</option><option>Centre de formation</option><option>Vente de matériel</option></select></div>
+        <button class="btn" type="submit">Rechercher</button>
+      </form>
+      <div class="after-search">
+        <a href="#demarches">Trouver la force de l’ordre la plus proche</a>
+        <a href="#">Voir la carte des prestataires</a>
+        <a href="#">Inscrire mon établissement</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="t-pop">
+    <div class="w row">
+      <div>
+        <h2 id="t-pop">Prestataires les plus consultés</h2>
+        <p class="intro">Classement des 30 derniers jours. Les notes proviennent d’avis de clients modérés par notre équipe.</p>
+        <ul class="list">
+          <li>
+            <h3><a href="#">Dauphin Sécurité</a></h3>
+            <p class="meta">Abidjan, Plateau · Entreprise de sécurité agréée</p>
+            <p class="svc">Gardiennage armé, garde rapprochée, intervention<br><span class="verified">Fiche vérifiée le 12 septembre 2026</span></p>
+            <div class="side"><strong>4,6 / 5</strong>38 avis</div>
+          </li>
+          <li>
+            <h3><a href="#">Sentinelle Garde</a></h3>
+            <p class="meta">Abidjan, Cocody · Entreprise de sécurité agréée</p>
+            <p class="svc">Vidéosurveillance, alarme, télésurveillance<br><span class="verified">Fiche vérifiée le 3 octobre 2026</span></p>
+            <div class="side"><strong>4,8 / 5</strong>52 avis</div>
+          </li>
+          <li>
+            <h3><a href="#">Bouclier Canin</a></h3>
+            <p class="meta">Yamoussoukro · Entreprise de sécurité agréée</p>
+            <p class="svc">Brigade canine, détection, sécurité événementielle<br><span class="verified">Fiche vérifiée le 21 août 2026</span></p>
+            <div class="side"><strong>4,4 / 5</strong>17 avis</div>
+          </li>
+          <li>
+            <h3><a href="#">Rempart Incendie</a></h3>
+            <p class="meta">San-Pédro · Centre de formation</p>
+            <p class="svc">Sécurité incendie, formation, audit<br><span class="verified">Fiche vérifiée le 30 septembre 2026</span></p>
+            <div class="side"><strong>4,7 / 5</strong>24 avis</div>
+          </li>
+        </ul>
+        <a class="more" href="#">Voir les 370 prestataires de l’annuaire</a>
+      </div>
+
+      <aside aria-label="Urgences et services">
+        <div class="inset">
+          <h2>En cas d’urgence</h2>
+          <p class="muted" style="font-size:.88em;margin:0">Appelez directement les services de l’État.</p>
+          <ul class="nums">
+            <li><span>Police secours</span><a href="tel:110">110</a></li>
+            <li><span>Sapeurs-pompiers</span><a href="tel:180">180</a></li>
+            <li><span>SAMU</span><a href="tel:185">185</a></li>
+          </ul>
+          <p class="muted" style="font-size:.75em;margin:8px 0 0">Numéros à confirmer avant la mise en ligne.</p>
+        </div>
+        <div>
+          <h2 style="font-size:1.35rem;margin-bottom:10px">Forces de l’État les plus proches</h2>
+          <ul class="near">
+            <li><a href="#">Commissariat du 1er arrondissement</a><span>0,8 km</span></li>
+            <li><a href="#">Brigade de gendarmerie du Plateau</a><span>1,4 km</span></li>
+            <li><a href="#">Caserne des sapeurs-pompiers</a><span>2,1 km</span></li>
+          </ul>
+        </div>
+        <div class="box">
+          <h2>Dis-moi tout</h2>
+          <p>Signalez une prestation, posez une question ou encouragez un agent. Chaque message reçoit un numéro de suivi.</p>
+          <a class="btn" href="#">Envoyer un message</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="sec" id="demarches" aria-labelledby="t-dem">
+    <div class="w">
+      <h2 id="t-dem">Démarches auprès des forces de l’État</h2>
+      <p class="intro">Choisissez votre démarche pour trouver la structure compétente la plus proche.</p>
+      <ul class="links">
+        <li><a href="#">Déposer une plainte</a><p>Commissariats de police et brigades de gendarmerie</p></li>
+        <li><a href="#">Signaler un fait suspect</a><p>Police nationale et gendarmerie</p></li>
+        <li><a href="#">Faire une déclaration de perte</a><p>Pièces d’identité, documents, objets</p></li>
+        <li><a href="#">Obtenir un constat d’accident</a><p>Unités de la circulation routière</p></li>
+        <li><a href="#">Demander une assistance pour une cérémonie</a><p>Encadrement d’événements publics ou privés</p></li>
+        <li><a href="#">Voir toutes les forces étatiques</a><p>Annuaire complet, par ville et par type</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="t-ver">
+    <div class="w">
+      <h2 id="t-ver">Comment les fiches sont vérifiées</h2>
+      <p class="intro">Aucune fiche n’apparaît dans l’annuaire sans avoir été contrôlée par l’équipe ProtectIci.</p>
+      <ol class="steps">
+        <li><h3>Inscription</h3><p>L’établissement transmet son RCCM, son numéro d’agrément et ses coordonnées.</p></li>
+        <li><h3>Contrôle</h3><p>Notre équipe vérifie les documents et peut demander des pièces complémentaires.</p></li>
+        <li><h3>Publication</h3><p>La fiche est publiée avec sa date de vérification. Les avis clients sont modérés.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="sec" id="actualites" aria-labelledby="t-act">
+    <div class="w row">
+      <div>
+        <h2 id="t-act">Actualités et conseils</h2>
+        <p class="intro">Prévention, réglementation et vie du secteur de la sécurité privée.</p>
+        <ul class="news">
+          <li class="lead-item"><span class="cat">Actualités</span><h3><a href="#">Comment choisir une société de gardiennage à Abidjan</a></h3><p>Agrément, assurance, formation des agents : les points à vérifier avant de signer un contrat.</p><time datetime="2026-09-02">2 septembre 2026</time></li>
+          <li><span class="cat">Cybercriminalité</span><h3><a href="#">Protéger ses comptes en ligne : les bons réflexes</a></h3><time datetime="2026-09-08">8 septembre 2026</time></li>
+          <li><span class="cat">Sécurité incendie</span><h3><a href="#">Prévention incendie dans les commerces</a></h3><time datetime="2026-09-12">12 septembre 2026</time></li>
+        </ul>
+        <a class="more" href="#">Toutes les actualités</a>
+      </div>
+      <aside aria-label="Articles les plus lus">
+        <h2 style="font-size:1.35rem;margin-bottom:10px">Les plus lus</h2>
+        <ol class="top5">
+          <li><a href="#">Arnaques par mobile money : les signes qui doivent alerter</a></li>
+          <li><a href="#">Métiers de la sécurité privée : se former en Côte d’Ivoire</a></li>
+          <li><a href="#">Sécuriser sa maison connectée</a></li>
+          <li><a href="#">Alarme ou télésurveillance : que choisir ?</a></li>
+        </ol>
+        <div class="box" style="margin-top:36px">
+          <h2>Lettre d’information</h2>
+          <p>Un message par mois : conseils de prévention et alertes.</p>
+          <div class="field"><label for="nl">Adresse e-mail</label><input id="nl" type="email" autocomplete="email"></div>
+          <button class="btn" type="button" style="margin-top:16px">S’abonner</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="pro" aria-labelledby="t-pro">
+    <div class="w">
+      <div>
+        <h2 id="t-pro">Vous dirigez une entreprise de sécurité ?</h2>
+        <p style="margin-top:12px">Inscrivez votre établissement gratuitement. Après vérification, votre fiche est publiée et vous recevez les demandes de devis.</p>
+        <ul>
+          <li>fiche complète : services, zones d’intervention, contacts</li>
+          <li>mention « fiche vérifiée » après contrôle de l’agrément</li>
+          <li>réponse aux avis et aux demandes de devis</li>
+        </ul>
+      </div>
+      <div class="act">
+        <a class="btn" href="#">Inscrire mon établissement</a>
+        <a href="#">Comment fonctionne la vérification</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="w">
+    <div class="cols">
+      <div><h2>Annuaire</h2><ul><li><a href="#">Prestataires</a></li><li><a href="#">Forces étatiques</a></li><li><a href="#">Inscrire un établissement</a></li><li><a href="#">Demande de devis</a></li></ul></div>
+      <div><h2>ProtectIci</h2><ul><li><a href="#">Qui sommes-nous</a></li><li><a href="#">Nos partenaires</a></li><li><a href="#">Nos clients</a></li><li><a href="#">Contact</a></li></ul></div>
+      <div><h2>Informations</h2><ul><li><a href="#">Mentions légales</a></li><li><a href="#">Confidentialité</a></li><li><a href="#">Conditions d’utilisation</a></li><li><a href="#">Gérer les cookies</a></li></ul></div>
+      <div><h2>Nous joindre</h2><ul><li>Abidjan Plateau, immeuble Eden</li><li><a href="tel:+2250709445111">+225 07 09 44 51 11</a></li><li><a href="mailto:info@protectici.ci">info@protectici.ci</a></li></ul></div>
+    </div>
+    <div class="legal"><span>© 2022–2026 ProtectIci · FYG Technologies</span><span>Plateforme d’information sur la sécurité privée en Côte d’Ivoire</span></div>
+  </div>
+</footer>
+
+<script>
+const f=document.getElementById('flash'),b=f.querySelector('button');
+b.addEventListener('click',()=>{const p=f.classList.toggle('paused');b.setAttribute('aria-pressed',p);b.textContent=p?'Reprendre':'Pause';});
+</script>
+</body>
+</html>
