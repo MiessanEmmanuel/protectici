@@ -25,14 +25,14 @@ $slug = '[a-z0-9]+(?:-[a-z0-9]+)*';
 
 // --- Public --------------------------------------------------------------------------------------------------
 Route::middleware('throttle:public-read')->group(function () use ($slug) {
-    Route::get('blog/categories', [BlogController::class, 'categories'])->name('blog.categories');
-    Route::get('blog/flash', [BlogController::class, 'flash'])->name('blog.flash');
-    Route::get('blog/posts', [BlogController::class, 'index'])->name('blog.posts.index');
+    Route::get('blog/categories', [BlogController::class, 'categories'])->middleware('public.cache:blog,120')->name('blog.categories');
+    Route::get('blog/flash', [BlogController::class, 'flash'])->middleware('public.cache:blog,60')->name('blog.flash');
+    Route::get('blog/posts', [BlogController::class, 'index'])->middleware('public.cache:blog,60')->name('blog.posts.index');
     Route::get('blog/posts/{slug}', [BlogController::class, 'show'])->where('slug', $slug)->name('blog.posts.show');
     Route::get('blog/posts/{slug}/comments', [CommentController::class, 'index'])->where('slug', $slug)->name('blog.comments.index');
-    Route::get('pages/{slug}', [SitePageController::class, 'page'])->where('slug', $slug)->name('pages.show');
-    Route::get('partners', [SitePageController::class, 'partners'])->name('partners.index');
-    Route::get('settings/public', [SitePageController::class, 'settings'])->name('settings.public');
+    Route::get('pages/{slug}', [SitePageController::class, 'page'])->where('slug', $slug)->middleware('public.cache:site,300')->name('pages.show');
+    Route::get('partners', [SitePageController::class, 'partners'])->middleware('public.cache:site,300')->name('partners.index');
+    Route::get('settings/public', [SitePageController::class, 'settings'])->middleware('public.cache:site,300')->name('settings.public');
 });
 
 Route::post('blog/posts/{slug}/comments', [CommentController::class, 'store'])

@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\ApiExceptionRenderer;
+use App\Http\Middleware\CachePublicResponse;
 use App\Http\Middleware\EnsureTwoFactorForStaff;
 use App\Http\Middleware\EnsureVerifiedEmail;
 use App\Http\Middleware\SecurityHeaders;
@@ -39,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToPriorityList(before: AuthenticatesRequests::class, prepend: StaffSessionInactivity::class);
         $middleware->alias([
             '2fa.staff' => EnsureTwoFactorForStaff::class,
+            'public.cache' => CachePublicResponse::class,
             'verified.api' => EnsureVerifiedEmail::class,
         ]);
     })

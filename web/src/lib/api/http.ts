@@ -40,6 +40,20 @@ export interface RequesterConfig {
 
 const API_PREFIX = '/api/v1';
 
+/**
+ * Étiquette du cache de données Next (revalidateTag) déduite du premier segment du chemin :
+ * mêmes « espaces » que le cache de réponses publiques de l'API (directory, blog, site).
+ */
+export function cacheTagsFor(path: string): string[] {
+  const first = (path.split('?')[0] ?? '').split('/').filter(Boolean)[0] ?? '';
+  if (['providers', 'state-forces', 'map', 'home', 'reference-data'].includes(first)) {
+    return ['directory', first];
+  }
+  if (first === 'blog') return ['blog'];
+  if (['pages', 'partners', 'settings'].includes(first)) return ['site', first];
+  return [];
+}
+
 export function buildQueryString(query: Query | undefined): string {
   if (!query) return '';
   const params = new URLSearchParams();
@@ -129,7 +143,7 @@ export function createRequester(config: RequesterConfig): Requester {
       Accept: 'application/json',
       'X-Requested-With': 'XMLHttpRequest',
     };
-    const init: RequestInit & { next?: { revalidate: number } } = {
+    const init: RequestInit & { next?: { revalidate: number; tags?: string[] } } = {
       method,
       headers,
       credentials: 'include',
@@ -160,7 +174,8 @@ export function createRequester(config: RequesterConfig): Requester {
         headers.Cookie = cookie;
         init.cache = 'no-store'; // réponse potentiellement personnalisée
       } else if (!mutating) {
-        init.next = { revalidate: options.revalidate ?? 60 };
+        const tags = cacheTagsFor(path);
+        init.next = { revalidate: options.revalidate ?? 60, ...(tags.length > 0 ? { tags } : {}) };
       }
     }
 

@@ -4,8 +4,7 @@ import Link from 'next/link';
 import { useRef, useState, type FormEvent } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { describeError } from '@/lib/api/errors';
-import { newsletterSchema } from '@/lib/content-schemas';
-import { formToObject, validate, type FieldErrors } from '@/lib/validation';
+import type { FieldErrors } from '@/lib/validation';
 import { AntiSpamFields } from '../security/AntiSpamFields';
 import { TURNSTILE_REQUIRED_MESSAGE, useAntiSpam } from '../security/use-anti-spam';
 import { Button } from '../ui/Button';
@@ -27,14 +26,25 @@ export function NewsletterForm({ source = 'footer' }: { source?: string }) {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (running.current) return;
+    running.current = true;
     setFormError(null);
     setMessage(null);
     const form = e.currentTarget;
+    // zod (≈30 Ko gzip) est chargé au premier envoi seulement : ce formulaire est dans le pied de page de toutes les pages.
+    const [{ newsletterSchema }, { formToObject, validate }] = await Promise.all([
+      import('@/lib/content-schemas'),
+      import('@/lib/validation'),
+    ]);
     const parsed = validate(newsletterSchema, formToObject(form));
-    if (!parsed.ok) return setErrors(parsed.errors);
+    if (!parsed.ok) {
+      running.current = false;
+      return setErrors(parsed.errors);
+    }
     setErrors({});
-    if (!spam.ready) return setFormError(TURNSTILE_REQUIRED_MESSAGE);
-    running.current = true;
+    if (!spam.ready) {
+      running.current = false;
+      return setFormError(TURNSTILE_REQUIRED_MESSAGE);
+    }
     setBusy(true);
     try {
       const text = spam.trapped

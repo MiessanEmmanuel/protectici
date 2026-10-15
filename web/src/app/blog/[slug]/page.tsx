@@ -85,7 +85,7 @@ export default async function PostPage({ params }: Props) {
         </header>
         {post.cover_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.cover_url} alt={post.cover_alt ?? ''} width={960} height={540} className="aspect-video w-full rounded-lg object-cover" />
+          <img src={post.cover_url} alt={post.cover_alt ?? ''} width={960} height={540} fetchPriority="high" decoding="async" className="aspect-video w-full rounded-lg object-cover" />
         ) : null}
         <SanitizedHtml html={post.body} />
         <ShareLinks url={url} title={post.title} label="Partager cet article" />

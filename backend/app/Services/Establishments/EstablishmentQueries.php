@@ -39,7 +39,8 @@ class EstablishmentQueries
      */
     public function admin(array $filters, int $perPage): array
     {
-        $query = $this->union();
+        // La liste d'administration n'expose pas le compteur de demandes en attente : on évite 5 800 sous-requêtes corrélées.
+        $query = $this->union(false);
 
         if (! empty($filters['type'])) {
             $query->where('e.type', $filters['type']);
@@ -82,15 +83,20 @@ class EstablishmentQueries
         ]);
     }
 
-    private function union(): Builder
+    private function union(bool $withPendingChangeRequests = true): Builder
     {
+        $pendingProvider = $withPendingChangeRequests
+            ? "(select count(*) from provider_change_requests cr where cr.provider_id = providers.id and cr.status = 'pending')"
+            : '0';
+        $pendingForce = $withPendingChangeRequests
+            ? "(select count(*) from provider_change_requests cr where cr.state_force_id = state_forces.id and cr.status = 'pending')"
+            : '0';
+
         $providers = DB::table('providers')->whereNull('deleted_at')->selectRaw(
-            "'provider' as type, id, user_id, slug, name, status, rejection_reason, is_visible, is_verified, is_featured, city_id, created_at as submitted_at, reviewed_at, "
-            ."(select count(*) from provider_change_requests cr where cr.provider_id = providers.id and cr.status = 'pending') as pending_change_requests"
+            "'provider' as type, id, user_id, slug, name, status, rejection_reason, is_visible, is_verified, is_featured, city_id, created_at as submitted_at, reviewed_at, {$pendingProvider} as pending_change_requests"
         );
         $forces = DB::table('state_forces')->whereNull('deleted_at')->selectRaw(
-            "'state_force' as type, id, user_id, slug, name, status, rejection_reason, is_visible, false as is_verified, false as is_featured, city_id, created_at as submitted_at, reviewed_at, "
-            ."(select count(*) from provider_change_requests cr where cr.state_force_id = state_forces.id and cr.status = 'pending') as pending_change_requests"
+            "'state_force' as type, id, user_id, slug, name, status, rejection_reason, is_visible, false as is_verified, false as is_featured, city_id, created_at as submitted_at, reviewed_at, {$pendingForce} as pending_change_requests"
         );
 
         return DB::query()->fromSub($providers->unionAll($forces), 'e');

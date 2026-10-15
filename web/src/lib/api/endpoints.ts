@@ -415,7 +415,7 @@ export function buildApi(req: Requester): Api {
       return res.data;
     },
     async getHome() {
-      const res = await req<{ data: HomeData }>('GET', '/home', { revalidate: 120 });
+      const res = await req<{ data: HomeData }>('GET', '/home', { revalidate: 60 });
       return res.data;
     },
     listProviders(query) {
@@ -426,7 +426,7 @@ export function buildApi(req: Requester): Api {
     async getPopularProviders(limit = 8) {
       const res = await req<{ data: ProviderSummary[] }>('GET', '/providers/popular', {
         query: { limit },
-        revalidate: 120,
+        revalidate: 60,
       });
       return res.data;
     },

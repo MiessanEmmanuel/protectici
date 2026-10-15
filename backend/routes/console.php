@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('app:purge-unverified-users')->daily();
+Schedule::command('cache:purge-expired')->hourly()->onOneServer()->withoutOverlapping();
 
 // Rétention (modele.md §5.3, api-contract §8.6) : quotidienne, échelonnée, une seule exécution à la fois.
 foreach ([

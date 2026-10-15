@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\City;
+use App\Models\CompanyType;
 use App\Models\ContactMessage;
+use App\Models\District;
 use App\Models\Feedback;
+use App\Models\FeedbackTopic;
 use App\Models\Media;
 use App\Models\NewsletterSubscriber;
 use App\Models\Page;
@@ -11,20 +15,26 @@ use App\Models\Partner;
 use App\Models\Post;
 use App\Models\PostCategory;
 use App\Models\PostComment;
+use App\Models\ProcedureType;
 use App\Models\Provider;
 use App\Models\ProviderChangeRequest;
 use App\Models\ProviderDocument;
+use App\Models\ProviderExecutive;
 use App\Models\QuoteRequest;
 use App\Models\Review;
+use App\Models\ServiceType;
 use App\Models\Setting;
 use App\Models\StateForce;
+use App\Models\StateForceType;
 use App\Models\User;
 use App\Services\Geocoding\Geocoder;
 use App\Services\Geocoding\NominatimGeocoder;
+use App\Support\PublicCache;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
@@ -41,9 +51,40 @@ class AppServiceProvider extends ServiceProvider
         ));
     }
 
+    /**
+     * Toute écriture sur un contenu public renouvelle le jeton de version de l'espace concerné
+     * (App\Support\PublicCache). Les écritures SQL directes (compteurs de vues) ne passent pas par là :
+     * elles sont absorbées par le TTL court des entrées.
+     */
+    public static function registerPublicCacheInvalidation(): void
+    {
+        $map = [
+            PublicCache::DIRECTORY => [
+                Provider::class, StateForce::class, Review::class, City::class, District::class, CompanyType::class,
+                ServiceType::class, StateForceType::class, ProcedureType::class, FeedbackTopic::class, ProviderExecutive::class,
+            ],
+            PublicCache::BLOG => [Post::class, PostCategory::class, PostComment::class],
+            PublicCache::SITE => [Page::class, Partner::class, Setting::class],
+        ];
+
+        foreach ($map as $namespace => $models) {
+            foreach ($models as $model) {
+                foreach (['saved', 'deleted', 'restored'] as $event) {
+                    Event::listen("eloquent.{$event}: ".$model, static fn () => PublicCache::bump($namespace));
+                }
+            }
+        }
+
+        // Les médias illustrent tous les espaces (logos, galeries, couvertures, partenaires).
+        foreach (['saved', 'deleted', 'restored'] as $event) {
+            Event::listen("eloquent.{$event}: ".Media::class, static fn () => PublicCache::bump(...PublicCache::NAMESPACES));
+        }
+    }
+
     public function boot(): void
     {
         self::pinRootUrl();
+        self::registerPublicCacheInvalidation();
 
         // Morph map obligatoire (modele.md §1.4, §8) : jamais de nom de classe en base.
         Relation::enforceMorphMap([

@@ -7,7 +7,6 @@ import { clientApi } from '@/lib/api/client';
 import { describeError, errorMessage } from '@/lib/api/errors';
 import { RESEND_NEUTRAL_MESSAGE, type RegisterInput } from '@/lib/api/endpoints';
 import { USE_MOCKS } from '@/lib/env';
-import { mockClickVerificationLink } from '@/lib/mocks/mock-api';
 import { formToObject, registerSchema, validate, type FieldErrors } from '@/lib/validation';
 import { AntiSpamFields } from '../security/AntiSpamFields';
 import { TURNSTILE_REQUIRED_MESSAGE, useAntiSpam } from '../security/use-anti-spam';
@@ -125,8 +124,11 @@ export function RegisterForm() {
           <Button
             variant="ghost"
             onClick={() => {
-              mockClickVerificationLink();
-              router.push('/compte?verified=1');
+              // Chargement à la demande : les données factices ne pèsent pas sur le JS de production.
+              void import('@/lib/mocks/mock-api').then(({ mockClickVerificationLink }) => {
+                mockClickVerificationLink();
+                router.push('/compte?verified=1');
+              });
             }}
           >
             Démo : simuler le clic sur le lien reçu par e-mail

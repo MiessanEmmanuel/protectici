@@ -133,4 +133,19 @@ return [
 
     'serializable_classes' => false,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Cache des réponses publiques (phase 5)
+    |--------------------------------------------------------------------------
+    |
+    | Réponses GET anonymes de l'annuaire, du blog et des pages (middleware public.cache).
+    | Jamais appliqué aux requêtes authentifiées. Invalidation par jeton de version (App\Support\PublicCache).
+    |
+    */
+
+    'public' => [
+        'enabled' => (bool) env('PUBLIC_CACHE_ENABLED', true),
+        'max_body_bytes' => 524288,
+    ],
+
 ];
