@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProtectIci — Maquette accueil v4 (éditorial)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Système issu du skill ui-ux-pro-max :
+   style « Editorial Grid / Magazine » (grille asymétrique, filets, chapôs, lettrine, citation),
+   structure « Marketplace / Directory » (recherche > rubriques > fiches > confiance > appel pro),
+   typographie « News Editorial » (Newsreader) + Public Sans pour l'interface,
+   couleurs : noir / blanc à fort contraste + un seul accent de marque (bleu du logo). Rayon 0. */
+:root{
+  --ink:#111; --ink-2:#4a4a4a; --ink-3:#6b6b6b; --rule:#111; --hair:#d9d6d0; --paper:#fbfaf7; --white:#fff;
+  --blue:#0343A4; --blue-dark:#022d6e;
+  --serif:"Newsreader",Georgia,serif; --sans:"Public Sans",Arial,sans-serif;
+  --w:1180px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.5;font-variant-numeric:lining-nums tabular-nums}
+.w{width:min(var(--w),100% - 32px);margin-inline:auto}
+a{color:inherit;text-decoration:none}
+a:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.18em}
+a.blue{color:var(--blue)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:600;margin:0;line-height:1.08;letter-spacing:-.012em;text-wrap:balance}
+p{margin:0}
+.kicker{font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.byline{font-size:.78rem;color:var(--ink-3);letter-spacing:.02em}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.skip{position:absolute;left:-9999px}.skip:focus{left:16px;top:8px;background:var(--ink);color:#fff;padding:8px 12px;z-index:9}
+
+/* Bandeau maquette */
+.proto{background:var(--ink);color:#fff;font-size:.75rem;text-align:center;padding:6px 16px;letter-spacing:.03em}
+
+/* Manchette */
+.mast .top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:22px 0 16px;gap:16px}
+.mast .date{font-size:.8rem;color:var(--ink-2)}
+.mast .brand{text-align:center}
+.mast .brand a{font-family:var(--serif);font-weight:700;font-size:clamp(2.4rem,6vw,4.2rem);letter-spacing:-.03em;line-height:.9;display:inline-flex;align-items:center;gap:14px}
+.mast .brand a:hover{text-decoration:none}
+.mast .brand img{width:.9em;height:.9em}
+.mast .brand small{display:block;font-family:var(--sans);font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);margin-top:10px}
+.mast .acc{justify-self:end;display:flex;gap:18px;font-size:.85rem;font-weight:600}
+.mast .acc .btn{background:var(--blue);color:#fff;padding:8px 14px}
+.mast .acc .btn:hover{background:var(--blue-dark);text-decoration:none}
+.rules{border-top:3px solid var(--rule);border-bottom:1px solid var(--rule);height:6px}
+nav.rub{border-bottom:1px solid var(--rule)}
+nav.rub ul{list-style:none;margin:0;padding:0;display:flex;justify-content:center;flex-wrap:wrap}
+nav.rub a{display:block;padding:12px 16px;font-size:.84rem;font-weight:700;letter-spacing:.02em}
+nav.rub a[aria-current]{box-shadow:inset 0 -3px var(--blue)}
+@media (max-width:760px){.mast .top{grid-template-columns:1fr}.mast .date,.mast .acc{justify-self:center}nav.rub ul{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto}nav.rub a{white-space:nowrap}}
+
+/* En continu */
+.wire{border-bottom:1px solid var(--hair);background:var(--white)}
+.wire .w{display:flex;align-items:center;min-height:42px;gap:14px}
+.wire .lbl{flex:none;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);display:flex;align-items:center;gap:8px}
+.wire .lbl i{width:7px;height:7px;background:var(--blue);display:inline-block;animation:blink 1.6s steps(2) infinite}
+.wire .track{flex:1;overflow:hidden}
+.wire ul{display:flex;list-style:none;margin:0;padding:0;width:max-content;animation:tick 70s linear infinite}
+.wire.paused ul,.wire .track:hover ul,.wire .track:focus-within ul{animation-play-state:paused}
+.wire li{font-size:.86rem;padding:0 22px;border-left:1px solid var(--hair);white-space:nowrap}
+.wire time{font-weight:700;margin-right:8px}
+.wire button{flex:none;border:1px solid var(--ink);background:transparent;font:inherit;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;cursor:pointer}
+@keyframes tick{to{transform:translateX(-50%)}}
+@keyframes blink{50%{opacity:0}}
+
+/* Une : grille asymétrique 8/4 */
+.une{display:grid;grid-template-columns:minmax(0,8fr) minmax(0,4fr);gap:0;border-bottom:1px solid var(--rule)}
+.une > *{padding:36px 0}
+.une .main{padding-right:40px;border-right:1px solid var(--hair)}
+.une .side{padding-left:32px}
+.une h1{font-size:clamp(2.6rem,5.4vw,4.6rem);font-weight:600;margin:12px 0 18px}
+.une h1 em{font-style:italic;font-weight:400}
+.chapo{font-family:var(--serif);font-size:1.3rem;line-height:1.4;color:var(--ink-2);max-width:40ch}
+form.find{margin-top:30px;display:grid;grid-template-columns:1.6fr 1fr auto;border:1px solid var(--rule);background:var(--white)}
+form.find label{display:block;padding:10px 14px;border-right:1px solid var(--hair)}
+form.find label span{display:block;font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+form.find input,form.find select{border:0;background:transparent;font:inherit;font-size:1.02rem;width:100%;padding:4px 0;color:var(--ink);outline:none}
+form.find button{border:0;background:var(--blue);color:#fff;font:inherit;font-weight:700;padding:0 26px;cursor:pointer}
+form.find button:hover{background:var(--blue-dark)}
+form.find label:focus-within{box-shadow:inset 0 -3px var(--blue)}
+.quick{margin-top:14px;font-size:.85rem;color:var(--ink-2)}
+.quick a{text-decoration:underline;text-underline-offset:.18em;margin-right:12px}
+@media (max-width:900px){.une{grid-template-columns:1fr}.une .main{padding-right:0;border-right:0;border-bottom:1px solid var(--hair)}.une .side{padding-left:0}form.find{grid-template-columns:1fr}form.find label{border-right:0;border-bottom:1px solid var(--hair)}form.find button{padding:14px}}
+figure{margin:0}
+.ph{position:relative;aspect-ratio:4/3;background:repeating-linear-gradient(135deg,#e9e6df 0 1px,transparent 1px 9px),#f1eee8;border:1px solid var(--hair);display:grid;place-items:center;color:var(--ink-3);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase}
+figcaption{font-size:.74rem;color:var(--ink-3);margin-top:6px}
+.side h2{font-size:1.65rem;margin:10px 0 8px}
+.side p{font-family:var(--serif);font-size:1.02rem;color:var(--ink-2)}
+.side .more{display:block;border-top:1px solid var(--hair);margin-top:18px;padding-top:12px}
+.side .more li{list-style:none;padding:10px 0;border-bottom:1px solid var(--hair)}
+.side .more ul{margin:0;padding:0}
+.side .more h3{font-size:1.08rem}
+
+/* Titres de section */
+.sh{display:flex;justify-content:space-between;align-items:baseline;border-top:3px solid var(--rule);padding-top:10px;margin-bottom:22px;gap:16px}
+.sh h2{font-size:1.9rem}
+.sh a{font-size:.84rem;font-weight:700;color:var(--blue)}
+section.s{padding:52px 0 0}
+
+/* Rubriques : index en colonnes */
+.index{column-count:4;column-gap:32px;column-rule:1px solid var(--hair);margin:0;padding:0;list-style:none}
+.index li{break-inside:avoid;display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dotted #bdb8ad;font-size:.93rem}
+.index span{color:var(--ink-3)}
+@media (max-width:900px){.index{column-count:2}}
+@media (max-width:520px){.index{column-count:1}}
+
+/* 2/3 – 1/3 : fiches + colonne */
+.two{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:40px}
+@media (max-width:900px){.two{grid-template-columns:1fr}}
+.fiches{list-style:none;margin:0;padding:0}
+.fiches li{display:grid;grid-template-columns:72px 1fr auto;gap:18px;padding:18px 0;border-bottom:1px solid var(--hair);align-items:start}
+.fiches li:first-child{padding-top:0}
+.mono{width:72px;height:72px;border:1px solid var(--rule);display:grid;place-items:center;font-family:var(--serif);font-size:1.6rem;font-weight:700;background:var(--white)}
+.fiches h3{font-size:1.32rem}
+.fiches .meta{font-size:.82rem;color:var(--ink-3);margin-top:3px}
+.fiches .svc{font-family:var(--serif);font-size:1rem;color:var(--ink-2);margin-top:6px}
+.fiches .ver{font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-top:8px;color:var(--ink)}
+.fiches .ver::before{content:"✓ ";color:var(--blue)}
+.fiches .note{text-align:right;white-space:nowrap}
+.fiches .note b{display:block;font-family:var(--serif);font-size:1.7rem;font-weight:600;line-height:1}
+.fiches .note small{font-size:.74rem;color:var(--ink-3)}
+@media (max-width:520px){.fiches li{grid-template-columns:52px 1fr}.mono{width:52px;height:52px;font-size:1.2rem}.fiches .note{grid-column:2;text-align:left}}
+.col > * + *{margin-top:34px}
+.col h3.t{font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:6px}
+.urg li{list-style:none;display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--hair)}
+.urg ul{margin:0;padding:0}
+.urg a{font-family:var(--serif);font-size:2rem;font-weight:700;line-height:1}
+.urg small{display:block;font-size:.72rem;color:var(--ink-3);margin-top:8px}
+ol.lus{margin:0;padding:0;list-style:none;counter-reset:l}
+ol.lus li{counter-increment:l;display:grid;grid-template-columns:34px 1fr;padding:10px 0;border-bottom:1px solid var(--hair)}
+ol.lus li::before{content:counter(l);font-family:var(--serif);font-size:1.7rem;font-weight:700;line-height:1;color:var(--blue)}
+ol.lus a{font-family:var(--serif);font-size:1.05rem;line-height:1.3}
+.dmt{background:var(--white);border:1px solid var(--rule);padding:20px}
+.dmt h4{font-size:1.4rem;margin-bottom:8px}
+.dmt p{font-family:var(--serif);color:var(--ink-2);margin-bottom:14px}
+.dmt a.go{display:inline-block;background:var(--blue);color:#fff;font-weight:700;font-size:.9rem;padding:10px 16px}
+.dmt a.go:hover{background:var(--blue-dark);text-decoration:none}
+
+/* Confiance : article éditorial avec citation et lettrine */
+.trust{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:48px;align-items:start}
+blockquote{margin:0;font-family:var(--serif);font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.15;font-style:italic;border-left:4px solid var(--blue);padding-left:22px}
+blockquote footer{font-family:var(--sans);font-style:normal;font-size:.8rem;color:var(--ink-3);margin-top:16px}
+.cols3{column-count:2;column-gap:36px;font-family:var(--serif);font-size:1.08rem;line-height:1.6;color:var(--ink-2)}
+.cols3 p + p{margin-top:1em}
+.cols3 p:first-child::first-letter{float:left;font-size:4.2em;line-height:.82;font-weight:700;color:var(--ink);padding:6px 10px 0 0}
+.cols3 b{color:var(--ink)}
+@media (max-width:900px){.trust{grid-template-columns:1fr}.cols3{column-count:1}}
+
+/* Démarches : liste numérotée en deux colonnes */
+.dem{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--hair)}
+.dem a{display:block;padding:18px 18px 18px 0;border-bottom:1px solid var(--hair)}
+.dem a:hover{text-decoration:none}
+.dem a:hover h3{text-decoration:underline}
+.dem h3{font-size:1.2rem}
+.dem p{font-size:.82rem;color:var(--ink-3);margin-top:4px}
+@media (max-width:760px){.dem{grid-template-columns:1fr}}
+
+/* Dossiers : 1 grand + 3 */
+.dos{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,6fr);gap:32px}
+.dos .big h3{font-size:2rem;margin:12px 0 8px}
+.dos .big p{font-family:var(--serif);font-size:1.1rem;color:var(--ink-2)}
+.dos ul{list-style:none;margin:0;padding:0}
+.dos ul li{display:grid;grid-template-columns:120px 1fr;gap:16px;padding:0 0 18px;margin-bottom:18px;border-bottom:1px solid var(--hair)}
+.dos ul .ph{aspect-ratio:1}
+.dos ul h3{font-size:1.2rem;margin:6px 0 6px}
+@media (max-width:900px){.dos{grid-template-columns:1fr}}
+
+/* Appel aux professionnels */
+.pro{margin-top:64px;background:var(--ink);color:#fff}
+.pro .w{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:40px;padding:56px 0;align-items:end}
+.pro .kicker{color:#9fbaf0}
+.pro h2{font-size:clamp(2rem,4vw,3.2rem);font-weight:600;margin-top:12px}
+.pro p{font-family:var(--serif);font-size:1.12rem;color:#cfcfcf}
+.pro .acts{margin-top:20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.pro .acts .go{background:#fff;color:var(--ink);font-weight:700;padding:12px 18px}
+.pro .acts .go:hover{background:#e6e6e6;text-decoration:none}
+.pro .acts a:not(.go){text-decoration:underline;text-underline-offset:.18em}
+@media (max-width:900px){.pro .w{grid-template-columns:1fr}}
+
+/* Pied */
+footer.site{padding:40px 0 28px;font-size:.84rem}
+footer.site .grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:28px;border-top:3px solid var(--rule);padding-top:20px}
+footer.site h4{font-family:var(--sans);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
+footer.site ul{list-style:none;margin:0;padding:0}footer.site li{margin-bottom:6px}
+footer.site .legal{border-top:1px solid var(--hair);margin-top:24px;padding-top:14px;color:var(--ink-3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+@media (max-width:760px){footer.site .grid{grid-template-columns:1fr 1fr}}
+
+/* Apparition discrète au défilement */
+.rv{opacity:0;transform:translateY(10px);transition:opacity .7s ease,transform .7s ease}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}.wire ul{animation:none;flex-wrap:wrap;width:auto}.wire li[aria-hidden]{display:none}.wire .lbl i{animation:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu principal</a>
+<div class="proto">Maquette v4 « éditorial » à valider · contenus et noms fictifs</div>
+
+<header class="mast">
+  <div class="w top">
+    <span class="date" id="date">mercredi 15 octobre 2026</span>
+    <div class="brand">
+      <a href="#" aria-label="ProtectIci, accueil"><img src="../assets/elephant-icon-192.png" alt="">ProtectIci</a>
+      <small>Le média et l’annuaire de la sécurité privée en Côte d’Ivoire</small>
+    </div>
+    <div class="acc"><a href="#">Se connecter</a><a class="btn" href="#">Demander un devis</a></div>
+  </div>
+  <div class="w rules" aria-hidden="true"></div>
+  <nav class="rub w" aria-label="Rubriques">
+    <ul>
+      <li><a href="#" aria-current="page">Annuaire</a></li>
+      <li><a href="#dem">Forces de l’État</a></li>
+      <li><a href="#">Dis-moi tout</a></li>
+      <li><a href="#">Actualités</a></li>
+      <li><a href="#">Anti-intrusion</a></li>
+      <li><a href="#">Cybercriminalité</a></li>
+      <li><a href="#">Sécurité incendie</a></li>
+      <li><a href="#">Formation</a></li>
+      <li><a href="#">Emploi</a></li>
+    </ul>
+  </nav>
+</header>
+
+<div class="wire" id="wire" role="region" aria-label="Flash info">
+  <div class="w">
+    <span class="lbl"><i aria-hidden="true"></i>En continu</span>
+    <div class="track"><ul>
+      <li><a href="#"><time>09h42</time>Abidjan : patrouilles de nuit renforcées à Cocody et Marcory</a></li>
+      <li><a href="#"><time>10h15</time>Arnaques au mobile money : les signes qui doivent alerter</a></li>
+      <li><a href="#"><time>11h30</time>Yamoussoukro : session de formation des agents de sécurité incendie</a></li>
+      <li><a href="#"><time>13h05</time>Comment vérifier l’agrément d’une société de gardiennage</a></li>
+      <li aria-hidden="true"><a href="#" tabindex="-1"><time>09h42</time>Abidjan : patrouilles de nuit renforcées à Cocody et Marcory</a></li>
+      <li aria-hidden="true"><a href="#" tabindex="-1"><time>10h15</time>Arnaques au mobile money : les signes qui doivent alerter</a></li>
+      <li aria-hidden="true"><a href="#" tabindex="-1"><time>11h30</time>Yamoussoukro : session de formation des agents de sécurité incendie</a></li>
+      <li aria-hidden="true"><a href="#" tabindex="-1"><time>13h05</time>Comment vérifier l’agrément d’une société de gardiennage</a></li>
+    </ul></div>
+    <button type="button" aria-pressed="false">Pause</button>
+  </div>
+</div>
+
+<main id="main">
+  <div class="w une">
+    <div class="main">
+      <span class="kicker">L’annuaire · 370 établissements vérifiés</span>
+      <h1>Trouver une entreprise de sécurité <em>digne de confiance</em></h1>
+      <p class="chapo">Gardiennage, vidéosurveillance, brigades canines, centres de formation : comparez les prestataires agréés et les forces de l’État, fiche par fiche.</p>
+      <form class="find" role="search" onsubmit="return false">
+        <label><span>Service ou entreprise</span><input type="search" placeholder="Gardiennage armé, alarme…"></label>
+        <label><span>Ville</span><select><option>Toute la Côte d’Ivoire</option><option>Abidjan</option><option>Yamoussoukro</option><option>Bouaké</option><option>San-Pédro</option></select></label>
+        <button type="submit">Rechercher</button>
+      </form>
+      <p class="quick">Recherches fréquentes : <a href="#">gardiennage</a><a href="#">vidéosurveillance</a><a href="#">brigade canine</a><a href="#">commissariat le plus proche</a></p>
+    </div>
+    <aside class="side" aria-label="À la une">
+      <span class="kicker">À la une</span>
+      <figure style="margin-top:12px"><div class="ph">Photo</div><figcaption>Agents de gardiennage lors d’une relève, Abidjan.</figcaption></figure>
+      <h2><a href="#">Choisir une société de gardiennage : les cinq vérifications à faire</a></h2>
+      <p>Agrément, assurance, formation des agents : notre guide avant de signer.</p>
+      <p class="byline" style="margin-top:10px">Par la rédaction · 2 sept. 2026 · 5 min</p>
+      <div class="more"><ul>
+        <li><span class="kicker">Cybercriminalité</span><h3><a href="#">Protéger ses comptes en ligne : les bons réflexes</a></h3></li>
+        <li><span class="kicker">Incendie</span><h3><a href="#">Commerces : l’essentiel de la prévention</a></h3></li>
+      </ul></div>
+    </aside>
+  </div>
+
+  <section class="s w rv" aria-labelledby="t-rub">
+    <div class="sh"><h2 id="t-rub">Rubriques de l’annuaire</h2><a href="#">Tous les services</a></div>
+    <ul class="index">
+      <li><a href="#">Alarme et contrôle d’accès</a><span>42</span></li><li><a href="#">Assistance et intervention</a><span>58</span></li><li><a href="#">Audit de sécurité</a><span>21</span></li><li><a href="#">Brigade canine</a><span>17</span></li><li><a href="#">Escorte</a><span>26</span></li><li><a href="#">Formation</a><span>34</span></li>
+      <li><a href="#">Garde rapprochée</a><span>29</span></li><li><a href="#">Gardiennage armé</a><span>61</span></li><li><a href="#">Gardiennage non armé</a><span>88</span></li><li><a href="#">Hôtesses et stewards</a><span>12</span></li><li><a href="#">Investigation</a><span>9</span></li><li><a href="#">Location de matériel</a><span>14</span></li>
+      <li><a href="#">Sécurité événementielle</a><span>37</span></li><li><a href="#">Sécurité incendie</a><span>31</span></li><li><a href="#">Sécurité informatique</a><span>19</span></li><li><a href="#">Sécurité maritime</a><span>6</span></li><li><a href="#">Sweeping électronique</a><span>4</span></li><li><a href="#">Tracking de véhicules</a><span>11</span></li>
+      <li><a href="#">Veille sécuritaire</a><span>8</span></li><li><a href="#">Vente de matériel</a><span>23</span></li><li><a href="#">Vidéosurveillance</a><span>52</span></li><li><a href="#">Sécurité portuaire</a><span>5</span></li><li><a href="#">Exfiltration</a><span>3</span></li><li><a href="#">Détection canine</a><span>7</span></li>
+    </ul>
+  </section>
+
+  <section class="s w rv" aria-labelledby="t-fic">
+    <div class="two">
+      <div>
+        <div class="sh"><h2 id="t-fic">Les fiches les plus consultées</h2><a href="#">Voir l’annuaire</a></div>
+        <ul class="fiches">
+          <li><span class="mono" aria-hidden="true">D</span><div><h3><a href="#">Dauphin Sécurité</a></h3><p class="meta">Abidjan, Plateau · Entreprise agréée</p><p class="svc">Gardiennage armé, garde rapprochée, intervention.</p><p class="ver">Fiche vérifiée le 12 septembre 2026</p></div><div class="note"><b>4,6</b><small>sur 5 · 38 avis</small></div></li>
+          <li><span class="mono" aria-hidden="true">S</span><div><h3><a href="#">Sentinelle Garde</a></h3><p class="meta">Abidjan, Cocody · Entreprise agréée</p><p class="svc">Vidéosurveillance, alarme, télésurveillance.</p><p class="ver">Fiche vérifiée le 3 octobre 2026</p></div><div class="note"><b>4,8</b><small>sur 5 · 52 avis</small></div></li>
+          <li><span class="mono" aria-hidden="true">B</span><div><h3><a href="#">Bouclier Canin</a></h3><p class="meta">Yamoussoukro · Entreprise agréée</p><p class="svc">Brigade canine, détection, sécurité événementielle.</p><p class="ver">Fiche vérifiée le 21 août 2026</p></div><div class="note"><b>4,4</b><small>sur 5 · 17 avis</small></div></li>
+          <li><span class="mono" aria-hidden="true">R</span><div><h3><a href="#">Rempart Incendie</a></h3><p class="meta">San-Pédro · Centre de formation</p><p class="svc">Sécurité incendie, formation, audit.</p><p class="ver">Fiche vérifiée le 30 septembre 2026</p></div><div class="note"><b>4,7</b><small>sur 5 · 24 avis</small></div></li>
+        </ul>
+      </div>
+      <aside class="col" aria-label="Urgences, lectures et Dis-moi tout">
+        <div class="urg">
+          <h3 class="t">Urgences</h3>
+          <ul>
+            <li><span>Police secours</span><a href="tel:110">110</a></li>
+            <li><span>Sapeurs-pompiers</span><a href="tel:180">180</a></li>
+            <li><span>SAMU</span><a href="tel:185">185</a></li>
+          </ul>
+          <small>Numéros à confirmer avant la mise en ligne.</small>
+        </div>
+        <div>
+          <h3 class="t">Les plus lus</h3>
+          <ol class="lus">
+            <li><a href="#">Arnaques par mobile money : les signes qui doivent alerter</a></li>
+            <li><a href="#">Se former aux métiers de la sécurité privée</a></li>
+            <li><a href="#">Alarme ou télésurveillance : que choisir ?</a></li>
+          </ol>
+        </div>
+        <div class="dmt">
+          <span class="kicker">Dis-moi tout</span>
+          <h4 style="margin-top:8px">Une prestation à signaler ?</h4>
+          <p>Encouragement, question, plainte ou suggestion : chaque message reçoit un numéro de suivi.</p>
+          <a class="go" href="#">Envoyer un message</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="s w rv" aria-labelledby="t-tr">
+    <div class="sh"><h2 id="t-tr">Notre méthode</h2></div>
+    <div class="trust">
+      <blockquote>« Aucune fiche n’est publiée sans que nous ayons vérifié l’agrément et le registre de commerce. »<footer>L’équipe ProtectIci</footer></blockquote>
+      <div class="cols3">
+        <p>Chaque établissement qui s’inscrit transmet son <b>numéro RCCM</b> et, pour les sociétés de sécurité, son <b>numéro d’agrément</b>. Notre équipe contrôle ces pièces avant toute publication, et la date de vérification figure sur chaque fiche.</p>
+        <p>Les <b>avis</b> sont réservés aux personnes disposant d’un compte, à raison d’un avis par prestataire, et sont relus avant d’être publiés. Un prestataire peut répondre une fois, publiquement.</p>
+        <p>Vos <b>coordonnées</b> ne sont transmises qu’aux prestataires à qui vous demandez un devis. Elles ne sont jamais revendues.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="s w rv" id="dem" aria-labelledby="t-dem">
+    <div class="sh"><h2 id="t-dem">Démarches auprès des forces de l’État</h2><a href="#">Toutes les structures</a></div>
+    <div class="dem">
+      <a href="#"><h3>Déposer une plainte</h3><p>Commissariats et brigades de gendarmerie</p></a>
+      <a href="#"><h3>Signaler un fait suspect</h3><p>Police nationale et gendarmerie</p></a>
+      <a href="#"><h3>Déclarer une perte</h3><p>Pièces d’identité, documents, objets</p></a>
+      <a href="#"><h3>Obtenir un constat d’accident</h3><p>Unités de la circulation routière</p></a>
+      <a href="#"><h3>Sécuriser une cérémonie</h3><p>Encadrement d’événements</p></a>
+      <a href="#"><h3>Trouver la structure la plus proche</h3><p>Recherche par position</p></a>
+    </div>
+  </section>
+
+  <section class="s w rv" aria-labelledby="t-dos">
+    <div class="sh"><h2 id="t-dos">Dossiers</h2><a href="#">Toutes les actualités</a></div>
+    <div class="dos">
+      <article class="big"><figure><div class="ph">Photo</div></figure><span class="kicker" style="display:block;margin-top:14px">Formation</span><h3><a href="#">Métiers de la sécurité privée : se former en Côte d’Ivoire</a></h3><p>Panorama des formations, des certifications et des débouchés du secteur.</p><p class="byline" style="margin-top:10px">18 sept. 2026 · 7 min</p></article>
+      <ul>
+        <li><div class="ph">Photo</div><div><span class="kicker">Domotique</span><h3><a href="#">Sécuriser sa maison connectée</a></h3><p class="byline">25 sept. 2026</p></div></li>
+        <li><div class="ph">Photo</div><div><span class="kicker">Anti-intrusion</span><h3><a href="#">Alarme ou télésurveillance : que choisir ?</a></h3><p class="byline">29 sept. 2026</p></div></li>
+        <li><div class="ph">Photo</div><div><span class="kicker">Emploi</span><h3><a href="#">Agent de sécurité : salaires et conditions en 2026</a></h3><p class="byline">2 oct. 2026</p></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="pro" aria-labelledby="t-pro">
+    <div class="w">
+      <div><span class="kicker">Professionnels de la sécurité</span><h2 id="t-pro">Faites figurer votre entreprise dans l’annuaire de référence.</h2></div>
+      <div><p>L’inscription est gratuite. Après vérification de vos documents, votre fiche est publiée et vous recevez les demandes de devis.</p>
+        <div class="acts"><a class="go" href="#">Inscrire mon établissement</a><a href="#">Comment se passe la vérification</a></div></div>
+    </div>
+  </section>
+</main>
+
+<footer class="site w">
+  <div class="grid">
+    <div><h4>ProtectIci</h4><p style="font-family:var(--serif);font-size:1rem;color:var(--ink-2);max-width:36ch">Première plateforme d’information et de services dédiée à la sécurité et à la sûreté privées en Côte d’Ivoire.</p><p style="margin-top:10px">Abidjan Plateau, immeuble Eden · <a class="blue" href="tel:+2250709445111">+225 07 09 44 51 11</a></p></div>
+    <div><h4>Annuaire</h4><ul><li><a href="#">Prestataires</a></li><li><a href="#">Forces de l’État</a></li><li><a href="#">Inscrire un établissement</a></li><li><a href="#">Demande de devis</a></li></ul></div>
+    <div><h4>À propos</h4><ul><li><a href="#">Qui sommes-nous</a></li><li><a href="#">Partenaires</a></li><li><a href="#">Clients</a></li><li><a href="#">Contact</a></li></ul></div>
+    <div><h4>Informations</h4><ul><li><a href="#">Mentions légales</a></li><li><a href="#">Confidentialité</a></li><li><a href="#">CGU</a></li><li><a href="#">Gérer les cookies</a></li></ul></div>
+  </div>
+  <div class="legal"><span>© 2022–2026 ProtectIci · FYG Technologies</span><span>Lettre d’information : <a class="blue" href="#">s’abonner</a></span></div>
+</footer>
+
+<script>
+const w=document.getElementById('wire'),b=w.querySelector('button');
+b.addEventListener('click',()=>{const p=w.classList.toggle('paused');b.setAttribute('aria-pressed',p);b.textContent=p?'Reprendre':'Pause';});
+document.getElementById('date').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.08});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
