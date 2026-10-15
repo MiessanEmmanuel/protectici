@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="fr" data-palette="logo">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProtectIci — Maquette accueil v6 (aplats, ergonomie)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Skill ui-ux-pro-max : style « Vibrant & Block-based » / « Flat Design ».
+   Aplats de couleur pleins, 4 à 6 couleurs maximum, aucun dégradé, aucune ombre, angles droits.
+   Trois palettes au choix (sélecteur en bas à droite), contrastes texte ≥ 4,5:1. */
+:root,[data-palette="logo"]{
+  --c1:#0343A4; --on-c1:#fff;          /* aplat principal : bleu du logo */
+  --c2:#EAAB13; --on-c2:#0d1b2a;       /* aplat d'accent : or du logo (texte foncé uniquement) */
+  --c3:#0d1b2a; --on-c3:#fff;          /* aplat profond : nuit */
+  --c4:#f3eee4; --on-c4:#0d1b2a;       /* aplat doux : sable */
+  --link:#0343A4;
+}
+[data-palette="signal"]{
+  --c1:#0b2545; --on-c1:#fff;
+  --c2:#f26b1d; --on-c2:#111;
+  --c3:#111111; --on-c3:#fff;
+  --c4:#eef1f4; --on-c4:#0b2545;
+  --link:#0b4fae;
+}
+[data-palette="ivoire"]{
+  --c1:#0f6b43; --on-c1:#fff;          /* vert */
+  --c2:#f28c28; --on-c2:#111;          /* orange */
+  --c3:#0343A4; --on-c3:#fff;          /* bleu du logo */
+  --c4:#f6f3ec; --on-c4:#13261d;
+  --link:#0d5c39;
+}
+:root{--ink:#111;--ink-2:#4b4f55;--line:#111;--white:#fff;--font:"Archivo",Arial,sans-serif;--w:1200px}
+*{box-sizing:border-box;border-radius:0}
+body{margin:0;font-family:var(--font);font-size:17px;line-height:1.5;color:var(--ink);background:var(--white);font-variant-numeric:tabular-nums}
+.w{width:min(var(--w),100% - 32px);margin-inline:auto}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px;box-shadow:0 0 0 6px #fff}
+h1,h2,h3{margin:0;font-weight:900;line-height:1;letter-spacing:-.02em;text-wrap:balance}
+p{margin:0}
+.lab{font-size:.74rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:-9999px}.skip:focus{left:12px;top:12px;background:#111;color:#fff;padding:10px;z-index:20}
+.btn{display:inline-flex;align-items:center;gap:10px;min-height:50px;padding:0 22px;font-weight:800;text-decoration:none;border:2px solid currentColor;transition:background .15s,color .15s}
+.btn.solid{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.solid:hover{background:#fff;color:var(--ink)}
+.btn.light{background:#fff;color:var(--ink);border-color:#fff}
+.btn.light:hover{background:transparent;color:#fff}
+.arr{display:inline-block;transition:transform .15s}
+a:hover .arr{transform:translateX(4px)}
+
+/* En-tête */
+.head{background:var(--c1);color:var(--on-c1)}
+.head .w{display:flex;align-items:center;gap:28px;min-height:76px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:900;font-size:1.5rem;letter-spacing:.04em}
+.logo img{width:46px;height:46px;background:#fff;padding:4px}
+.head nav{display:flex;margin-left:auto}
+.head nav a{padding:0 16px;line-height:76px;font-weight:700;text-decoration:none;font-size:.95rem}
+.head nav a:hover,.head nav a[aria-current]{background:var(--c3);color:var(--on-c3)}
+.head .acc{font-weight:700;text-decoration:underline;text-underline-offset:.2em}
+@media (max-width:960px){.head nav{display:none}.head .acc{margin-left:auto}}
+
+/* Flash info : aplat d'accent */
+.flash{background:var(--c2);color:var(--on-c2)}
+.flash .w{display:flex;align-items:stretch;min-height:50px}
+.flash .tag{flex:none;background:var(--c3);color:var(--on-c3);display:flex;align-items:center;gap:10px;padding:0 16px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;font-size:.85rem}
+.flash .tag i{width:9px;height:9px;background:var(--c2);animation:bl 1.4s steps(2) infinite}
+.flash .track{flex:1;overflow:hidden;display:flex;align-items:center}
+.flash ul{display:flex;margin:0;padding:0;list-style:none;width:max-content;animation:tick 60s linear infinite}
+.flash.paused ul,.flash .track:hover ul,.flash .track:focus-within ul{animation-play-state:paused}
+.flash li{white-space:nowrap;padding:0 26px;font-weight:600;font-size:.95rem}
+.flash li + li{border-left:2px solid currentColor}
+.flash time{font-weight:900;margin-right:8px}
+.flash a{text-decoration:none}.flash a:hover{text-decoration:underline}
+.flash button{flex:none;background:transparent;border:0;border-left:2px solid currentColor;color:inherit;font:inherit;font-weight:800;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;padding:0 16px;cursor:pointer}
+@keyframes tick{to{transform:translateX(-50%)}}
+@keyframes bl{50%{opacity:0}}
+
+/* Hero en blocs : 2/3 – 1/3 */
+.hero{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.hero .main{background:var(--c1);color:var(--on-c1);padding:64px max(16px,calc((100vw - var(--w))/2)) 64px max(16px,calc((100vw - var(--w))/2));padding-right:56px}
+.hero h1{font-size:clamp(2.8rem,6.2vw,5.4rem);margin:16px 0 22px;max-width:12ch}
+.hero .lead{font-size:1.2rem;max-width:44ch;opacity:.92}
+.find{margin-top:34px;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto auto;max-width:none;background:#fff;color:var(--ink)}
+.find label{display:block;padding:12px 16px;border-right:2px solid var(--ink)}
+.find label span{display:block;font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.find input,.find select{width:100%;border:0;background:transparent;font:inherit;font-size:1.05rem;padding:4px 0;outline:none;color:var(--ink)}
+.find button{border:0;background:var(--c3);color:var(--on-c3);font:inherit;font-weight:900;font-size:1rem;padding:0 28px;cursor:pointer}
+.find button:hover{background:var(--c2);color:var(--on-c2)}
+.find label:focus-within{background:var(--c4)}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.tags a{font-size:.85rem;font-weight:700;text-decoration:none;border:2px solid currentColor;padding:5px 10px}
+.tags a:hover{background:var(--on-c1);color:var(--c1)}
+.hero .rail{display:grid;grid-template-rows:auto 1fr}
+.blk{padding:34px 32px}
+.blk.urg{background:var(--c2);color:var(--on-c2)}
+.blk.urg h2{font-size:1.9rem}
+.blk.urg ul{list-style:none;margin:18px 0 0;padding:0}
+.blk.urg li{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-top:2px solid currentColor;font-weight:700}
+.blk.urg li a{font-size:2.3rem;font-weight:900;text-decoration:none;line-height:1}
+.blk.urg small{display:block;margin-top:10px;font-size:.72rem;font-weight:600}
+.blk.dmt{background:var(--c3);color:var(--on-c3);display:flex;flex-direction:column;gap:14px}
+.blk.dmt h2{font-size:1.9rem}
+.blk.dmt p{opacity:.85}
+.blk.dmt .kinds{display:flex;flex-wrap:wrap;gap:6px}
+.blk.dmt .kinds span{border:2px solid currentColor;padding:3px 8px;font-size:.78rem;font-weight:700}
+@media (max-width:960px){.hero{grid-template-columns:1fr}.hero .main{padding:48px 16px}.find label{border-right:0;border-bottom:2px solid var(--ink)}.find button[type=submit]{padding:18px}}
+
+/* Services : mosaïque d'aplats */
+section.s{padding:72px 0}
+.sh{display:flex;justify-content:space-between;align-items:end;gap:12px 20px;margin-bottom:28px;flex-wrap:wrap}
+.sh h2{font-size:clamp(2.1rem,4vw,3.2rem)}
+.sh a{font-weight:800;text-decoration:none;white-space:nowrap}
+.sh a:hover{text-decoration:underline}
+.mosaic{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:170px;gap:0;border:2px solid var(--ink)}
+.mosaic a{display:flex;flex-direction:column;justify-content:space-between;padding:20px;text-decoration:none;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transition:transform .15s}
+.mosaic a:nth-child(4n){border-right:0}
+.mosaic a:nth-last-child(-n+4){border-bottom:0}
+.mosaic b{font-size:2.6rem;font-weight:900;line-height:1}
+.mosaic span{font-weight:800;font-size:1.05rem;line-height:1.15}
+.mosaic a:hover span{text-decoration:underline}
+.t1{background:var(--c1);color:var(--on-c1)}.t2{background:var(--c2);color:var(--on-c2)}.t3{background:var(--c3);color:var(--on-c3)}.t4{background:var(--c4);color:var(--on-c4)}.t5{background:#fff;color:var(--ink)}
+.mosaic .wide{grid-column:span 2}
+@media (max-width:860px){.mosaic{grid-template-columns:1fr 1fr;grid-auto-rows:140px}.mosaic a{border-right:2px solid var(--ink)!important;border-bottom:2px solid var(--ink)!important}.mosaic a:nth-child(2n){border-right:0!important}.mosaic .wide{grid-column:span 2;border-right:0!important}}
+
+/* 2/3 – 1/3 : fiches sur fond sable + aplat forces */
+.band{background:var(--c4);color:var(--on-c4)}
+.two{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:0}
+.two > .l{padding-right:48px}
+@media (max-width:960px){.two{grid-template-columns:1fr}.two > .l{padding-right:0;margin-bottom:40px}}
+.fiche{display:grid;grid-template-columns:84px 1fr auto;gap:20px;align-items:center;padding:18px;background:#fff;color:var(--ink);border:2px solid var(--ink);margin-bottom:-2px;text-decoration:none;transition:background .15s,color .15s}
+.fiche:hover{background:var(--ink);color:#fff}
+.fiche:hover .mono{background:var(--c2);color:var(--on-c2)}
+.mono{width:84px;height:84px;display:grid;place-items:center;font-weight:900;font-size:2rem;background:var(--c1);color:var(--on-c1)}
+.fiche h3{font-size:1.35rem;font-weight:800;letter-spacing:-.01em}
+.fiche .m{font-size:.85rem;margin-top:4px;opacity:.75}
+.fiche .ver{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+.fiche .n{text-align:right}
+.fiche .n b{display:block;font-size:2.2rem;font-weight:900;line-height:1}
+.fiche .n small{font-size:.75rem;opacity:.75}
+@media (max-width:560px){.fiche{grid-template-columns:56px 1fr}.mono{width:56px;height:56px;font-size:1.4rem}.fiche .n{grid-column:2;text-align:left}}
+.forces{background:var(--c1);color:var(--on-c1);padding:30px}
+.forces h3{font-size:1.7rem;margin-bottom:14px}
+.forces ul{list-style:none;margin:0;padding:0}
+.forces li a{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:2px solid currentColor;text-decoration:none;font-weight:700}
+.forces li a:hover{text-decoration:underline}
+.forces .km{font-weight:900;white-space:nowrap}
+.forces .btn{margin-top:20px}
+
+/* Méthode : trois aplats chiffrés */
+.method{display:grid;grid-template-columns:repeat(3,1fr)}
+.method > div{padding:34px 30px;min-height:280px;display:flex;flex-direction:column;gap:12px}
+.method b{font-size:5rem;font-weight:900;line-height:.85}
+.method h3{font-size:1.5rem}
+.method p{opacity:.88}
+@media (max-width:860px){.method{grid-template-columns:1fr}.method > div{min-height:0}}
+
+/* Démarches : grille de liens en aplat blanc */
+.dem{display:grid;grid-template-columns:repeat(3,1fr);border:2px solid var(--ink)}
+.dem a{padding:22px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);text-decoration:none;display:flex;justify-content:space-between;gap:16px;font-weight:800;font-size:1.1rem;transition:background .15s,color .15s}
+.dem a:nth-child(3n){border-right:0}.dem a:nth-last-child(-n+3){border-bottom:0}
+.dem a:hover{background:var(--c2);color:var(--on-c2)}
+.dem small{display:block;font-weight:500;font-size:.82rem;margin-top:4px;color:var(--ink-2)}
+.dem a:hover small{color:inherit}
+@media (max-width:760px){.dem{grid-template-columns:1fr}.dem a{border-right:0!important;border-bottom:2px solid var(--ink)!important}.dem a:last-child{border-bottom:0!important}}
+
+/* Actualités : bande catégorie en aplat */
+.news{display:grid;grid-template-columns:2fr 1fr 1fr;gap:24px}
+.news article{border:2px solid var(--ink);display:flex;flex-direction:column}
+.news .cat{padding:8px 14px;font-size:.74rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.news .img{aspect-ratio:16/10;background:repeating-linear-gradient(45deg,rgba(0,0,0,.08) 0 2px,transparent 2px 12px)}
+.news .big .img{aspect-ratio:16/9}
+.news .body{padding:18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.news h3{font-size:1.3rem;font-weight:800;line-height:1.15}
+.news .big h3{font-size:2rem}
+.news h3 a{text-decoration:none}.news h3 a:hover{text-decoration:underline}
+.news .d{font-size:.8rem;color:var(--ink-2);margin-top:auto}
+@media (max-width:960px){.news{grid-template-columns:1fr}}
+
+/* Appel pro : aplat accent pleine largeur */
+.pro{background:var(--c2);color:var(--on-c2)}
+.pro .w{display:grid;grid-template-columns:3fr 2fr;gap:40px;align-items:center;padding:64px 0}
+.pro h2{font-size:clamp(2.2rem,4.6vw,3.8rem)}
+.pro ul{margin:0;padding:0;list-style:none;font-weight:700}
+.pro li{padding:10px 0;border-top:2px solid currentColor}
+.pro .acts{margin-top:26px;display:flex;gap:14px;flex-wrap:wrap}
+@media (max-width:860px){.pro .w{grid-template-columns:1fr}}
+
+/* Pied */
+footer{background:var(--c3);color:var(--on-c3);font-size:.9rem}
+footer .w{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px;padding:56px 0 28px}
+footer h4{margin:0 0 12px;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase}
+footer ul{list-style:none;margin:0;padding:0}footer li{margin-bottom:8px}
+footer a{text-decoration:none}footer a:hover{text-decoration:underline}
+footer .legal{grid-column:1 / -1;border-top:2px solid currentColor;padding-top:16px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;opacity:.85}
+@media (max-width:760px){footer .w{grid-template-columns:1fr 1fr}}
+
+/* Sélecteur de palette (maquette uniquement) */
+.pal{position:fixed;right:16px;bottom:16px;max-width:calc(100% - 32px);z-index:30;background:#fff;color:#111;border:2px solid #111;padding:10px 12px;font-size:.78rem;font-weight:700}
+.pal p{margin:0 0 8px;letter-spacing:.08em;text-transform:uppercase;font-size:.7rem}
+.pal div{display:flex;gap:6px}
+.pal button{border:2px solid #111;background:#fff;font:inherit;font-size:.78rem;font-weight:800;padding:6px 8px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.pal button[aria-pressed="true"]{background:#111;color:#fff}
+.pal .sw{display:inline-flex}.pal .sw i{width:10px;height:14px;display:block}
+
+
+/* ===== v6 : ergonomie ===== */
+.blk.urg li{padding:0}
+.blk.urg a.row{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:56px;text-decoration:none;font-weight:700}
+.blk.urg a.row b{font-size:2.3rem;font-weight:900;line-height:1}
+.blk.urg a.row:hover b{text-decoration:underline}
+.sh a{display:inline-flex;align-items:center;min-height:44px}
+.head{position:sticky;top:0;z-index:40}
+.burger{display:none;margin-left:auto;min-width:48px;min-height:48px;background:transparent;border:2px solid currentColor;color:inherit;font:inherit;font-weight:800;font-size:.85rem;padding:0 12px;cursor:pointer;align-items:center;gap:8px}
+.burger .bars{width:18px;height:12px;border-top:2px solid currentColor;border-bottom:2px solid currentColor;position:relative}
+.burger .bars::after{content:"";position:absolute;left:0;right:0;top:3px;border-top:2px solid currentColor}
+.menu{display:none;background:var(--c3);color:var(--on-c3)}
+.menu.open{display:block}
+.menu a{display:flex;align-items:center;min-height:56px;padding:0 16px;border-top:2px solid rgba(255,255,255,.15);font-weight:800;text-decoration:none}
+.menu a:hover{background:var(--c2);color:var(--on-c2)}
+@media (max-width:960px){.burger{display:inline-flex}.head .acc{display:none}}
+@media (min-width:961px){.menu{display:none!important}}
+
+/* Flash info : une dépêche à la fois, contrôlable */
+.flash .now{flex:1;display:flex;align-items:center;gap:10px;padding:0 16px;min-width:0}
+.flash .now a{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.flash .now time{font-weight:900;flex:none}
+.flash .ctl{display:flex;flex:none}
+.flash .ctl button{min-width:48px;min-height:50px;border-left:2px solid currentColor;padding:0 12px}
+.flash .count{font-size:.78rem;font-weight:800;flex:none;padding:0 12px;display:flex;align-items:center;border-left:2px solid currentColor}
+@media (max-width:600px){.flash .count{display:none}.flash .tag span{display:none}}
+.fade{animation:fd .35s ease}
+@keyframes fd{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* Recherche : géolocalisation + suggestions */
+.find{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto auto}
+.find .geo{border:0;border-left:2px solid var(--ink);background:#fff;color:var(--ink);font:inherit;font-weight:800;font-size:.85rem;padding:0 16px;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:56px}
+.find .geo:hover{background:var(--c4)}
+.find .geo svg{width:18px;height:18px}
+@media (max-width:960px){.find{grid-template-columns:1fr}.find .geo{border-left:0;border-bottom:2px solid var(--ink);justify-content:center}}
+.tags a{min-height:44px;display:inline-flex;align-items:center;padding:0 14px}
+
+/* Mosaïque : libellé explicite */
+.mosaic b small{display:block;font-size:.8rem;font-weight:700;letter-spacing:0;margin-top:4px;opacity:.85}
+
+/* Fiches : lien principal + actions directes */
+.fiche{position:relative;grid-template-columns:84px 1fr auto}
+.fiche h3 a{text-decoration:none}
+.fiche h3 a::after{content:"";position:absolute;inset:0}
+.fiche .acts{grid-column:2 / -1;display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.fiche .acts a{position:relative;z-index:1;min-height:44px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border:2px solid currentColor;font-weight:800;font-size:.85rem;text-decoration:none;background:transparent}
+.fiche .acts a:hover{background:var(--c2);color:var(--on-c2);border-color:var(--c2)}
+.fiche:hover .acts a{border-color:#fff}
+.fiche .dist{font-size:.78rem;font-weight:800;margin-top:6px}
+@media (max-width:560px){.fiche .acts{grid-column:1 / -1}}
+
+/* Forces : position */
+.forces .geo2{display:inline-flex;align-items:center;gap:8px;min-height:44px;background:transparent;border:2px solid currentColor;color:inherit;font:inherit;font-weight:800;font-size:.85rem;padding:0 14px;cursor:pointer;margin-bottom:14px}
+.forces .geo2:hover{background:var(--on-c1);color:var(--c1)}
+
+/* Barre d'actions mobile (3 entrées, toujours accessible au pouce) */
+.dock{display:none}
+@media (max-width:760px){
+  .dock{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;z-index:45;background:var(--c3);color:var(--on-c3);border-top:2px solid var(--on-c3)}
+  .dock a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:60px;font-size:.78rem;font-weight:800;text-decoration:none}
+  .dock a + a{border-left:2px solid rgba(255,255,255,.2)}
+  .dock a.sos{background:var(--c2);color:var(--on-c2)}
+  .dock svg{width:20px;height:20px}
+  body{padding-bottom:62px}
+  .pal{bottom:74px}
+}
+/* Sélecteur de palette repliable */
+.pal summary{cursor:pointer;list-style:none;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;min-height:32px;display:flex;align-items:center}
+.pal summary::-webkit-details-marker{display:none}
+.pal[open] summary{margin-bottom:8px}
+svg.ic{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:square}
+
+/* Apparition par blocs */
+/* Contenu visible par défaut ; l'animation ne s'active que si le script tourne. */
+.anim .rv:not(.in){clip-path:inset(0 0 100% 0)}
+.anim .rv{transition:clip-path .7s cubic-bezier(.7,0,.2,1)}
+@media (prefers-reduced-motion:reduce){.rv{clip-path:none;transition:none}.flash ul{animation:none;flex-wrap:wrap;width:auto}.flash li[aria-hidden]{display:none}.flash .tag i{animation:none}*{transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu principal</a>
+
+<header class="head">
+  <div class="w">
+    <a class="logo" href="#"><img src="../assets/elephant-icon-192.png" alt="" width="46" height="46">PROTECTICI</a>
+    <nav aria-label="Navigation principale">
+      <a href="#" aria-current="page">Prestataires</a><a href="#dem">Forces de l’État</a><a href="#">Devis</a><a href="#">Dis-moi tout</a><a href="#news">Actualités</a>
+    </nav>
+    <a class="acc" href="#">Se connecter</a>
+    <button class="burger" type="button" aria-expanded="false" aria-controls="menu"><span class="bars" aria-hidden="true"></span>Menu</button>
+  </div>
+  <nav class="menu" id="menu" aria-label="Menu mobile">
+    <a href="#">Prestataires</a><a href="#dem">Forces de l’État</a><a href="#">Demande de devis</a><a href="#">Dis-moi tout</a><a href="#news">Actualités</a><a href="#">Se connecter</a>
+  </nav>
+</header>
+
+<div class="flash" id="flash" role="region" aria-roledescription="dépêches" aria-label="Flash info">
+  <div class="w">
+    <span class="tag"><i aria-hidden="true"></i><span>Flash info</span></span>
+    <div class="now" id="now" aria-live="off"><time>09H42</time><a href="#">Patrouilles de nuit renforcées à Cocody et Marcory</a></div>
+    <span class="count" id="count" aria-hidden="true">1 / 4</span>
+    <div class="ctl">
+      <button type="button" id="prev" aria-label="Dépêche précédente">‹</button>
+      <button type="button" id="play" aria-pressed="false" aria-label="Mettre en pause">❚❚</button>
+      <button type="button" id="next" aria-label="Dépêche suivante">›</button>
+    </div>
+  </div>
+</div>
+
+<main id="main">
+  <section class="hero" aria-labelledby="h1">
+    <div class="main">
+      <span class="lab">370 établissements vérifiés en Côte d’Ivoire</span>
+      <h1 id="h1">La sécurité, entre de bonnes mains.</h1>
+      <p class="lead">Trouvez une entreprise de sécurité agréée, un centre de formation ou la force de l’ordre la plus proche. Chaque fiche est contrôlée avant publication.</p>
+      <form class="find" id="search" role="search" onsubmit="return false">
+        <label><span>Service ou entreprise</span><input type="search" list="sugg" autocomplete="off" placeholder="Gardiennage, alarme, escorte…"></label>
+        <datalist id="sugg"><option value="Gardiennage armé"><option value="Gardiennage non armé"><option value="Vidéosurveillance"><option value="Alarme et contrôle d’accès"><option value="Brigade canine"><option value="Sécurité incendie"><option value="Escorte"><option value="Garde rapprochée"><option value="Formation"><option value="Dauphin Sécurité"><option value="Sentinelle Garde"></datalist>
+        <label><span>Ville</span><select><option>Toute la Côte d’Ivoire</option><option>Abidjan</option><option>Yamoussoukro</option><option>Bouaké</option><option>San-Pédro</option></select></label>
+        <button class="geo" type="button" id="geo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Autour de moi</button>
+        <button type="submit">Rechercher</button>
+      </form>
+      <div class="tags"><a href="#">Gardiennage armé</a><a href="#">Vidéosurveillance</a><a href="#">Brigade canine</a><a href="#">Sécurité incendie</a></div>
+    </div>
+    <div class="rail">
+      <div class="blk urg" id="urgence">
+        <h2>Urgence</h2>
+        <ul>
+          <li><a class="row" href="tel:110"><span>Police secours</span><b>110</b></a></li>
+          <li><a class="row" href="tel:180"><span>Sapeurs-pompiers</span><b>180</b></a></li>
+          <li><a class="row" href="tel:185"><span>SAMU</span><b>185</b></a></li>
+        </ul>
+        <small>Numéros à confirmer avant la mise en ligne.</small>
+      </div>
+      <div class="blk dmt">
+        <span class="lab">Dis-moi tout</span>
+        <h2>Une prestation à signaler&nbsp;?</h2>
+        <p>Chaque message reçoit un numéro de suivi et une réponse de notre équipe.</p>
+        <div class="kinds"><span>Encouragement</span><span>Question</span><span>Plainte</span><span>Suggestion</span></div>
+        <a class="btn light" href="#" style="align-self:flex-start;margin-top:auto">Envoyer un message <span class="arr">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="s w" aria-labelledby="t-svc">
+    <div class="sh rv"><h2 id="t-svc">Que recherchez-vous&nbsp;?</h2><a href="#">Les 25 services <span class="arr">→</span></a></div>
+    <div class="mosaic rv">
+      <a class="t1" href="#"><b>88<small>établissements</small></b><span>Gardiennage non armé</span></a>
+      <a class="t2" href="#"><b>61<small>établissements</small></b><span>Gardiennage armé</span></a>
+      <a class="t4" href="#"><b>52<small>établissements</small></b><span>Vidéosurveillance</span></a>
+      <a class="t3" href="#"><b>42<small>établissements</small></b><span>Alarme et contrôle d’accès</span></a>
+      <a class="t5" href="#"><b>37<small>établissements</small></b><span>Sécurité événementielle</span></a>
+      <a class="t2" href="#"><b>34<small>établissements</small></b><span>Formation</span></a>
+      <a class="t1" href="#"><b>31<small>établissements</small></b><span>Sécurité incendie</span></a>
+      <a class="t3" href="#"><b>+18<small>autres services</small></b><span>Voir les 25 services →</span></a>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="t-fic">
+    <div class="w s two" style="padding:72px 0">
+      <div class="l">
+        <div class="sh rv"><h2 id="t-fic">Les plus consultés</h2><a href="#">Tout l’annuaire <span class="arr">→</span></a></div>
+        <div class="rv">
+          <article class="fiche"><span class="mono" aria-hidden="true">D</span><div><h3><a href="#">Dauphin Sécurité</a></h3><p class="m">Abidjan, Plateau · Gardiennage armé, garde rapprochée</p><p class="ver">✓ Fiche vérifiée le 12/09/2026</p></div><div class="n"><b>4,6</b><small>38 avis</small></div><div class="acts"><a href="tel:+2250700000000">Appeler</a><a href="#">Demander un devis</a></div></article>
+          <article class="fiche"><span class="mono" aria-hidden="true">S</span><div><h3><a href="#">Sentinelle Garde</a></h3><p class="m">Abidjan, Cocody · Vidéosurveillance, alarme</p><p class="ver">✓ Fiche vérifiée le 03/10/2026</p></div><div class="n"><b>4,8</b><small>52 avis</small></div><div class="acts"><a href="tel:+2250700000000">Appeler</a><a href="#">Demander un devis</a></div></article>
+          <article class="fiche"><span class="mono" aria-hidden="true">B</span><div><h3><a href="#">Bouclier Canin</a></h3><p class="m">Yamoussoukro · Brigade canine, détection</p><p class="ver">✓ Fiche vérifiée le 21/08/2026</p></div><div class="n"><b>4,4</b><small>17 avis</small></div><div class="acts"><a href="tel:+2250700000000">Appeler</a><a href="#">Demander un devis</a></div></article>
+          <article class="fiche"><span class="mono" aria-hidden="true">R</span><div><h3><a href="#">Rempart Incendie</a></h3><p class="m">San-Pédro · Sécurité incendie, formation</p><p class="ver">✓ Fiche vérifiée le 30/09/2026</p></div><div class="n"><b>4,7</b><small>24 avis</small></div><div class="acts"><a href="tel:+2250700000000">Appeler</a><a href="#">Demander un devis</a></div></article>
+        </div>
+      </div>
+      <aside class="forces rv" aria-label="Forces de l’État les plus proches">
+        <span class="lab">Autour de vous</span>
+        <h3 style="margin-top:10px">Forces de l’État les plus proches</h3>
+        <button class="geo2" type="button">Utiliser ma position</button>
+        <ul>
+          <li><a href="#"><span>Commissariat du 1er arrondissement</span><span class="km">0,8 km</span></a></li>
+          <li><a href="#"><span>Brigade de gendarmerie du Plateau</span><span class="km">1,4 km</span></a></li>
+          <li><a href="#"><span>Caserne des sapeurs-pompiers</span><span class="km">2,1 km</span></a></li>
+          <li><a href="#"><span>Commissariat de Treichville</span><span class="km">3,6 km</span></a></li>
+        </ul>
+        <a class="btn light" href="#">Voir la carte <span class="arr">→</span></a>
+      </aside>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-met">
+    <h2 id="t-met" class="sr">Notre méthode</h2>
+    <div class="method rv">
+      <div class="t3"><b>01</b><h3>Inscription</h3><p>L’établissement transmet son RCCM, son agrément et ses coordonnées.</p></div>
+      <div class="t1"><b>02</b><h3>Vérification</h3><p>Notre équipe contrôle chaque pièce avant toute publication.</p></div>
+      <div class="t2"><b>03</b><h3>Publication</h3><p>La fiche affiche sa date de vérification. Les avis sont modérés.</p></div>
+    </div>
+  </section>
+
+  <section class="s w" id="dem" aria-labelledby="t-dem">
+    <div class="sh rv"><h2 id="t-dem">Une démarche auprès de l’État&nbsp;?</h2><a href="#">Toutes les structures <span class="arr">→</span></a></div>
+    <div class="dem rv">
+      <a href="#"><span>Déposer une plainte<small>Commissariats et brigades</small></span><span class="arr">→</span></a>
+      <a href="#"><span>Signaler un fait suspect<small>Police et gendarmerie</small></span><span class="arr">→</span></a>
+      <a href="#"><span>Déclarer une perte<small>Pièces, documents, objets</small></span><span class="arr">→</span></a>
+      <a href="#"><span>Constat d’accident<small>Circulation routière</small></span><span class="arr">→</span></a>
+      <a href="#"><span>Sécuriser une cérémonie<small>Encadrement d’événements</small></span><span class="arr">→</span></a>
+      <a href="#"><span>La structure la plus proche<small>Recherche par position</small></span><span class="arr">→</span></a>
+    </div>
+  </section>
+
+  <section class="s w" id="news" style="padding-top:0" aria-labelledby="t-news">
+    <div class="sh rv"><h2 id="t-news">Actualités</h2><a href="#">Tous les articles <span class="arr">→</span></a></div>
+    <div class="news rv">
+      <article class="big"><span class="cat t1">Actualités</span><div class="img t4" aria-hidden="true"></div><div class="body"><h3><a href="#">Choisir une société de gardiennage : les cinq vérifications à faire</a></h3><p>Agrément, assurance, formation des agents : notre guide avant de signer.</p><span class="d">2 septembre 2026 · 5 min</span></div></article>
+      <article><span class="cat t2">Cybercriminalité</span><div class="img t4" aria-hidden="true"></div><div class="body"><h3><a href="#">Arnaques au mobile money : les signes qui doivent alerter</a></h3><span class="d">8 septembre 2026</span></div></article>
+      <article><span class="cat t3">Formation</span><div class="img t4" aria-hidden="true"></div><div class="body"><h3><a href="#">Se former aux métiers de la sécurité privée</a></h3><span class="d">18 septembre 2026</span></div></article>
+    </div>
+  </section>
+
+  <section class="pro" aria-labelledby="t-pro">
+    <div class="w">
+      <div class="rv">
+        <span class="lab">Professionnels de la sécurité</span>
+        <h2 id="t-pro" style="margin-top:14px">Votre entreprise mérite d’être trouvée.</h2>
+        <div class="acts"><a class="btn solid" href="#">Inscrire mon établissement <span class="arr">→</span></a></div>
+      </div>
+      <ul class="rv">
+        <li>Inscription gratuite</li>
+        <li>Fiche vérifiée et datée</li>
+        <li>Demandes de devis reçues directement</li>
+        <li>Réponse aux avis clients</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="w">
+    <div><a class="logo" href="#"><img src="../assets/elephant-icon-192.png" alt="" width="46" height="46">PROTECTICI</a><p style="margin-top:14px;max-width:36ch;opacity:.85">Première plateforme d’information et de services dédiée à la sécurité et à la sûreté privées en Côte d’Ivoire.</p></div>
+    <div><h4>Annuaire</h4><ul><li><a href="#">Prestataires</a></li><li><a href="#">Forces de l’État</a></li><li><a href="#">Inscrire un établissement</a></li><li><a href="#">Demande de devis</a></li></ul></div>
+    <div><h4>ProtectIci</h4><ul><li><a href="#">Qui sommes-nous</a></li><li><a href="#">Partenaires</a></li><li><a href="#">Clients</a></li><li><a href="#">Contact</a></li></ul></div>
+    <div><h4>Nous joindre</h4><ul><li>Abidjan Plateau, immeuble Eden</li><li><a href="tel:+2250709445111">+225 07 09 44 51 11</a></li><li><a href="mailto:info@protectici.ci">info@protectici.ci</a></li></ul></div>
+    <div class="legal"><span>© 2022–2026 ProtectIci · FYG Technologies</span><span><a href="#">Mentions légales</a> · <a href="#">Confidentialité</a> · <a href="#">Cookies</a></span></div>
+  </div>
+</footer>
+
+<nav class="dock" aria-label="Actions rapides">
+  <a href="#search" id="dock-search"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Rechercher</a>
+  <a class="sos" href="#urgence"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10M12 17v2"/><circle cx="12" cy="12" r="10"/></svg>Urgences</a>
+  <a href="#"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg>Dis-moi tout</a>
+</nav>
+
+<details class="pal" open>
+  <summary>Palette (maquette)</summary>
+  <div>
+    <button type="button" data-p="logo" aria-pressed="true"><span class="sw"><i style="background:#0343A4"></i><i style="background:#EAAB13"></i><i style="background:#0d1b2a"></i></span>Logo</button>
+    <button type="button" data-p="signal" aria-pressed="false"><span class="sw"><i style="background:#0b2545"></i><i style="background:#f26b1d"></i><i style="background:#111"></i></span>Signal</button>
+    <button type="button" data-p="ivoire" aria-pressed="false"><span class="sw"><i style="background:#0f6b43"></i><i style="background:#f28c28"></i><i style="background:#0343A4"></i></span>Ivoire</button>
+  </div>
+</details>
+
+<script>
+/* Menu mobile */
+const bg=document.querySelector('.burger'),menu=document.getElementById('menu');
+bg.addEventListener('click',()=>{const o=menu.classList.toggle('open');bg.setAttribute('aria-expanded',o);});
+/* Flash info : une dépêche à la fois, pause au survol/focus, contrôles clavier */
+const news=[["09H42","Patrouilles de nuit renforcées à Cocody et Marcory"],["10H15","Arnaques au mobile money : les signes qui doivent alerter"],["11H30","Formation des agents de sécurité incendie à Yamoussoukro"],["13H05","Vérifier l’agrément d’une société de gardiennage"]];
+let k=0,timer=null,paused=matchMedia('(prefers-reduced-motion: reduce)').matches,hold=false;
+const now=document.getElementById('now'),cnt=document.getElementById('count'),play=document.getElementById('play'),fl=document.getElementById('flash');
+const show=d=>{k=(k+d+news.length)%news.length;now.innerHTML=`<time>${news[k][0]}</time><a href="#">${news[k][1]}</a>`;now.classList.remove('fade');void now.offsetWidth;now.classList.add('fade');cnt.textContent=`${k+1} / ${news.length}`;};
+const tick=()=>{clearInterval(timer);if(!paused&&!hold)timer=setInterval(()=>show(1),6000);};
+const setPaused=p=>{paused=p;play.setAttribute('aria-pressed',p);play.setAttribute('aria-label',p?'Reprendre':'Mettre en pause');play.textContent=p?'▶':'❚❚';now.setAttribute('aria-live',p?'polite':'off');tick();};
+document.getElementById('prev').onclick=()=>{show(-1);setPaused(true)};
+document.getElementById('next').onclick=()=>{show(1);setPaused(true)};
+play.onclick=()=>setPaused(!paused);
+fl.addEventListener('mouseenter',()=>{hold=true;tick()});fl.addEventListener('mouseleave',()=>{hold=false;tick()});
+fl.addEventListener('focusin',()=>{hold=true;tick()});fl.addEventListener('focusout',()=>{hold=false;tick()});
+setPaused(paused);
+/* Géolocalisation (maquette : simulée) */
+document.getElementById('geo').onclick=e=>{e.currentTarget.lastChild.textContent=' Position utilisée';};
+document.querySelector('.geo2').onclick=e=>{e.currentTarget.textContent='Position utilisée ✓';};
+/* Raccourci « Rechercher » du dock : place le focus dans le champ */
+document.getElementById('dock-search').onclick=e=>{e.preventDefault();const f=document.querySelector('#search input');f.scrollIntoView({block:'center'});f.focus({preventScroll:true});};
+document.querySelectorAll('.pal button').forEach(x=>x.addEventListener('click',()=>{document.documentElement.dataset.palette=x.dataset.p;document.querySelectorAll('.pal button').forEach(y=>y.setAttribute('aria-pressed',y===x));}));
+if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const els=[...document.querySelectorAll('.rv')], show=()=>els.forEach(e=>e.classList.add('in'));
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:0,rootMargin:'0px 0px -8% 0px'});
+  els.forEach(el=>{const r=el.getBoundingClientRect(); if(r.top<innerHeight) el.classList.add('in'); else io.observe(el);});
+  document.documentElement.classList.add('anim');
+  setTimeout(show,4000); // filet de sécurité : rien ne reste jamais masqué
+}
+</script>
+</body>
+</html>
