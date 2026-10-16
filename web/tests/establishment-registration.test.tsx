@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api/errors';
 import type { EstablishmentCreateInput, ReferenceData } from '@/lib/api/types';
+import { chooseOption } from './select-helpers';
 
 const session = vi.hoisted(() => ({
   value: {
@@ -62,7 +63,7 @@ async function fillToReview(u: User, opts: { name?: string; doc?: boolean } = {}
     ),
   );
   await next(u);
-  await u.selectOptions(screen.getByLabelText(/Ville/), String(reference.cities[0]!.id));
+  await chooseOption(u, screen.getByLabelText(/Ville/), String(reference.cities[0]!.id));
   await next(u);
   await next(u); // légal (facultatif)
   await u.type(screen.getByLabelText(/^Téléphone/), '0709445111');

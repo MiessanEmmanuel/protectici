@@ -2,6 +2,7 @@
 
 import { useId, type ReactNode } from 'react';
 import { FieldError } from '../ui/Field';
+import { RadioControl } from '../ui/Radio';
 
 export interface RadioOption<V extends string> {
   value: V;
@@ -51,16 +52,15 @@ export function RadioGroup<V extends string>({
               key={o.value}
               className="flex min-h-btn items-center gap-3 border-2 border-ink bg-white px-3 font-semibold has-checked:bg-c4 has-checked:font-extrabold has-focus-visible:outline-3 has-focus-visible:outline-ink"
             >
-              <input
+              <RadioControl
                 id={inputId}
-                type="radio"
                 name={name}
                 value={o.value}
                 checked={value === o.value}
                 onChange={() => onChange(o.value)}
-                className="size-5 shrink-0 accent-ink"
+                className="mt-0"
               />
-              <label htmlFor={inputId} className="flex-1 py-2">
+              <label htmlFor={inputId} className="flex-1 cursor-pointer py-2">
                 {o.label}
               </label>
             </div>

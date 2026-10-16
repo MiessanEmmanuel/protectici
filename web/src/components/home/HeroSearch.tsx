@@ -7,7 +7,9 @@ import type { NamedSlug } from '@/lib/api/types';
 import { geoErrorMessage, getBrowserPosition } from '@/lib/geolocation';
 import { buildHref } from '@/lib/search-params';
 import { HOME_SEARCH_INPUT_ID } from '../layout/MobileDock';
-import { InlineField, inlineControlClasses } from '../ui/InlineField';
+import { Combobox } from '../ui/Combobox';
+import { InlineField } from '../ui/InlineField';
+import { SelectControl } from '../ui/Select';
 
 interface HeroSearchProps {
   services: NamedSlug[];
@@ -15,6 +17,10 @@ interface HeroSearchProps {
   /** Noms de prestataires proposés en suggestion (populaires). */
   providerNames?: string[];
 }
+
+/** Champ sans bordure de la cellule (voir inlineControlClasses), hauteur de cible tactile. */
+const searchInputClasses =
+  'w-full min-h-tap border-0 bg-transparent py-1 text-[1.05rem] text-ink outline-none placeholder:text-ink-2 focus-visible:shadow-none focus-visible:outline-none';
 
 const norm = (s: string) =>
   s
@@ -54,7 +60,7 @@ export function heroSearchHref(
  */
 export function HeroSearch({ services, cities, providerNames = [] }: HeroSearchProps) {
   const router = useRouter();
-  const listId = useId();
+  const cityId = useId();
   const msgId = useId();
   const [text, setText] = useState('');
   const [city, setCity] = useState('');
@@ -92,31 +98,28 @@ export function HeroSearch({ services, cities, providerNames = [] }: HeroSearchP
         onSubmit={onSubmit}
         className="mt-[34px] grid grid-cols-1 bg-white text-ink lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.1fr)_auto_auto]"
       >
-        <InlineField label="Service ou entreprise">
-          <input
+        <InlineField label="Service ou entreprise" htmlFor={HOME_SEARCH_INPUT_ID}>
+          <Combobox
             id={HOME_SEARCH_INPUT_ID}
             type="search"
             name="q"
-            list={listId}
             maxLength={100}
             autoComplete="off"
             placeholder="Gardiennage, alarme, escorte…"
             value={text}
-            onChange={(e) => setText(e.target.value)}
-            className={inlineControlClasses}
+            onValueChange={setText}
+            suggestions={suggestions}
+            listLabel="Suggestions de services et d’entreprises"
+            className={searchInputClasses}
           />
-          <datalist id={listId}>
-            {suggestions.map((s) => (
-              <option key={s} value={s} />
-            ))}
-          </datalist>
         </InlineField>
-        <InlineField label="Ville">
-          <select
+        <InlineField label="Ville" htmlFor={cityId}>
+          <SelectControl
+            id={cityId}
+            appearance="inline"
             name="city"
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            className={inlineControlClasses}
           >
             <option value="">Toutes les villes</option>
             {cities.map((c) => (
@@ -124,7 +127,7 @@ export function HeroSearch({ services, cities, providerNames = [] }: HeroSearchP
                 {c.name}
               </option>
             ))}
-          </select>
+          </SelectControl>
         </InlineField>
         <button
           type="button"

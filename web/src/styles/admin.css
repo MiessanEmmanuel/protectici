@@ -1083,3 +1083,53 @@ html:has([data-admin-theme='light']) {
     transform: none;
   }
 }
+
+/* ---- Apparences natives (barres de défilement, sélection, remplissage automatique…) ----
+   Jetons consommés par styles/globals.css ; scrollbar-color est redéclaré car il hérite de sa valeur calculée. */
+[data-admin-theme] {
+  --sb-radius: 999px;
+  --sel-bg: var(--a-gold);
+  --sel-fg: var(--a-gold-ink);
+  --autofill-bg: var(--a-card);
+  --autofill-bg-focus: var(--a-card-2);
+  --autofill-fg: var(--a-text);
+  scrollbar-color: var(--sb-thumb) var(--sb-track);
+}
+[data-admin-theme='dark'] {
+  --sb-track: var(--a-panel);
+  --sb-thumb: #4d4d4d;
+  --sb-thumb-hover: #737373;
+  accent-color: var(--a-gold);
+}
+[data-admin-theme='light'] {
+  --sb-track: var(--a-card);
+  --sb-thumb: #b9b7af;
+  --sb-thumb-hover: #858585;
+  --sel-bg: var(--a-blue);
+  --sel-fg: var(--a-on-blue);
+  accent-color: var(--a-blue);
+}
+/* Barre de la page entière (portée par <html>, hors de la coquille). */
+html:has([data-admin-theme='dark']) {
+  color-scheme: dark;
+  --sb-track: #121212;
+  --sb-thumb: #4d4d4d;
+  --sb-thumb-hover: #737373;
+  --sb-radius: 999px;
+}
+html:has([data-admin-theme='light']) {
+  color-scheme: light;
+  --sb-track: #f2f1ec;
+  --sb-thumb: #b9b7af;
+  --sb-thumb-hover: #858585;
+  --sb-radius: 999px;
+}
+/* Repli WebKit : curseur arrondi détaché de la piste. */
+@supports not (scrollbar-color: auto) {
+  [data-admin-theme] ::-webkit-scrollbar-thumb {
+    border-width: 3px;
+  }
+}
+[data-admin-theme] .rich-text li::marker {
+  color: var(--a-muted);
+}

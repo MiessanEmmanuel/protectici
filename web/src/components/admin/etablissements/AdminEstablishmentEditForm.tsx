@@ -16,6 +16,7 @@ import { LocationFields } from '../../establishment/LocationFields';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
 import { Checkbox } from '../../ui/Checkbox';
+import { DateField } from '../../ui/DateField';
 import { FormError, FieldError } from '../../ui/Field';
 import { Input } from '../../ui/Input';
 import { Select } from '../../ui/Select';
@@ -320,9 +321,8 @@ export function AdminEstablishmentEditForm({
               {...str('approval_number')}
               error={err('approval_number')}
             />
-            <Input
+            <DateField
               label="Fin de validité de l’agrément"
-              type="date"
               {...str('approval_expires_at')}
               error={err('approval_expires_at')}
             />

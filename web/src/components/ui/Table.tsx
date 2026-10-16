@@ -17,7 +17,7 @@ export function Table({
 }) {
   return (
     <div
-      className="ui-table max-w-full overflow-x-auto overscroll-x-contain border-2 border-ink bg-white"
+      className="ui-table max-w-full scroll-x border-2 border-ink bg-white"
       tabIndex={0}
       role="region"
       aria-label={caption}

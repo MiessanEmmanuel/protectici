@@ -8,6 +8,7 @@ const api = vi.hoisted(() => ({ adminListAuditLogs: vi.fn() }));
 vi.mock('@/lib/api/client', () => ({ clientApi: api }));
 
 import { AdminAuditView } from '@/components/admin/audit/AdminAuditView';
+import { chooseOption } from './select-helpers';
 
 const log: AdminAuditLog = {
   id: 1,
@@ -48,7 +49,7 @@ describe('AdminAuditView', () => {
     await screen.findByText('Rôle modifié');
     await u.type(screen.getByLabelText('Événement'), 'role_changed');
     await u.type(screen.getByLabelText('Identifiant de l’utilisateur'), '3');
-    await u.selectOptions(screen.getByLabelText('Type d’objet'), 'user');
+    await chooseOption(u, screen.getByLabelText('Type d’objet'), 'user');
     await u.type(screen.getByLabelText(/^Du/), '2026-10-01');
     await u.type(screen.getByLabelText(/^Au/), '2026-10-09');
     await u.click(screen.getByRole('button', { name: 'Appliquer' }));

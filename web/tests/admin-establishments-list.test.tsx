@@ -9,6 +9,7 @@ vi.mock('@/lib/api/client', () => ({ clientApi: { adminListEstablishments: (q: u
 import { AdminEstablishmentsList } from '@/components/admin/etablissements/AdminEstablishmentsList';
 import AdminEstablishmentsPage from '@/app/admin/etablissements/page';
 import { ApiError } from '@/lib/api/errors';
+import { chooseOption } from './select-helpers';
 
 beforeEach(() => {
   list.mockReset();
@@ -36,9 +37,9 @@ describe('liste admin des établissements', () => {
     const u = userEvent.setup();
     render(<AdminEstablishmentsList />);
     await screen.findByRole('table');
-    await u.selectOptions(screen.getByLabelText('Type'), 'provider');
-    await u.selectOptions(screen.getByLabelText('Statut'), 'approved');
-    await u.selectOptions(screen.getByLabelText('Tri'), 'name');
+    await chooseOption(u, screen.getByLabelText('Type'), 'provider');
+    await chooseOption(u, screen.getByLabelText('Statut'), 'approved');
+    await chooseOption(u, screen.getByLabelText('Tri'), 'name');
     await u.type(screen.getByLabelText('Recherche'), '  sentinelle ');
     await u.click(screen.getByRole('button', { name: 'Rechercher' }));
     expect(list).toHaveBeenLastCalledWith({

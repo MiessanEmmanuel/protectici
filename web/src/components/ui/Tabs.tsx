@@ -37,7 +37,7 @@ export function Tabs({ tabs, label, initial }: { tabs: TabDef[]; label: string; 
       <div
         role="tablist"
         aria-label={label}
-        className="ui-tablist flex overflow-x-auto overscroll-x-contain border-b-2 border-ink"
+        className="ui-tablist flex scroll-x border-b-2 border-ink"
       >
         {tabs.map((t, i) => {
           const selected = t.id === active;

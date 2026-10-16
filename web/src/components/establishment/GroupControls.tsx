@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { Checkbox } from '../ui/Checkbox';
 import { FieldError } from '../ui/Field';
+import { RadioControl } from '../ui/Radio';
 import { cn } from '../ui/cn';
 
 interface Option<V> {
@@ -116,17 +117,16 @@ export function RadioGroup<V extends string>({
               key={o.value}
               className="flex min-h-btn items-start gap-3 border-2 border-ink px-3 has-checked:bg-c4"
             >
-              <input
+              <RadioControl
                 id={oid}
-                type="radio"
                 name={name}
                 value={o.value}
                 checked={value === o.value}
                 onChange={() => onChange(o.value)}
                 aria-describedby={o.hint ? `${oid}-hint` : undefined}
-                className="mt-3 size-5 shrink-0 accent-ink"
+                className="mt-3"
               />
-              <label htmlFor={oid} className="flex-1 py-2.5">
+              <label htmlFor={oid} className="flex-1 cursor-pointer py-2.5">
                 <span className="font-bold">{o.label}</span>
                 {o.hint ? (
                   <span id={`${oid}-hint`} className="block text-sm text-muted">

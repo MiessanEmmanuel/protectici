@@ -40,7 +40,7 @@ export function Textarea({
         required={required}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(fieldId, hint, error)}
-        className={cn(controlClasses, 'py-2', className)}
+        className={cn(controlClasses, 'min-h-28 resize-y py-2', className)}
         {...rest}
       />
     </Field>

@@ -19,7 +19,7 @@ export function ProviderSpaceNav() {
       : pathname === href;
   return (
     <nav aria-label="Espace prestataire">
-      <ul className="flex overflow-x-auto overscroll-x-contain border-b-2 border-ink">
+      <ul className="flex scroll-x border-b-2 border-ink">
         {LINKS.map((l) => {
           const current = isCurrent(l.href);
           return (

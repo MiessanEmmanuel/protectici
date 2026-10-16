@@ -11,6 +11,7 @@ import { Button } from '../../ui/Button';
 import { Checkbox } from '../../ui/Checkbox';
 import { FormError } from '../../ui/Field';
 import { Input } from '../../ui/Input';
+import { NumberField } from '../../ui/NumberField';
 import { QueryBoundary } from '../../ui/QueryBoundary';
 import { Textarea } from '../../ui/Textarea';
 import { useToast } from '../../ui/Toast';
@@ -85,7 +86,7 @@ function CategoryForm({ category, onSaved }: { category: ContentCategory; onSave
           <FormError message={formError} />
         </div>
         <Input label="Nom" name="name" defaultValue={category.name} maxLength={80} required error={errors.name} />
-        <Input label="Ordre d’affichage" name="sort_order" type="number" min={0} defaultValue={category.sort_order} error={errors.sort_order} />
+        <NumberField label="Ordre d’affichage" name="sort_order" min={0} defaultValue={category.sort_order} error={errors.sort_order} />
         <Textarea label="Description" name="description" defaultValue={category.description ?? ''} rows={2} maxLength={300} wrapperClassName="sm:col-span-2" error={errors.description} />
         <Checkbox name="is_visible" label="Visible sur le site" defaultChecked={category.is_visible} />
         <p className="text-sm text-muted tabular-nums sm:text-right">{category.posts_count} article(s)</p>

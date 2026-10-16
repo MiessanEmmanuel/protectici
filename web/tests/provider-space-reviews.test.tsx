@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api/errors';
 import type { OwnerReview, Paginated } from '@/lib/api/types';
+import { chooseOption, selectedValue } from './select-helpers';
 
 const nav = vi.hoisted(() => ({ fiche: '' as string, replace: vi.fn() }));
 const session = vi.hoisted(() => ({
@@ -96,11 +97,16 @@ describe('avis reçus : sélection et filtre', () => {
     const list = vi.spyOn(clientApi, 'listOwnerReviews');
     render(<ReviewsReceived />);
     const select = await screen.findByLabelText('Fiche concernée');
-    expect(select).toHaveValue(slug); // une seule fiche : sélectionnée d’office
-    await u.selectOptions(select, slug);
-    expect(nav.replace).toHaveBeenCalledWith(`/espace-prestataire/avis?fiche=${slug}`);
+    expect(selectedValue(select)).toBe(slug); // une seule fiche : sélectionnée d’office
+    // Re-choisir l’option déjà choisie ne déclenche pas « change » (comme un <select> natif) ;
+    // le routeur simulé ne change pas l’URL, la fiche unique reste donc sélectionnée.
+    await chooseOption(u, select, slug);
+    expect(nav.replace).not.toHaveBeenCalled();
+    await chooseOption(u, select, '');
+    expect(nav.replace).toHaveBeenLastCalledWith('/espace-prestataire/avis');
+    expect(selectedValue(select)).toBe(slug);
     await screen.findByRole('list', { name: 'Avis reçus' });
-    await u.selectOptions(screen.getByLabelText('Filtrer par statut'), 'rejected');
+    await chooseOption(u, screen.getByLabelText('Filtrer par statut'), 'rejected');
     await waitFor(() => expect(list).toHaveBeenCalledWith(slug, { status: 'rejected', page: 1 }));
   });
 });

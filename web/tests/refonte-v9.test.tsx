@@ -20,6 +20,7 @@ import { HeroSearch, heroSearchHref } from '@/components/home/HeroSearch';
 import { FLASH_INTERVAL_MS, FlashBanner } from '@/components/layout/FlashBanner';
 import { HeaderNav } from '@/components/layout/HeaderNav';
 import { mediaOriginsFromEnv } from '@/lib/csp';
+import { chooseOption } from './select-helpers';
 
 function mockReducedMotion(matches: boolean) {
   vi.stubGlobal(
@@ -161,7 +162,7 @@ describe('HeroSearch', () => {
     expect(form).toHaveAttribute('action', '/annuaire');
     expect(form).toHaveAttribute('method', 'get');
     await userEvent.type(screen.getByLabelText('Service ou entreprise'), 'Vidéosurveillance');
-    await userEvent.selectOptions(screen.getByLabelText('Ville'), 'abidjan');
+    await chooseOption(userEvent, screen.getByLabelText('Ville'), 'abidjan');
     await userEvent.click(screen.getByRole('button', { name: 'Rechercher' }));
     expect(push).toHaveBeenCalledWith('/annuaire?service=videosurveillance&city=abidjan');
   });

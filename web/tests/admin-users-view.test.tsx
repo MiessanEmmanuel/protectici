@@ -15,6 +15,7 @@ vi.mock('@/components/layout/SessionProvider', () => ({
 }));
 
 import { AdminUsersView } from '@/components/admin/users/AdminUsersView';
+import { chooseOption } from './select-helpers';
 
 function user(over: Partial<AdminUser> = {}): AdminUser {
   return {
@@ -51,8 +52,8 @@ describe('AdminUsersView', () => {
     expect(await screen.findByText('Awa Kone')).toBeInTheDocument();
     expect(api.adminListUsers).toHaveBeenLastCalledWith({ page: 1 });
     await u.type(screen.getByLabelText('Nom ou e-mail'), ' awa ');
-    await u.selectOptions(screen.getByLabelText('Rôle'), 'editor');
-    await u.selectOptions(screen.getByLabelText('Statut du compte'), '0');
+    await chooseOption(u, screen.getByLabelText('Rôle'), 'editor');
+    await chooseOption(u, screen.getByLabelText('Statut du compte'), '0');
     await u.click(screen.getByRole('button', { name: 'Appliquer' }));
     await waitFor(() =>
       expect(api.adminListUsers).toHaveBeenLastCalledWith({
@@ -71,7 +72,7 @@ describe('AdminUsersView', () => {
     api.adminUpdateUser.mockResolvedValue(user({ role: 'editor' }));
     render(<AdminUsersView />);
     await u.click(await screen.findByRole('button', { name: 'Changer le rôle de Awa Kone' }));
-    await u.selectOptions(screen.getByLabelText('Nouveau rôle'), 'editor');
+    await chooseOption(u, screen.getByLabelText('Nouveau rôle'), 'editor');
     expect(api.adminUpdateUser).not.toHaveBeenCalled();
     await u.click(screen.getByRole('button', { name: 'Confirmer le changement' }));
     await waitFor(() => expect(api.adminUpdateUser).toHaveBeenCalledWith(1, { role: 'editor' }));

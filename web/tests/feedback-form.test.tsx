@@ -17,6 +17,7 @@ vi.mock('@/lib/api/client', () => ({
 }));
 
 import { FeedbackForm } from '@/components/feedback/FeedbackForm';
+import { chooseOption } from './select-helpers';
 
 const opt = (id: number, name: string) => ({ id, slug: name.toLowerCase(), name });
 const reference = {
@@ -47,8 +48,8 @@ async function step3(u: User, action = 'Une plainte') {
 }
 async function step4Service(u: User) {
   await u.click(screen.getByRole('radio', { name: 'Une prestation' }));
-  await u.selectOptions(screen.getByLabelText(/^Type de prestation/), 'Gardiennage');
-  await u.selectOptions(screen.getByLabelText(/^Sujet/), 'Courtoisie');
+  await chooseOption(u, screen.getByLabelText(/^Type de prestation/), 'Gardiennage');
+  await chooseOption(u, screen.getByLabelText(/^Sujet/), 'Courtoisie');
   await u.type(screen.getByLabelText(/^Commentaire/), COMMENT);
   await next(u);
 }

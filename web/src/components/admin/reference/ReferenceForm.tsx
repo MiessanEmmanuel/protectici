@@ -11,6 +11,7 @@ import { Button } from '../../ui/Button';
 import { Checkbox } from '../../ui/Checkbox';
 import { FormError } from '../../ui/Field';
 import { Input } from '../../ui/Input';
+import { NumberField } from '../../ui/NumberField';
 import { Select } from '../../ui/Select';
 import { Textarea } from '../../ui/Textarea';
 
@@ -124,9 +125,8 @@ export function ReferenceForm({ resource, item, cities, parents, onSubmit, onCan
           hint="Généré automatiquement, non modifiable."
         />
       ) : null}
-      <Input
+      <NumberField
         label="Ordre d’affichage"
-        type="number"
         min={0}
         step={1}
         required
@@ -175,18 +175,16 @@ export function ReferenceForm({ resource, item, cities, parents, onSubmit, onCan
       ) : null}
       {isCity ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input
+          <NumberField
             label="Latitude"
-            type="number"
             step="any"
             value={lat}
             onChange={(e) => setLat(e.target.value)}
             error={err('lat')}
             disabled={busy}
           />
-          <Input
+          <NumberField
             label="Longitude"
-            type="number"
             step="any"
             value={lng}
             onChange={(e) => setLng(e.target.value)}

@@ -54,3 +54,9 @@
   overflow-y: auto;
   padding: 0.75rem 1rem;
 }
+
+/* Puces et numéros des listes : couleur de marque, sans dépendre du style natif. */
+.rich-text li::marker {
+  color: var(--color-c1);
+  font-weight: 700;
+}

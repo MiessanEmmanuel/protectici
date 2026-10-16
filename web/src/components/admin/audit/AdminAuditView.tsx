@@ -272,7 +272,7 @@ function LogRow({ log }: { log: AdminAuditLog }) {
               {log.old_values !== null ? (
                 <div className="min-w-0">
                   <p className="mb-1 text-sm font-semibold">Avant</p>
-                  <pre className="overflow-x-auto rounded-md border border-line bg-surface-alt p-3 text-xs">
+                  <pre className="scroll-x rounded-md border border-line bg-surface-alt p-3 text-xs">
                     {auditJson(log.old_values)}
                   </pre>
                 </div>
@@ -280,7 +280,7 @@ function LogRow({ log }: { log: AdminAuditLog }) {
               {log.new_values !== null ? (
                 <div className="min-w-0">
                   <p className="mb-1 text-sm font-semibold">Après</p>
-                  <pre className="overflow-x-auto rounded-md border border-line bg-surface-alt p-3 text-xs">
+                  <pre className="scroll-x rounded-md border border-line bg-surface-alt p-3 text-xs">
                     {auditJson(log.new_values)}
                   </pre>
                 </div>

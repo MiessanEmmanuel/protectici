@@ -17,6 +17,7 @@ import type { DocumentType } from '@/lib/api/types';
 import { useState } from 'react';
 import { Button } from '../ui/Button';
 import { Checkbox } from '../ui/Checkbox';
+import { DateField } from '../ui/DateField';
 import { FileInput } from '../ui/FileInput';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
@@ -201,10 +202,9 @@ function LegalStep(p: StepProps) {
         </Select>
         <Input {...bind(p, 'share_capital')} label="Capital social (FCFA)" inputMode="numeric" />
         <Input {...bind(p, 'approval_number')} label="Numéro d’agrément" maxLength={50} />
-        <Input
+        <DateField
           {...bind(p, 'approval_expires_at')}
           label="Date d’expiration de l’agrément"
-          type="date"
         />
       </div>
       <Textarea {...bind(p, 'corporate_purpose')} label="Objet social" rows={3} maxLength={1000} />

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api/errors';
 import type { ReferenceData } from '@/lib/api/types';
+import { chooseOption } from './select-helpers';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
@@ -129,7 +130,7 @@ describe('espace prestataire : gestion d’une fiche', () => {
     await u.click(await screen.findByRole('tab', { name: 'Dirigeants' }));
     await u.click(screen.getByRole('button', { name: 'Ajouter un dirigeant' }));
     await u.type(screen.getAllByLabelText(/Nom complet/)[1]!, 'Awa Koné');
-    await u.selectOptions(screen.getAllByLabelText(/^Fonction/)[1]!, 'other');
+    await chooseOption(u, screen.getAllByLabelText(/^Fonction/)[1]!, 'other');
     await u.click(screen.getByRole('button', { name: 'Enregistrer les dirigeants' }));
     expect(await screen.findByText('Précisez la fonction.', { selector: 'p' })).toBeInTheDocument();
     await u.type(screen.getByLabelText(/Intitulé de la fonction/), 'Directrice RH');
@@ -180,8 +181,8 @@ describe('espace prestataire : gestion d’une fiche', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
     await u.upload(screen.getByLabelText('Fichier'), new File(['%PDF'], 'agrement.pdf', { type: 'application/pdf' }));
     await u.click(screen.getByRole('button', { name: 'Envoyer le justificatif' }));
-    expect(await screen.findByText('agrement.pdf')).toBeInTheDocument();
-    await u.click(screen.getByRole('button', { name: 'Supprimer le justificatif agrement.pdf' }));
+    // Le nom s'affiche d'abord dans le champ fichier ; on attend la ligne de la liste envoyée.
+    await u.click(await screen.findByRole('button', { name: 'Supprimer le justificatif agrement.pdf' }));
     await u.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Supprimer' }));
     await waitFor(() => expect(screen.queryByText('agrement.pdf')).not.toBeInTheDocument());
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
@@ -225,7 +226,7 @@ describe('espace prestataire : gestion d’une fiche', () => {
     manager('garde-lagune-securite');
     await u.click(await screen.findByRole('tab', { name: 'Modifications sensibles' }));
     const legal = screen.getByLabelText('Forme juridique');
-    await u.selectOptions(legal, 'sas');
+    await chooseOption(u, legal, 'sas');
     await u.click(screen.getByRole('button', { name: 'Envoyer la demande' }));
     expect(await screen.findByText('Une demande de modification est déjà en attente.')).toBeInTheDocument();
   });

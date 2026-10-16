@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api/errors';
 import type { Paginated, ProviderQuote } from '@/lib/api/types';
+import { chooseOption } from './select-helpers';
 
 const session = vi.hoisted(() => ({
   value: { status: 'authenticated' as 'authenticated' | 'anonymous', user: { email_verified: true } as unknown },
@@ -94,7 +95,7 @@ describe('devis reçus : liste et détail', () => {
     const table = await screen.findByRole('table', { name: 'Devis reçus' });
     expect(within(table).getAllByRole('row').length).toBeGreaterThan(1);
     expect(screen.getByRole('list', { name: 'Nombre de devis par statut' })).toBeInTheDocument();
-    await u.selectOptions(screen.getByLabelText('Filtrer par statut'), 'replied');
+    await chooseOption(u, screen.getByLabelText('Filtrer par statut'), 'replied');
     await waitFor(() => expect(list).toHaveBeenCalledWith({ status: 'replied', page: 1 }));
   });
 

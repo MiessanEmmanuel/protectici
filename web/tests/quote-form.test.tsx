@@ -15,6 +15,7 @@ vi.mock('@/lib/api/client', () => ({
 }));
 
 import { QuoteForm } from '@/components/quote/QuoteForm';
+import { chooseOption, openOptions } from './select-helpers';
 
 const DESCRIPTION = 'Gardiennage de nuit pour un entrepôt de 2 000 m² à Yopougon.';
 const service = referenceData.service_types[0]!;
@@ -30,8 +31,8 @@ async function fillRequired(u: ReturnType<typeof userEvent.setup>) {
   await u.type(screen.getByLabelText(/^Nom/), 'Koné');
   await u.type(screen.getByLabelText(/Adresse e-mail/), 'awa@example.test');
   await u.type(screen.getByLabelText(/^Téléphone/), '+225 07 00 00 00 00');
-  await u.selectOptions(screen.getByLabelText(/Service recherché/), String(service.id));
-  await u.selectOptions(screen.getByLabelText(/^Ville/), String(abidjan.id));
+  await chooseOption(u, screen.getByLabelText(/Service recherché/), String(service.id));
+  await chooseOption(u, screen.getByLabelText(/^Ville/), String(abidjan.id));
   await u.type(screen.getByLabelText(/Description de votre besoin/), DESCRIPTION);
   await u.click(screen.getByLabelText(/J’accepte/));
 }
@@ -59,7 +60,11 @@ describe('QuoteForm', () => {
       expect(screen.getByLabelText(l)).toBeInTheDocument();
     }
     expect(screen.getByRole('link', { name: 'politique de confidentialité' })).toHaveAttribute('href', '/confidentialite');
-    expect(screen.getByLabelText(/Date de début/)).toHaveAttribute('min', todayIso());
+    // Champ date conçu : la borne minimale (aujourd'hui) est annoncée et appliquée par le calendrier.
+    const [y, m, d] = todayIso().split('-');
+    expect(screen.getByLabelText(/Date de début/)).toHaveAccessibleDescription(
+      expect.stringContaining(`à partir du ${d}/${m}/${y}`),
+    );
   });
 
   it('exige les champs requis et ne fait aucun appel', async () => {
@@ -107,10 +112,11 @@ describe('QuoteForm', () => {
     render(<QuoteForm reference={referenceData} />);
     const district = screen.getByLabelText(/Quartier/);
     expect(district).toBeDisabled();
-    await u.selectOptions(screen.getByLabelText(/^Ville/), String(abidjan.id));
-    expect(within(screen.getByLabelText(/Quartier/)).getByRole('option', { name: 'Cocody' })).toBeInTheDocument();
-    await u.selectOptions(screen.getByLabelText(/^Ville/), String(bouake.id));
-    const after = screen.getByLabelText(/Quartier/);
+    await chooseOption(u, screen.getByLabelText(/^Ville/), String(abidjan.id));
+    expect(within(await openOptions(u, screen.getByLabelText(/Quartier/))).getByRole('option', { name: 'Cocody' })).toBeInTheDocument();
+    await u.keyboard('{Escape}');
+    await chooseOption(u, screen.getByLabelText(/^Ville/), String(bouake.id));
+    const after = await openOptions(u, screen.getByLabelText(/Quartier/));
     expect(within(after).queryByRole('option', { name: 'Cocody' })).toBeNull();
     expect(within(after).getByRole('option', { name: 'Air France' })).toBeInTheDocument();
   });
@@ -174,7 +180,7 @@ describe('QuoteForm', () => {
     const u = userEvent.setup();
     render(<QuoteForm reference={referenceData} />);
     await fillRequired(u);
-    await u.selectOptions(screen.getByLabelText(/Quartier/), String(abidjan.districts[0]!.id));
+    await chooseOption(u, screen.getByLabelText(/Quartier/), String(abidjan.districts[0]!.id));
     await submit(u);
     await screen.findByTestId('reference');
     expect(createQuote.mock.calls[0]![0]).not.toHaveProperty('provider_slugs');

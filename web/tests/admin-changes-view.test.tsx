@@ -15,6 +15,7 @@ vi.mock('@/lib/api/client', () => ({ clientApi: api }));
 
 import { AdminChangeRequestsView } from '@/components/admin/modifications/AdminChangeRequestsView';
 import { formatChangeValue } from '@/components/admin/modifications/change-format';
+import { chooseOption } from './select-helpers';
 
 const request: AdminChangeRequestRow = {
   id: 3,
@@ -54,7 +55,7 @@ describe('demandes de modification', () => {
     const u = userEvent.setup();
     render(<AdminChangeRequestsView />);
     await screen.findByRole('link', { name: 'Sentinelle Sécurité' });
-    await u.selectOptions(screen.getByLabelText('Statut des demandes'), 'rejected');
+    await chooseOption(u, screen.getByLabelText('Statut des demandes'), 'rejected');
     expect(api.adminListChangeRequests).toHaveBeenLastCalledWith({ status: 'rejected', page: 1 });
   });
 

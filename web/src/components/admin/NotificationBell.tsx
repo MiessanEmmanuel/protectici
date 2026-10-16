@@ -95,7 +95,7 @@ export function NotificationBell() {
           {items.length === 0 ? (
             <p className="mt-2 text-muted">Aucune notification pour le moment.</p>
           ) : (
-            <ul className="mt-2 flex max-h-80 flex-col divide-y divide-line-soft overflow-y-auto">
+            <ul className="mt-2 flex max-h-80 flex-col divide-y divide-line-soft scroll-y">
               {items.map((n) => (
                 <li key={n.id} className="flex items-start justify-between gap-3 py-2">
                   <div>

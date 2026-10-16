@@ -13,6 +13,7 @@ import { AntiSpamFields } from '../security/AntiSpamFields';
 import { TURNSTILE_REQUIRED_MESSAGE, useAntiSpam } from '../security/use-anti-spam';
 import { Button, ButtonLink } from '../ui/Button';
 import { Checkbox } from '../ui/Checkbox';
+import { DateField } from '../ui/DateField';
 import { FieldError, FormError } from '../ui/Field';
 import { Input } from '../ui/Input';
 import { ReferenceCard } from '../ui/ReferenceCard';
@@ -286,10 +287,9 @@ function QuoteFields({
           error={errors.description}
           required
         />
-        <Input
+        <DateField
           label="Date de début souhaitée (facultatif)"
           name="desired_start_date"
-          type="date"
           min={todayIso()}
           error={errors.desired_start_date}
         />

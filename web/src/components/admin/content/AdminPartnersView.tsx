@@ -14,6 +14,7 @@ import { EmptyState } from '../../ui/EmptyState';
 import { FormError } from '../../ui/Field';
 import { Input } from '../../ui/Input';
 import { Modal } from '../../ui/Modal';
+import { NumberField } from '../../ui/NumberField';
 import { QueryBoundary } from '../../ui/QueryBoundary';
 import { Select } from '../../ui/Select';
 import { Table, Td, Th, THead, Tr } from '../../ui/Table';
@@ -151,7 +152,7 @@ function PartnerForm({ partner, onDone }: { partner?: ContentPartner; onDone: ()
       <Input label="Nom" name="name" defaultValue={partner?.name} maxLength={120} required error={errors.name} />
       <Input label="Site web" name="website_url" type="url" defaultValue={partner?.website_url ?? ''} placeholder="https://" error={errors.website_url} />
       <Textarea label="Description" name="description" defaultValue={partner?.description ?? ''} rows={3} maxLength={500} error={errors.description} />
-      <Input label="Ordre d’affichage" name="sort_order" type="number" min={0} defaultValue={partner?.sort_order ?? 0} error={errors.sort_order} />
+      <NumberField label="Ordre d’affichage" name="sort_order" min={0} defaultValue={partner?.sort_order ?? 0} error={errors.sort_order} />
       <Checkbox name="is_visible" label="Visible sur le site" defaultChecked={partner?.is_visible ?? true} />
       <div><Button type="submit" loading={busy}>Enregistrer</Button></div>
     </form>

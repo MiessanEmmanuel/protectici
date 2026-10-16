@@ -49,6 +49,162 @@
   }
 }
 
+/* ---------- Apparences natives remplacées par le design (public v9) ----------
+   L'administration redéfinit ces jetons sous [data-admin-theme] (styles/admin.css). */
+:root {
+  --sb-track: var(--color-c4); /* piste : sable */
+  --sb-thumb: var(--color-c3); /* curseur : nuit */
+  --sb-thumb-hover: var(--color-c1);
+  --sb-radius: 0; /* angles droits */
+  --sb-size: 10px; /* repli WebKit (Safari) */
+  --sel-bg: var(--color-c2);
+  --sel-fg: var(--color-on-c2);
+  --autofill-bg: var(--color-white);
+  --autofill-bg-focus: var(--color-c4);
+  --autofill-fg: var(--color-ink);
+}
+
+@layer base {
+  html {
+    accent-color: var(--color-c1);
+    scrollbar-color: var(--sb-thumb) var(--sb-track);
+  }
+  /* Barres fines partout (page, panneaux, tableaux, listes, onglets, menus). */
+  * {
+    scrollbar-width: thin;
+  }
+
+  ::selection {
+    background: var(--sel-bg);
+    color: var(--sel-fg);
+  }
+
+  ::placeholder {
+    color: var(--color-ink-2);
+    opacity: 1;
+  }
+
+  /* Recherche : ni croix d'effacement ni décoration natives (Échap efface toujours le champ). */
+  input[type='search'] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input[type='search']::-webkit-search-cancel-button,
+  input[type='search']::-webkit-search-decoration,
+  input[type='search']::-webkit-search-results-button,
+  input[type='search']::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+  }
+
+  /* Remplissage automatique : pas de fond jaune/bleu natif, couleurs du champ conservées. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: var(--autofill-fg);
+    caret-color: var(--autofill-fg);
+    box-shadow: inset 0 0 0 100vmax var(--autofill-bg);
+    transition: background-color 600000s 0s;
+  }
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill:focus {
+    box-shadow: inset 0 0 0 100vmax var(--autofill-bg-focus);
+  }
+  input:-webkit-autofill:focus-visible,
+  textarea:-webkit-autofill:focus-visible,
+  select:-webkit-autofill:focus-visible {
+    box-shadow:
+      inset 0 0 0 100vmax var(--autofill-bg-focus),
+      0 0 0 6px #fff;
+  }
+  input:autofill {
+    background-color: var(--autofill-bg);
+  }
+
+  /* Zones de saisie longues : redimensionnement vertical uniquement. */
+  textarea {
+    resize: vertical;
+  }
+
+  /* Focus : pas de contour au clic souris, contour uniforme au clavier (:focus-visible ci-dessus). */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* <details>/<summary> : marqueur natif remplacé par un chevron dessiné en CSS. */
+  summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary::marker {
+    content: '';
+  }
+  summary::after {
+    content: '';
+    flex: none;
+    width: 0.5em;
+    height: 0.5em;
+    margin-top: -0.25em;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.15s ease;
+  }
+  details[open] > summary::after {
+    margin-top: 0.25em;
+    transform: rotate(-135deg);
+  }
+  summary.summary-plain::after {
+    content: none;
+  }
+}
+
+/* Repli WebKit : uniquement là où scrollbar-color n'est pas pris en charge (Safari),
+   sinon Chrome ignorerait scrollbar-color au profit de ces pseudo-éléments. */
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: var(--sb-size);
+    height: var(--sb-size);
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: var(--sb-track);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--sb-thumb);
+    border: 2px solid var(--sb-track);
+    border-radius: var(--sb-radius);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--sb-thumb-hover);
+  }
+  ::-webkit-resizer {
+    background: var(--sb-track);
+  }
+}
+
+/* Zones défilantes des composants : fines, sans débordement sur la page. */
+@utility scroll-x {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+@utility scroll-y {
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
 /* ---------- Utilitaires du système v9 (voir components/ui/README.md) ---------- */
 
 /* Conteneur : 1200 px max, gouttière 16 px. */

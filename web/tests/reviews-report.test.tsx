@@ -18,6 +18,7 @@ vi.mock('@/lib/api/client', () => ({
 }));
 
 import { ReviewsList } from '@/components/directory/ReviewsList';
+import { chooseOption } from './select-helpers';
 
 const reviews: Review[] = [
   {
@@ -75,7 +76,7 @@ describe('Signalement d’un avis', () => {
   it('succès : appel avec raison et précisions, confirmation', async () => {
     const u = setup();
     await u.click(screen.getByRole('button', { name: /Signaler/ }));
-    await u.selectOptions(screen.getByLabelText(/Raison du signalement/), 'spam');
+    await chooseOption(u, screen.getByLabelText(/Raison du signalement/), 'spam');
     await u.type(screen.getByLabelText(/Précisions/), 'Publicité déguisée');
     await u.click(screen.getByRole('button', { name: 'Envoyer le signalement' }));
     expect(await screen.findByText('Signalement envoyé. Merci.')).toBeInTheDocument();
@@ -86,7 +87,7 @@ describe('Signalement d’un avis', () => {
   it('rejeu (204 déjà enregistré) = succès', async () => {
     const u = setup();
     await u.click(screen.getByRole('button', { name: /Signaler/ }));
-    await u.selectOptions(screen.getByLabelText(/Raison du signalement/), 'other');
+    await chooseOption(u, screen.getByLabelText(/Raison du signalement/), 'other');
     await u.click(screen.getByRole('button', { name: 'Envoyer le signalement' }));
     expect(await screen.findByText('Signalement envoyé. Merci.')).toBeInTheDocument();
     expect(reportReview).toHaveBeenCalledWith(7, { reason: 'other' });
@@ -103,7 +104,7 @@ describe('Signalement d’un avis', () => {
     if (status === 401) impl = async () => { throw new ApiError(401, message); };
     const u = setup();
     await u.click(screen.getByRole('button', { name: /Signaler/ }));
-    await u.selectOptions(screen.getByLabelText(/Raison du signalement/), 'offensive');
+    await chooseOption(u, screen.getByLabelText(/Raison du signalement/), 'offensive');
     await u.click(screen.getByRole('button', { name: 'Envoyer le signalement' }));
     expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent(message);
   });
@@ -114,7 +115,7 @@ describe('Signalement d’un avis', () => {
     };
     const u = setup();
     await u.click(screen.getByRole('button', { name: /Signaler/ }));
-    await u.selectOptions(screen.getByLabelText(/Raison du signalement/), 'spam');
+    await chooseOption(u, screen.getByLabelText(/Raison du signalement/), 'spam');
     await u.click(screen.getByRole('button', { name: 'Envoyer le signalement' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('30 secondes');
   });
@@ -124,7 +125,7 @@ describe('Signalement d’un avis', () => {
     impl = () => new Promise<void>((r) => (release = () => r()));
     const u = setup();
     await u.click(screen.getByRole('button', { name: /Signaler/ }));
-    await u.selectOptions(screen.getByLabelText(/Raison du signalement/), 'spam');
+    await chooseOption(u, screen.getByLabelText(/Raison du signalement/), 'spam');
     await u.dblClick(screen.getByRole('button', { name: 'Envoyer le signalement' }));
     expect(reportReview).toHaveBeenCalledTimes(1);
     release();
