@@ -48,3 +48,35 @@ export function buildCsp({
   if (!isDev) parts.push('upgrade-insecure-requests');
   return parts.join('; ');
 }
+
+/**
+ * Origines d'images supplémentaires à partir de l'environnement : NEXT_PUBLIC_MEDIA_ORIGINS
+ * (séparées par des virgules ou des espaces) + origine de NEXT_PUBLIC_HERO_IMAGE_URL si elle est
+ * absolue en https. Seules des origines https valides (ou http locales) sont retenues (pas de chemin, pas de joker
+ * injecté par erreur) ; résultat dédupliqué, séparé par des espaces.
+ */
+export function mediaOriginsFromEnv(mediaOrigins = '', heroImageUrl = ''): string {
+  const out = new Set<string>();
+  for (const raw of mediaOrigins.split(/[\s,]+/)) {
+    const v = raw.trim();
+    if (!v) continue;
+    if (/^https:\/\/\*\.[a-z0-9.-]+$/i.test(v)) {
+      out.add(v.toLowerCase()); // sous-domaines explicitement autorisés (https://*.exemple.ci)
+      continue;
+    }
+    try {
+      const u = new URL(v);
+      const localHttp = u.protocol === 'http:' && /^(localhost|127\.0\.0\.1)$/.test(u.hostname);
+      if (u.protocol === 'https:' || localHttp) out.add(u.origin);
+    } catch {
+      /* valeur ignorée */
+    }
+  }
+  try {
+    const hero = new URL(heroImageUrl.trim());
+    if (hero.protocol === 'https:') out.add(hero.origin);
+  } catch {
+    /* URL relative ou vide : rien à ajouter */
+  }
+  return [...out].join(' ');
+}

@@ -22,3 +22,14 @@ export function serverApiUrl(): string {
 export function turnstileSiteKey(): string {
   return (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '').trim();
 }
+
+/**
+ * Photo d'arrière-plan du hero de l'accueil (publique, facultative). Seules les URL https (ou un
+ * chemin local « /… ») sont acceptées ; vide ou invalide = aplat bleu seul. Son origine est ajoutée
+ * automatiquement à la CSP img-src (voir proxy.ts / mediaOriginsFromEnv).
+ */
+export function heroImage(): { url: string; credit: string } | null {
+  const url = (process.env.NEXT_PUBLIC_HERO_IMAGE_URL ?? '').trim();
+  if (!url || !(/^https:\/\//i.test(url) || /^\/(?!\/)/.test(url))) return null;
+  return { url, credit: (process.env.NEXT_PUBLIC_HERO_IMAGE_CREDIT ?? '').trim() };
+}

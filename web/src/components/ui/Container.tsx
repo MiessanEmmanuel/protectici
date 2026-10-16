@@ -5,6 +5,7 @@ interface ContainerProps extends HTMLAttributes<HTMLElement> {
   as?: ElementType;
 }
 
+/** Conteneur de page : 1200 px max, gouttière 16 px (utilitaire `wrap`). */
 export function Container({ as: Tag = 'div', className, ...rest }: ContainerProps) {
-  return <Tag className={cn('mx-auto w-full max-w-page px-4 sm:px-6', className)} {...rest} />;
+  return <Tag className={cn('wrap', className)} {...rest} />;
 }

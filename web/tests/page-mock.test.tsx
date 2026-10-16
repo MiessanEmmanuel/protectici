@@ -46,9 +46,24 @@ describe("page d'accueil en mode mock", () => {
   it('affiche le formulaire de recherche, les populaires et le bandeau d’inscription', async () => {
     render(await HomePage());
     expect(screen.getByRole('search', { name: 'Rechercher un prestataire' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Prestataires populaires' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'La sécurité, entre de bonnes mains.',
+    );
+    expect(screen.getByRole('heading', { name: 'Les plus consultés' })).toBeInTheDocument();
     expect(screen.queryByText('Bientôt disponible')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Derniers articles' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Actualités' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Police secours\s*110/ })).toHaveAttribute(
+      'href',
+      'tel:110',
+    );
+    expect(screen.getByText('Numéros à confirmer avant la mise en ligne.')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Forces de l’État les plus proches' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Déposer une plainte' })).toHaveAttribute(
+      'href',
+      '/forces-etatiques?procedure=deposer-une-plainte',
+    );
     expect(screen.getByRole('link', { name: 'Inscrire mon établissement' })).toHaveAttribute(
       'href',
       '/inscription-etablissement',

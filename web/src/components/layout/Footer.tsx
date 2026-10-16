@@ -1,23 +1,17 @@
 import Link from 'next/link';
 import { formatPhone, telHref } from '@/lib/format';
 import { getSiteContact } from '@/lib/site-settings';
-import { Container } from '../ui/Container';
 import { CookieSettingsButton } from './CookieSettingsButton';
+import { Logo } from './Header';
 import { NewsletterForm } from './NewsletterForm';
 
 const columns = [
   {
-    title: 'Annuaires',
+    title: 'Annuaire',
     links: [
-      { href: '/annuaire', label: 'Prestataires de sécurité' },
-      { href: '/forces-etatiques', label: 'Forces étatiques' },
-      { href: '/blog', label: 'Blog et actualités' },
-    ],
-  },
-  {
-    title: 'Services',
-    links: [
-      { href: '/inscription-etablissement', label: 'Inscrire mon établissement' },
+      { href: '/annuaire', label: 'Prestataires' },
+      { href: '/forces-etatiques', label: 'Forces de l’État' },
+      { href: '/inscription-etablissement', label: 'Inscrire un établissement' },
       { href: '/devis', label: 'Demande de devis' },
       { href: '/dis-moi-tout', label: 'Dis-moi tout' },
     ],
@@ -26,75 +20,62 @@ const columns = [
     title: 'ProtectIci',
     links: [
       { href: '/qui-sommes-nous', label: 'Qui sommes-nous' },
-      { href: '/nos-partenaires', label: 'Nos partenaires' },
-      { href: '/nos-clients', label: 'Nos clients' },
+      { href: '/nos-partenaires', label: 'Partenaires' },
+      { href: '/nos-clients', label: 'Clients' },
+      { href: '/blog', label: 'Actualités' },
       { href: '/contact', label: 'Contact' },
-    ],
-  },
-  {
-    title: 'Informations légales',
-    links: [
-      { href: '/mentions-legales', label: 'Mentions légales' },
-      { href: '/confidentialite', label: 'Politique de confidentialité' },
-      { href: '/cgu', label: 'Conditions d’utilisation' },
     ],
   },
 ];
 
-const linkClass = 'inline-flex min-h-tap items-center text-link-on-night';
+const link = 'inline-flex min-h-tap items-center text-inherit no-underline hover:underline';
+const legalLink =
+  'inline-flex min-h-tap items-center text-inherit underline-offset-[0.2em] hover:underline';
 
+/** Pied de page v9 : bande newsletter sable puis aplat nuit (marque, liens, coordonnées, légal). */
 export async function Footer() {
   const year = new Date().getFullYear();
   const contact = await getSiteContact();
   return (
-    <footer className="mt-16">
-      <section aria-labelledby="titre-newsletter" className="bg-primary-soft">
-        <Container className="grid gap-4 py-8 lg:grid-cols-2 lg:items-start">
+    <footer>
+      <section
+        aria-labelledby="titre-newsletter"
+        className="border-t-2 border-ink bg-c4 text-on-c4"
+      >
+        <div className="wrap grid gap-6 py-12 lg:grid-cols-2 lg:items-start">
           <div>
-            <h2 id="titre-newsletter" className="text-xl font-bold">
+            <p className="eyebrow">Newsletter</p>
+            <h2 id="titre-newsletter" className="mt-2 text-2xl heading-block">
               Restez informé
             </h2>
-            <p className="mt-1 max-w-prose text-muted">
+            <p className="mt-2 max-w-prose text-ink-2">
               Recevez les nouveaux articles et conseils de sécurité. Un e-mail de confirmation vous
               sera envoyé avant tout abonnement.
             </p>
           </div>
           <NewsletterForm />
-        </Container>
+        </div>
       </section>
-      <div className="bg-night text-on-night">
-        <Container className="grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-5">
-          <div>
-            <p className="text-lg font-bold">ProtectIci</p>
-            <p className="mt-2 text-sm text-on-night/85">
-              La plateforme d’information et de services dédiée à la sécurité et à la sûreté privées
-              en Côte d’Ivoire.
+      <div className="bg-c3 text-[0.9rem] text-on-c3">
+        <div className="wrap grid grid-cols-1 gap-8 pt-14 pb-7 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
+          <div className="min-w-0">
+            <Logo />
+            <p className="mt-3.5 max-w-[36ch] opacity-85">
+              Première plateforme d’information et de services dédiée à la sécurité et à la sûreté
+              privées en Côte d’Ivoire.
             </p>
-            <address className="mt-3 text-sm not-italic text-on-night/85">
-              <p>{contact.address}</p>
-              <p>
-                <a href={telHref(contact.phone)} className={linkClass}>
-                  {formatPhone(contact.phone)}
-                </a>
-              </p>
-              <p>
-                <a href={`mailto:${contact.email}`} className={linkClass}>
-                  {contact.email}
-                </a>
-              </p>
-            </address>
             {contact.facebook || contact.linkedin ? (
-              <ul className="mt-1 flex gap-4 text-sm">
+              <ul className="mt-2 flex gap-4">
                 {contact.facebook ? (
                   <li>
-                    <a href={contact.facebook} rel="noopener noreferrer" className={linkClass}>
+                    <a href={contact.facebook} rel="noopener noreferrer" className={legalLink}>
                       Facebook
                     </a>
                   </li>
                 ) : null}
                 {contact.linkedin ? (
                   <li>
-                    <a href={contact.linkedin} rel="noopener noreferrer" className={linkClass}>
+                    <a href={contact.linkedin} rel="noopener noreferrer" className={legalLink}>
                       LinkedIn
                     </a>
                   </li>
@@ -103,29 +84,60 @@ export async function Footer() {
             ) : null}
           </div>
           {columns.map((col) => (
-            <nav key={col.title} aria-label={col.title}>
-              <p className="font-semibold">{col.title}</p>
-              <ul className="mt-2 space-y-1">
+            <nav key={col.title} aria-label={col.title} className="min-w-0">
+              <h2 className="mb-3 eyebrow text-[0.78rem]">{col.title}</h2>
+              <ul>
                 {col.links.map((l) => (
                   <li key={l.href}>
-                    <Link href={l.href} className={linkClass}>
+                    <Link href={l.href} className={link}>
                       {l.label}
                     </Link>
                   </li>
                 ))}
-                {col.title === 'Informations légales' ? (
-                  <li>
-                    <CookieSettingsButton className={`${linkClass} underline`} />
-                  </li>
-                ) : null}
               </ul>
             </nav>
           ))}
-        </Container>
-        <div className="border-t border-on-night/20">
-          <Container className="py-4 text-sm text-on-night/85">
-            © 2022–{year} ProtectIci — FYG Technologies. Cartes © contributeurs OpenStreetMap.
-          </Container>
+          <div className="min-w-0">
+            <h2 className="mb-3 eyebrow text-[0.78rem]">Nous joindre</h2>
+            <address className="[overflow-wrap:anywhere] not-italic">
+              <p className="mb-2">{contact.address}</p>
+              <p>
+                <a href={telHref(contact.phone)} className={link}>
+                  {formatPhone(contact.phone)}
+                </a>
+              </p>
+              <p>
+                <a href={`mailto:${contact.email}`} className={link}>
+                  {contact.email}
+                </a>
+              </p>
+            </address>
+          </div>
+          <div className="col-span-full flex flex-wrap justify-between gap-3 border-t-2 border-current pt-4 opacity-85">
+            <p className="flex min-h-tap items-center">
+              © 2022–{year} ProtectIci · FYG Technologies. Cartes © contributeurs OpenStreetMap.
+            </p>
+            <ul className="flex flex-wrap items-center gap-x-4">
+              <li>
+                <Link href="/mentions-legales" className={legalLink}>
+                  Mentions légales
+                </Link>
+              </li>
+              <li>
+                <Link href="/confidentialite" className={legalLink}>
+                  Confidentialité
+                </Link>
+              </li>
+              <li>
+                <Link href="/cgu" className={legalLink}>
+                  Conditions d’utilisation
+                </Link>
+              </li>
+              <li>
+                <CookieSettingsButton className={`${legalLink} underline`} />
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </footer>

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { buildCsp } from '@/lib/csp';
+import { buildCsp, mediaOriginsFromEnv } from '@/lib/csp';
 import { turnstileSiteKey } from '@/lib/env';
 import { safeRedirect } from '@/lib/safe-redirect';
 
@@ -42,7 +42,10 @@ export function proxy(request: NextRequest) {
     nonce,
     isDev: process.env.NODE_ENV !== 'production',
     apiOrigin: apiOrigin(),
-    mediaOrigins: process.env.NEXT_PUBLIC_MEDIA_ORIGINS,
+    mediaOrigins: mediaOriginsFromEnv(
+      process.env.NEXT_PUBLIC_MEDIA_ORIGINS,
+      process.env.NEXT_PUBLIC_HERO_IMAGE_URL,
+    ),
     turnstile: turnstileSiteKey() !== '',
   });
 
@@ -67,7 +70,8 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      source: '/((?!_next/static|_next/image|favicon.ico|logo-protectici.webp|map/).*)',
+      source:
+        '/((?!_next/static|_next/image|favicon.ico|logo-protectici.webp|elephant-icon-192.png|map/).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

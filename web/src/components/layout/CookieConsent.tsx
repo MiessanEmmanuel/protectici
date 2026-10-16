@@ -58,11 +58,16 @@ export function CookieConsent() {
   return (
     <section
       aria-labelledby="titre-cookies"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-surface p-4 shadow-overlay"
+      className="fixed inset-x-0 bottom-0 z-50 border-t-2 border-ink bg-white p-4"
     >
-      <div className="mx-auto flex max-w-page flex-col gap-3 sm:px-2 lg:flex-row lg:items-center lg:justify-between">
+      <div className="wrap flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-3xl">
-          <h2 id="titre-cookies" ref={titleRef} tabIndex={-1} className="text-lg font-bold outline-none">
+          <h2
+            id="titre-cookies"
+            ref={titleRef}
+            tabIndex={-1}
+            className="text-lg font-bold outline-none"
+          >
             Vos choix en matière de cookies
           </h2>
           <p className="mt-1 text-sm">

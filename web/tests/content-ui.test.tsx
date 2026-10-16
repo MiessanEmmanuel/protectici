@@ -25,13 +25,17 @@ describe('FlashBanner', () => {
     const { container } = render(<FlashBanner items={[]} />);
     expect(container).toBeEmptyDOMElement();
   });
-  it('liens vers les articles, copie dupliquée masquée, bouton pause accessible', async () => {
+  it('une dépêche à la fois, lien vers l’article, bouton pause accessible', async () => {
     render(<FlashBanner items={items} />);
-    expect(screen.getAllByRole('link', { name: 'Première info' })).toHaveLength(1); // la copie est aria-hidden/inert
+    expect(screen.getByRole('link', { name: 'Première info' })).toHaveAttribute('href', '/blog/a');
+    expect(screen.queryByRole('link', { name: 'Seconde info' })).not.toBeInTheDocument();
     const pause = screen.getByRole('button', { name: /pause/i });
     expect(pause).toHaveAttribute('aria-pressed', 'false');
     await userEvent.click(pause);
-    expect(screen.getByRole('button', { name: /reprendre/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /reprendre/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 });
 

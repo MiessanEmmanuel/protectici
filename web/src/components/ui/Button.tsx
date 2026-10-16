@@ -3,24 +3,37 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'reac
 import { cn } from './cn';
 import { Spinner } from './Spinner';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'accent' | 'ghost' | 'danger';
+/**
+ * Boutons v9 : angles droits, filet 2 px, graisse 800, pas d'ombre.
+ *  - solid   : encre sur blanc (inversion au survol) — appel principal sur fond clair ou or.
+ *  - light   : blanc sur aplat foncé (bleu, nuit) — s'inverse en contour au survol.
+ *  - accent  : or, texte nuit — appel fort sur fond clair ou bleu.
+ *  - outline : contour couleur courante, fond transparent — action secondaire sur tout aplat.
+ * Alias historiques conservés : primary (bleu), secondary (contour bleu), ghost, danger.
+ */
+export type ButtonVariant =
+  'solid' | 'light' | 'accent' | 'outline' | 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'md' | 'lg' | 'sm';
 
 const base =
-  'inline-flex min-h-tap items-center justify-center gap-2 rounded-md border border-transparent px-4 font-semibold no-underline transition-colors disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:opacity-60';
+  'inline-flex items-center justify-center gap-2.5 border-2 font-extrabold no-underline transition-colors disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:opacity-60 [&_svg]:size-[1.2em] [&_svg]:shrink-0';
 
 const variants: Record<ButtonVariant, string> = {
-  primary: 'bg-primary text-on-primary hover:bg-primary-hover active:bg-primary-active',
-  secondary: 'border-primary bg-surface text-primary hover:bg-primary-soft',
-  accent: 'bg-accent text-on-accent hover:brightness-95',
-  ghost: 'bg-transparent text-primary hover:bg-primary-soft',
-  danger: 'bg-danger text-on-primary hover:brightness-90',
+  solid: 'border-ink bg-ink text-white hover:bg-white hover:text-ink',
+  light: 'border-white bg-white text-ink hover:bg-transparent hover:text-white',
+  accent: 'border-c2 bg-c2 text-on-c2 hover:border-ink hover:bg-ink hover:text-white',
+  outline:
+    'border-current bg-transparent text-inherit hover:bg-ink hover:text-white hover:border-ink',
+  primary: 'border-c1 bg-c1 text-on-c1 hover:border-ink hover:bg-ink',
+  secondary: 'border-c1 bg-white text-c1 hover:bg-c1 hover:text-on-c1',
+  ghost: 'border-transparent bg-transparent text-c1 hover:border-c1',
+  danger: 'border-danger bg-danger text-white hover:border-ink hover:bg-ink',
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: 'text-sm',
-  md: 'text-base',
-  lg: 'min-h-14 px-6 text-lg',
+  sm: 'min-h-tap px-3.5 text-sm',
+  md: 'min-h-tap px-5 text-base',
+  lg: 'min-h-btn px-[22px] text-base',
 };
 
 export function buttonClasses(

@@ -20,7 +20,7 @@ export function describedBy(id: string, hint?: ReactNode, error?: string): strin
 export function Field({ id, label, hint, error, required, className, children }: FieldProps) {
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
-      <label htmlFor={id} className="font-semibold text-ink">
+      <label htmlFor={id} className="font-bold text-ink">
         {label}
         {required ? (
           <span aria-hidden="true" className="text-danger">
@@ -60,7 +60,7 @@ export function FormError({ message, title }: { message?: string | null; title?:
     <div
       role="alert"
       aria-live="assertive"
-      className="rounded-md border border-danger bg-danger-soft p-3 text-danger"
+      className="border-2 border-danger bg-danger-soft p-3 text-danger"
     >
       {title ? <p className="font-semibold">{title}</p> : null}
       <p>{message}</p>
@@ -71,14 +71,12 @@ export function FormError({ message, title }: { message?: string | null; title?:
 export function FormSuccess({ message }: { message?: string | null }) {
   if (!message) return null;
   return (
-    <div
-      role="status"
-      className="rounded-md border border-success bg-success-soft p-3 text-success"
-    >
+    <div role="status" className="border-2 border-success bg-success-soft p-3 text-success">
       {message}
     </div>
   );
 }
 
+/** Contrôle v9 : filet 2 px encre, angles droits, 50 px de haut, fond sable au focus. */
 export const controlClasses =
-  'min-h-tap w-full rounded-md border border-line bg-surface px-3 text-base text-ink placeholder:text-muted aria-[invalid=true]:border-danger disabled:bg-surface-alt';
+  'min-h-btn w-full border-2 border-ink bg-white px-3 text-base text-ink placeholder:text-ink-2 focus:bg-c4 aria-[invalid=true]:border-danger disabled:bg-c4 disabled:text-ink-2';

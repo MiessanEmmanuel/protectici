@@ -1,29 +1,35 @@
 import Link from 'next/link';
-import { Container } from '../ui/Container';
 import { HeaderNav } from './HeaderNav';
 
+/** Logo v9 : éléphant sur plaque blanche + mot « PROTECTICI » (texte réel, pas d'image de texte). */
+export function Logo({ className }: { className?: string }) {
+  return (
+    <Link
+      href="/"
+      className={`inline-flex min-h-tap shrink-0 items-center gap-3 text-[1.5rem] font-black tracking-[0.04em] text-inherit no-underline ${className ?? ''}`}
+    >
+      {/* <img> et non next/image : next/image injecte un style en ligne bloqué par la CSP stricte. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/elephant-icon-192.png"
+        alt=""
+        width={46}
+        height={46}
+        fetchPriority="high"
+        className="size-[46px] bg-white p-1"
+      />
+      <span>
+        PROTECTICI<span className="sr-only"> — accueil</span>
+      </span>
+    </Link>
+  );
+}
+
+/** En-tête bleu fixe (sticky) : logo, navigation à icônes, compte, bouton Menu sous 1280 px. */
 export function Header() {
   return (
-    <header className="relative border-b border-line bg-surface">
-      <Container className="flex items-center justify-between gap-4 py-2">
-        <Link
-          href="/"
-          className="inline-flex min-h-tap items-center"
-          aria-label="ProtectIci — accueil"
-        >
-          {/* <img> et non next/image : next/image injecte un style en ligne (color:transparent) bloqué par la CSP stricte. Le logo est déjà un WebP optimisé. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo-protectici.webp"
-            alt="ProtectIci"
-            width={96}
-            height={67}
-            fetchPriority="high"
-            className="h-12 w-auto"
-          />
-        </Link>
-        <HeaderNav />
-      </Container>
+    <header className="sticky top-0 z-40 bg-c1 text-on-c1">
+      <HeaderNav logo={<Logo />} />
     </header>
   );
 }

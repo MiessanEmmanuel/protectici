@@ -2,109 +2,210 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { ChevronDown, LogOut, Menu, UserRound, X } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from '../ui/cn';
-import { buttonClasses } from '../ui/Button';
+import { isActive, NAV_LINKS } from './nav-links';
 import { useSession } from './SessionProvider';
 
-const links = [
-  { href: '/', label: 'Accueil' },
-  { href: '/annuaire', label: 'Prestataires' },
-  { href: '/forces-etatiques', label: 'Forces étatiques' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/devis', label: 'Demande de devis' },
-  { href: '/dis-moi-tout', label: 'Dis-moi tout' },
-  { href: '/contact', label: 'Contact' },
-];
+const deskLink =
+  'inline-flex h-header items-center gap-2 px-4 text-[0.95rem] font-bold text-inherit no-underline hover:bg-c3 hover:text-on-c3 aria-[current=page]:bg-c3 aria-[current=page]:text-on-c3 [&_svg]:size-[1.15em]';
+const mobileLink =
+  'flex min-h-14 items-center gap-3 border-t-2 border-white/15 px-4 font-extrabold text-inherit no-underline hover:bg-c2 hover:text-on-c2 aria-[current=page]:bg-c1 [&_svg]:size-[1.15em]';
 
-function isActive(pathname: string, href: string) {
-  return href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+interface AccountLink {
+  href: string;
+  label: string;
 }
 
-export function HeaderNav() {
-  const pathname = usePathname();
-  // Le menu mobile se referme tout seul à chaque changement de page (l'état est lié au chemin).
-  const [openFor, setOpenFor] = useState<string | null>(null);
-  const open = openFor === pathname;
-  const { user, status, logout } = useSession();
+function accountLinks(role: string | undefined): AccountLink[] {
+  const links: AccountLink[] = [];
+  if (role === 'admin') links.push({ href: '/admin', label: 'Administration' });
+  if (role === 'editor') links.push({ href: '/admin/blog', label: 'Gestion du blog' });
+  if (role === 'provider') links.push({ href: '/espace-prestataire', label: 'Mes établissements' });
+  links.push({ href: '/compte', label: 'Mon compte' });
+  return links;
+}
 
-  const link = 'inline-flex min-h-tap items-center px-3 no-underline hover:underline';
+/**
+ * Navigation de l'en-tête. ≥ 1280 px : liens à icônes + compte. En dessous : bouton « Menu »
+ * (aria-expanded / aria-controls) ouvrant un panneau nuit. Le panneau se referme au changement de
+ * page et avec Échap. Sans JavaScript, la navigation reste accessible via le pied de page.
+ */
+export function HeaderNav({ logo }: { logo: ReactNode }) {
+  const pathname = usePathname();
+  // Les menus se referment tout seuls à chaque changement de page (l'état est lié au chemin).
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const [accountFor, setAccountFor] = useState<string | null>(null);
+  const open = openFor === pathname;
+  const accountOpen = accountFor === pathname;
+  const { user, status, logout } = useSession();
+  const burgerRef = useRef<HTMLButtonElement>(null);
+  const accountRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open && !accountOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return;
+      if (open) {
+        setOpenFor(null);
+        burgerRef.current?.focus();
+      }
+      setAccountFor(null);
+    }
+    function onClick(e: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) setAccountFor(null);
+    }
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onClick);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onClick);
+    };
+  }, [open, accountOpen]);
+
+  const authed = status === 'authenticated' && !!user;
+  const links = authed ? accountLinks(user.role) : [];
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        type="button"
-        className={buttonClasses('secondary', 'md', 'lg:hidden')}
-        aria-expanded={open}
-        aria-controls="menu-principal"
-        onClick={() => setOpenFor(open ? null : pathname)}
-      >
-        {open ? 'Fermer' : 'Menu'}
-      </button>
-      <nav
-        id="menu-principal"
-        aria-label="Navigation principale"
-        className={cn(
-          'absolute inset-x-0 top-[4.25rem] z-40 border-b border-line bg-surface px-4 py-3 shadow-card lg:static lg:block lg:border-0 lg:p-0 lg:shadow-none',
-          open ? 'block' : 'hidden',
-        )}
-      >
-        <ul className="flex flex-col lg:flex-row lg:items-center lg:gap-1">
-          {links.map((l) => (
-            <li key={l.href}>
-              <Link
-                href={l.href}
-                className={cn(
-                  link,
-                  isActive(pathname, l.href)
-                    ? 'font-semibold text-primary-active underline'
-                    : 'text-ink',
-                )}
-                aria-current={isActive(pathname, l.href) ? 'page' : undefined}
+    <>
+      <div className="wrap flex min-h-header items-center gap-7">
+        {logo}
+        <nav aria-label="Navigation principale" className="ml-auto hidden xl:flex">
+          {NAV_LINKS.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={deskLink}
+              aria-current={isActive(pathname, href) ? 'page' : undefined}
+            >
+              <Icon aria-hidden="true" />
+              {label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="hidden xl:block">
+          {authed ? (
+            <div ref={accountRef} className="relative">
+              <button
+                type="button"
+                aria-expanded={accountOpen}
+                aria-controls="menu-compte"
+                onClick={() => setAccountFor(accountOpen ? null : pathname)}
+                className="inline-flex min-h-tap items-center gap-2 font-bold underline underline-offset-[0.2em] [&_svg]:size-[1.15em]"
               >
-                {l.label}
+                <UserRound aria-hidden="true" />
+                Mon compte
+                <ChevronDown aria-hidden="true" />
+              </button>
+              <ul
+                id="menu-compte"
+                hidden={!accountOpen}
+                className="absolute top-full right-0 z-50 mt-3 min-w-56 border-2 border-white bg-c3 text-on-c3"
+              >
+                {links.map((l) => (
+                  <li key={l.href}>
+                    <Link href={l.href} className={mobileLink}>
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => void logout()}
+                    className={cn(mobileLink, 'w-full text-left')}
+                  >
+                    <LogOut aria-hidden="true" />
+                    Déconnexion
+                  </button>
+                </li>
+              </ul>
+            </div>
+          ) : status === 'loading' ? (
+            <span className="inline-block min-h-tap w-32" aria-hidden="true" />
+          ) : (
+            <Link
+              href="/connexion"
+              className="inline-flex min-h-tap items-center gap-2 font-bold text-inherit underline underline-offset-[0.2em] [&_svg]:size-[1.15em]"
+            >
+              <UserRound aria-hidden="true" />
+              Se connecter
+            </Link>
+          )}
+        </div>
+
+        <button
+          ref={burgerRef}
+          type="button"
+          aria-expanded={open}
+          aria-controls="menu-mobile"
+          onClick={() => setOpenFor(open ? null : pathname)}
+          className="ml-auto inline-flex min-h-12 min-w-12 items-center gap-2 border-2 border-current px-3 text-[0.85rem] font-extrabold xl:hidden [&_svg]:size-[1.15em]"
+        >
+          {open ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+          {open ? 'Fermer' : 'Menu'}
+        </button>
+      </div>
+
+      <nav
+        id="menu-mobile"
+        aria-label="Menu mobile"
+        hidden={!open}
+        className="bg-c3 text-on-c3 xl:hidden"
+      >
+        <ul>
+          {NAV_LINKS.map(({ href, label, longLabel, icon: Icon }) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className={mobileLink}
+                aria-current={isActive(pathname, href) ? 'page' : undefined}
+              >
+                <Icon aria-hidden="true" />
+                {longLabel ?? label}
               </Link>
             </li>
           ))}
-          <li className="mt-2 flex flex-col gap-2 lg:mt-0 lg:ml-2 lg:flex-row lg:items-center">
-            {status === 'authenticated' && user ? (
-              <>
-                {user.role === 'admin' || user.role === 'editor' ? (
-                  <Link href={user.role === 'editor' ? '/admin/blog' : '/admin'} className={link}>
-                    {user.role === 'editor' ? 'Gestion du blog' : 'Administration'}
+          {authed ? (
+            <>
+              {links.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className={mobileLink}>
+                    {l.href === '/compte' ? <UserRound aria-hidden="true" /> : null}
+                    {l.label}
                   </Link>
-                ) : null}
-                {user.role === 'provider' ? (
-                  <Link href="/espace-prestataire" className={link}>
-                    Mes établissements
-                  </Link>
-                ) : null}
-                <Link href="/compte" className={buttonClasses('secondary')}>
-                  Mon compte
-                </Link>
+                </li>
+              ))}
+              <li>
                 <button
                   type="button"
-                  className={buttonClasses('ghost')}
                   onClick={() => void logout()}
+                  className={cn(mobileLink, 'w-full text-left')}
                 >
+                  <LogOut aria-hidden="true" />
                   Déconnexion
                 </button>
-              </>
-            ) : status === 'loading' ? (
-              <span className="inline-block min-h-tap w-28" aria-hidden="true" />
-            ) : (
-              <>
-                <Link href="/connexion" className={buttonClasses('secondary')}>
+              </li>
+            </>
+          ) : status === 'loading' ? null : (
+            <>
+              <li>
+                <Link href="/connexion" className={mobileLink}>
+                  <UserRound aria-hidden="true" />
                   Se connecter
                 </Link>
-                <Link href="/inscription" className={buttonClasses('primary')}>
+              </li>
+              <li>
+                <Link href="/inscription" className={mobileLink}>
                   Créer un compte
                 </Link>
-              </>
-            )}
-          </li>
+              </li>
+            </>
+          )}
         </ul>
       </nav>
-    </div>
+    </>
   );
 }

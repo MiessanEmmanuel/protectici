@@ -1,68 +1,105 @@
 /*
- * JETONS DE THÈME — seul fichier à modifier pour la refonte visuelle (phase 6).
- * Toute la mise en forme des composants passe par ces variables (classes Tailwind
- * générées : bg-primary, text-ink, border-line, rounded-md, shadow-card, etc.).
+ * JETONS DE THÈME — direction validée v9 (design/maquette/landing-v9.html, design.md « Direction validée »).
  *
- * Contrastes mesurés (design.md §3.3) : l'or #EAAB13 n'est JAMAIS un texte sur fond clair.
+ * Règles : aplats pleins, ANGLES DROITS (rayon 0 partout), AUCUNE OMBRE, AUCUN DÉGRADÉ, filets de 2 px.
+ * Toute la mise en forme passe par ces variables (classes Tailwind générées : bg-c1, text-on-c2,
+ * border-ink, text-hero…). Les anciens noms (primary, accent, night, line…) sont conservés comme
+ * alias pour que les pages pas encore refondues adoptent automatiquement la nouvelle direction.
+ *
+ * Contrastes : l'or #EAAB13 n'est JAMAIS un texte sur fond clair ; sur l'or, texte #0d1b2a uniquement.
  */
 @theme {
-  /* Marque */
+  /* ---- Palette du logo (aplats) ---- */
+  --color-c1: #0343a4; /* aplat principal : bleu du logo */
+  --color-on-c1: #ffffff;
+  --color-c2: #eaab13; /* aplat d'accent : or (texte foncé uniquement) */
+  --color-on-c2: #0d1b2a;
+  --color-c3: #0d1b2a; /* aplat profond : nuit */
+  --color-on-c3: #ffffff;
+  --color-c4: #f3eee4; /* aplat doux : sable */
+  --color-on-c4: #0d1b2a;
+  --color-ink: #111111; /* encre : texte et filets */
+  --color-ink-2: #4b4f55; /* texte secondaire (≥ 7:1 sur blanc et sable) */
+  --color-white: #ffffff;
+
+  /* ---- Alias historiques (pages non encore refondues) ---- */
   --color-primary: #0343a4;
   --color-primary-hover: #02367f;
   --color-primary-active: #022a63;
-  --color-primary-soft: #eaf1fb;
-  --color-primary-soft-2: #d2e2f7;
+  --color-primary-soft: #f3eee4; /* les fonds teintés deviennent sable */
+  --color-primary-soft-2: #e4dccb;
   --color-on-primary: #ffffff;
-  --color-accent: #eaab13; /* fond uniquement, texte #001029 dessus */
-  --color-on-accent: #001029;
+  --color-accent: #eaab13;
+  --color-on-accent: #0d1b2a;
   --color-accent-text: #8a6200; /* seul or autorisé en texte sur clair */
-  --color-night: #001029;
+  --color-night: #0d1b2a;
   --color-on-night: #ffffff;
-  --color-link-on-night: #7fb0ff;
-
-  /* Neutres */
-  --color-ink: #001029;
-  --color-muted: #4f5b70;
-  --color-line: #d5ddea;
+  --color-link-on-night: #ffffff;
+  --color-muted: #4b4f55;
+  --color-line: #111111; /* filets noirs */
+  --color-line-soft: #d9d3c6; /* séparateurs discrets (tableaux) */
   --color-surface: #ffffff;
-  --color-surface-alt: #f5f7fb;
-  --color-focus: #0343a4;
+  --color-surface-alt: #f3eee4;
+  --color-focus: #111111;
 
-  /* États */
+  /* États (texte toujours explicite, jamais la couleur seule) */
   --color-success: #0f7b4f;
   --color-success-soft: #e3f5ec;
-  --color-danger: #c62828;
+  --color-danger: #b42318;
   --color-danger-soft: #fdecec;
   --color-warning-soft: #fff6dd;
 
-  /* Typographie (polices système : aucune police externe) */
-  --font-sans:
-    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  /* ---- Typographie : Archivo (next/font, auto-hébergée) ---- */
+  --font-sans: var(--font-archivo), Arial, sans-serif;
   --font-heading: var(--font-sans);
   --text-xs: 0.8125rem;
   --text-sm: 0.9375rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
+  --text-base: 1.0625rem; /* 17 px */
+  --text-lg: 1.2rem;
   --text-xl: 1.375rem;
-  --text-2xl: 1.75rem;
+  --text-2xl: 1.9rem;
   --text-3xl: 2.25rem;
+  --text-label: 0.74rem; /* libellés en petites capitales */
+  --text-figure: 2.3rem; /* gros chiffres (numéros d'urgence, notes) */
+  --text-section: clamp(2.1rem, 4vw, 3.2rem); /* titres de section */
+  --text-hero: clamp(2.8rem, 6.2vw, 5.4rem); /* titre principal */
+  --text-display: clamp(2.2rem, 4.6vw, 3.8rem); /* appel aux professionnels */
+  --tracking-label: 0.12em;
+  --tracking-tight: -0.02em;
+  --font-weight-black: 900;
 
-  /* Rayons */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-pill: 999px;
+  /* ---- Rayons : zéro partout ---- */
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
+  --radius-pill: 0;
 
-  /* Ombres */
-  --shadow-card: 0 1px 2px rgb(0 16 41 / 0.06), 0 2px 8px rgb(0 16 41 / 0.06);
-  --shadow-overlay: 0 8px 32px rgb(0 16 41 / 0.24);
+  /* ---- Ombres : aucune ---- */
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+  --shadow-card: none;
+  --shadow-overlay: none;
 
-  /* Mise en page */
-  --container-page: 72rem;
+  /* ---- Mise en page ---- */
+  --container-page: 75rem; /* 1200 px, gouttière 16 px */
   --spacing-tap: 2.75rem; /* cible tactile minimale 44 px */
+  --spacing-btn: 3.125rem; /* hauteur des boutons 50 px */
+  --spacing-section: 4.5rem; /* 72 px entre sections */
+  --spacing-header: 4.75rem; /* en-tête 76 px */
+  --spacing-dock: 3.875rem; /* barre d'actions mobile 62 px */
 }
 
 :root {
-  --focus-ring: 3px solid var(--color-focus);
+  --focus-ring: 3px solid var(--color-ink);
   --focus-offset: 2px;
 }
