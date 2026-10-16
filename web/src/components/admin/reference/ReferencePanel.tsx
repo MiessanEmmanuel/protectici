@@ -6,7 +6,6 @@ import { ApiError } from '@/lib/api/errors';
 import type { AdminReferenceInput, AdminReferenceItem, ReferenceResource } from '@/lib/api/types';
 import { REFERENCE_LABELS } from '@/lib/labels';
 import { useAsyncAction, useResource } from '@/lib/use-async';
-import { Badge } from '../../ui/Tag';
 import { Button } from '../../ui/Button';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { EmptyState } from '../../ui/EmptyState';
@@ -16,6 +15,7 @@ import { PagerButtons } from '../../ui/PagerButtons';
 import { QueryBoundary } from '../../ui/QueryBoundary';
 import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { ReferenceForm } from './ReferenceForm';
+import { StatusDot } from '../content/AdminKit';
 
 const IN_USE = 'Valeur utilisée, masquez-la plutôt.';
 
@@ -82,17 +82,17 @@ export function ReferencePanel({ resource }: { resource: ReferenceResource }) {
   const parentOptions = state.data?.data.map((d) => ({ id: d.id, name: d.name })) ?? [];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 rounded-lg border border-line bg-white p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl heading-block">{label}</h2>
+        <h2 className="text-lg font-bold">{label}</h2>
         <Button onClick={() => setEditing({ item: null })}>Ajouter une valeur</Button>
       </div>
 
-      <p role="status" aria-live="polite" className="text-sm text-success">
+      <p role="status" aria-live="polite" className="text-sm font-semibold text-success empty:hidden">
         {notice}
       </p>
       {conflict ? (
-        <div role="alert" className="flex flex-wrap items-center gap-3 border-2 border-danger bg-danger-soft p-4">
+        <div role="alert" className="flex flex-wrap items-center gap-3 rounded-md border border-danger bg-danger-soft p-4">
           <p className="flex-1">
             <strong>{conflict.item.name}</strong> : {conflict.message}
           </p>
@@ -112,7 +112,9 @@ export function ReferencePanel({ resource }: { resource: ReferenceResource }) {
       <QueryBoundary state={state} loadingLabel={`Chargement : ${label}…`}>
         {(list) =>
           list.data.length === 0 ? (
-            <EmptyState title="Aucune valeur pour ce référentiel" />
+            <EmptyState title="Aucune valeur pour ce référentiel">
+              Ajoutez une première valeur avec le bouton « Ajouter une valeur ».
+            </EmptyState>
           ) : (
             <div>
               <Table caption={label}>
@@ -130,14 +132,14 @@ export function ReferencePanel({ resource }: { resource: ReferenceResource }) {
                   {list.data.map((it) => (
                     <Tr key={it.id}>
                       <Td className="font-semibold">{it.name}</Td>
-                      <Td className="text-muted">{it.slug}</Td>
-                      <Td>{it.sort_order}</Td>
+                      <Td className="font-mono text-xs text-muted">{it.slug}</Td>
+                      <Td className="tabular-nums">{it.sort_order}</Td>
                       <Td>
-                        <Badge tone={it.is_visible ? 'success' : 'neutral'}>
+                        <StatusDot tone={it.is_visible ? 'success' : 'neutral'}>
                           {it.is_visible ? 'Visible' : 'Masquée'}
-                        </Badge>
+                        </StatusDot>
                       </Td>
-                      <Td className="max-w-xs">
+                      <Td className="max-w-xs text-sm text-muted">
                         <Details resource={resource} item={it} cityName={cityName} />
                       </Td>
                       <Td>

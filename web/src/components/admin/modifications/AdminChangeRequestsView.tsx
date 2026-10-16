@@ -9,7 +9,6 @@ import { formatDateTime } from '@/lib/format';
 import { TYPE_LABELS } from '@/lib/labels';
 import { useResource } from '@/lib/use-async';
 import { Button } from '../../ui/Button';
-import { Card } from '../../ui/Card';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { EmptyState } from '../../ui/EmptyState';
 import { PagerButtons } from '../../ui/PagerButtons';
@@ -19,6 +18,7 @@ import { Badge } from '../../ui/Tag';
 import { useToast } from '../../ui/Toast';
 import { ChangeDiff } from './ChangeDiff';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { filterPanelClasses, itemCardClasses } from '../etablissements/panel';
 
 type Status = 'pending' | 'approved' | 'rejected';
 
@@ -45,7 +45,10 @@ export function AdminChangeRequestsView() {
   const [notice, setNotice] = useState('');
   const inflight = useRef(false);
   const toast = useToast();
-  const list = useResource(() => clientApi.adminListChangeRequests({ status, page }), [status, page]);
+  const list = useResource(
+    () => clientApi.adminListChangeRequests({ status, page }),
+    [status, page],
+  );
   const reference = useResource(() => clientApi.getReferenceData(), []);
 
   async function confirm(reason?: string) {
@@ -78,26 +81,27 @@ export function AdminChangeRequestsView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <AdminPageHeader section="Annuaire" title="Demandes de modification" />
-      <p className="text-muted">
-        Les champs sensibles d’une fiche (raison sociale, RCCM, agrément…) ne sont modifiés qu’après
-        votre validation.
-      </p>
-      <Select
-        label="Statut des demandes"
-        value={status}
-        wrapperClassName="max-w-xs"
-        onChange={(e) => {
-          setStatus(e.target.value as Status);
-          setPage(1);
-        }}
-      >
-        {(Object.keys(STATUS_LABELS) as Status[]).map((s) => (
-          <option key={s} value={s}>
-            {STATUS_LABELS[s]}
-          </option>
-        ))}
-      </Select>
+      <AdminPageHeader
+        section="Annuaire"
+        title="Demandes de modification"
+        description="Les champs sensibles d’une fiche (raison sociale, RCCM, agrément…) ne sont modifiés qu’après votre validation."
+      />
+      <div className={`${filterPanelClasses} sm:grid-cols-[minmax(0,20rem)]`}>
+        <Select
+          label="Statut des demandes"
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value as Status);
+            setPage(1);
+          }}
+        >
+          {(Object.keys(STATUS_LABELS) as Status[]).map((s) => (
+            <option key={s} value={s}>
+              {STATUS_LABELS[s]}
+            </option>
+          ))}
+        </Select>
+      </div>
       <p role="status" aria-live="polite" className="sr-only">
         {notice}
       </p>
@@ -113,11 +117,13 @@ export function AdminChangeRequestsView() {
               <ul className="flex flex-col gap-4">
                 {res.data.map((row) => (
                   <li key={row.id}>
-                    <Card as="article" aria-labelledby={`cr-${row.id}`} className="flex flex-col gap-3">
+                    <article aria-labelledby={`cr-${row.id}`} className={itemCardClasses}>
                       <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <h2 id={`cr-${row.id}`} className="text-lg heading-block">
-                            <Link href={`/admin/etablissements/${row.type}/${row.establishment.id}`}>
+                        <div className="min-w-0">
+                          <h2 id={`cr-${row.id}`} className="text-lg font-bold break-words">
+                            <Link
+                              href={`/admin/etablissements/${row.type}/${row.establishment.id}`}
+                            >
                               {row.establishment.name}
                             </Link>
                           </h2>
@@ -125,20 +131,33 @@ export function AdminChangeRequestsView() {
                             {TYPE_LABELS[row.type]} · demandée le {formatDateTime(row.created_at)}
                           </p>
                         </div>
-                        <Badge tone={row.status === 'approved' ? 'success' : row.status === 'rejected' ? 'danger' : 'accent'}>
+                        <Badge
+                          tone={
+                            row.status === 'approved'
+                              ? 'success'
+                              : row.status === 'rejected'
+                                ? 'danger'
+                                : 'accent'
+                          }
+                        >
                           {STATUS_BADGES[row.status]}
                         </Badge>
                       </div>
                       <ChangeDiff changes={row.changes} reference={reference.data} />
                       {row.status === 'pending' ? (
-                        <div className="flex flex-wrap gap-3">
-                          <Button onClick={() => setDialog({ kind: 'approve', row })}>Approuver</Button>
-                          <Button variant="secondary" onClick={() => setDialog({ kind: 'reject', row })}>
+                        <div className="flex flex-wrap gap-2 border-t border-line pt-4">
+                          <Button onClick={() => setDialog({ kind: 'approve', row })}>
+                            Approuver
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={() => setDialog({ kind: 'reject', row })}
+                          >
                             Rejeter
                           </Button>
                         </div>
                       ) : null}
-                    </Card>
+                    </article>
                   </li>
                 ))}
               </ul>
@@ -157,7 +176,8 @@ export function AdminChangeRequestsView() {
       >
         <p>
           Les modifications seront appliquées à la fiche{' '}
-          <strong>{dialog?.row.establishment.name}</strong> et son propriétaire sera prévenu par e-mail.
+          <strong>{dialog?.row.establishment.name}</strong> et son propriétaire sera prévenu par
+          e-mail.
         </p>
       </ConfirmDialog>
       <ConfirmDialog

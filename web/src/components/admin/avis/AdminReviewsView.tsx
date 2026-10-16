@@ -12,7 +12,6 @@ import { formatDateTime, pluralize } from '@/lib/format';
 import { REPORT_REASON_LABELS, REPORT_STATUS_LABELS, REVIEW_STATUS_LABELS } from '@/lib/labels';
 import { useAsyncAction, useResource } from '@/lib/use-async';
 import { Button } from '../../ui/Button';
-import { Card } from '../../ui/Card';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { EmptyState } from '../../ui/EmptyState';
 import { FormError } from '../../ui/Field';
@@ -25,17 +24,18 @@ import { Tabs } from '../../ui/Tabs';
 import { useToast } from '../../ui/Toast';
 import { moderate } from './moderation';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { filterPanelClasses, itemCardClasses } from '../etablissements/panel';
 
 export type ReviewsTab = 'reviews' | 'reports';
 
 export function AdminReviewsView({ initialTab = 'reviews' }: { initialTab?: ReviewsTab }) {
   return (
     <div className="flex flex-col gap-6">
-      <AdminPageHeader section="Annuaire" title="Avis et signalements" />
-      <p className="text-muted">
-        Un avis n’est publié qu’après votre validation. Les signalements des internautes sont traités
-        ici : accepter un signalement masque l’avis.
-      </p>
+      <AdminPageHeader
+        section="Modération"
+        title="Avis et signalements"
+        description="Un avis n’est publié qu’après votre validation. Les signalements des internautes sont traités ici : accepter un signalement masque l’avis."
+      />
       <Tabs
         label="Avis et signalements"
         initial={initialTab}
@@ -81,7 +81,10 @@ function ReviewsPanel() {
 
   async function approve(row: AdminReviewRow) {
     await action.run(() =>
-      moderate(() => clientApi.adminReviewAction(row.id, 'approve'), opts('Avis approuvé et publié.')),
+      moderate(
+        () => clientApi.adminReviewAction(row.id, 'approve'),
+        opts('Avis approuvé et publié.'),
+      ),
     );
   }
 
@@ -111,7 +114,11 @@ function ReviewsPanel() {
 
   return (
     <div className="flex flex-col gap-5">
-      <form onSubmit={search} className="flex flex-col gap-3 sm:flex-row sm:items-end border-2 border-ink bg-c4 p-3 sm:p-4" role="search">
+      <form
+        onSubmit={search}
+        className={`${filterPanelClasses} sm:flex sm:flex-row sm:items-end`}
+        role="search"
+      >
         <Select
           label="Statut des avis"
           value={status}
@@ -152,10 +159,10 @@ function ReviewsPanel() {
               <ul className="flex flex-col gap-4">
                 {res.data.map((row) => (
                   <li key={row.id}>
-                    <Card as="article" aria-labelledby={`avis-${row.id}`} className="flex flex-col gap-3">
+                    <article aria-labelledby={`avis-${row.id}`} className={itemCardClasses}>
                       <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <h2 id={`avis-${row.id}`} className="text-lg heading-block">
+                        <div className="min-w-0">
+                          <h2 id={`avis-${row.id}`} className="text-lg font-bold break-words">
                             {row.provider.name}
                           </h2>
                           <p className="text-sm text-muted">
@@ -167,16 +174,16 @@ function ReviewsPanel() {
                         </div>
                         <StatusPill kind="review" status={row.status} />
                       </div>
-                      <p className="font-semibold">
+                      <p className="inline-flex w-fit flex-wrap items-center gap-2 rounded-full bg-surface-alt px-3 py-1 text-sm font-semibold">
                         Note : {row.rating} sur 5{row.title ? ` · ${row.title}` : ''}
                       </p>
-                      <p className="whitespace-pre-line break-words">{row.body}</p>
+                      <p className="break-words whitespace-pre-line">{row.body}</p>
                       <p className="text-sm text-muted">
                         {row.reports_count > 0
                           ? `${row.reports_count} ${pluralize(row.reports_count, 'signalement', 'signalements')}`
                           : 'Aucun signalement'}
                       </p>
-                      <div className="flex flex-wrap gap-3">
+                      <div className="flex flex-wrap gap-2 border-t border-line pt-4">
                         {row.status !== 'approved' ? (
                           <Button
                             onClick={() => void approve(row)}
@@ -206,7 +213,7 @@ function ReviewsPanel() {
                           Supprimer
                         </Button>
                       </div>
-                    </Card>
+                    </article>
                   </li>
                 ))}
               </ul>
@@ -227,8 +234,8 @@ function ReviewsPanel() {
         onConfirm={confirm}
       >
         <p>
-          Le motif sera communiqué à l’auteur de l’avis sur <strong>{dialog?.row.provider.name}</strong>{' '}
-          par e-mail.
+          Le motif sera communiqué à l’auteur de l’avis sur{' '}
+          <strong>{dialog?.row.provider.name}</strong> par e-mail.
         </p>
       </ConfirmDialog>
       <ConfirmDialog
@@ -240,8 +247,8 @@ function ReviewsPanel() {
         onConfirm={confirm}
       >
         <p>
-          L’avis sur <strong>{dialog?.row.provider.name}</strong> sera supprimé et la note moyenne du
-          prestataire recalculée. Cette action est journalisée.
+          L’avis sur <strong>{dialog?.row.provider.name}</strong> sera supprimé et la note moyenne
+          du prestataire recalculée. Cette action est journalisée.
         </p>
       </ConfirmDialog>
     </div>
@@ -260,7 +267,10 @@ function ReportsPanel() {
   const inflight = useRef(false);
   const action = useAsyncAction();
   const toast = useToast();
-  const list = useResource(() => clientApi.adminListReviewReports({ status, page }), [status, page]);
+  const list = useResource(
+    () => clientApi.adminListReviewReports({ status, page }),
+    [status, page],
+  );
 
   function notify(message: string) {
     setNotice(message);
@@ -276,7 +286,10 @@ function ReportsPanel() {
 
   async function dismiss(row: AdminReviewReport) {
     await action.run(() =>
-      moderate(() => clientApi.adminReviewReportAction(row.id, 'dismiss'), opts('Signalement rejeté.')),
+      moderate(
+        () => clientApi.adminReviewReportAction(row.id, 'dismiss'),
+        opts('Signalement rejeté.'),
+      ),
     );
   }
 
@@ -296,21 +309,22 @@ function ReportsPanel() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Select
-        label="Statut des signalements"
-        value={status}
-        wrapperClassName="max-w-xs"
-        onChange={(e) => {
-          setStatus(e.target.value as ReviewReportStatus);
-          setPage(1);
-        }}
-      >
-        {(Object.keys(REPORT_STATUS_LABELS) as ReviewReportStatus[]).map((s) => (
-          <option key={s} value={s}>
-            {REPORT_STATUS_LABELS[s]}
-          </option>
-        ))}
-      </Select>
+      <div className={`${filterPanelClasses} sm:grid-cols-[minmax(0,20rem)]`}>
+        <Select
+          label="Statut des signalements"
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value as ReviewReportStatus);
+            setPage(1);
+          }}
+        >
+          {(Object.keys(REPORT_STATUS_LABELS) as ReviewReportStatus[]).map((s) => (
+            <option key={s} value={s}>
+              {REPORT_STATUS_LABELS[s]}
+            </option>
+          ))}
+        </Select>
+      </div>
       <p role="status" aria-live="polite" className="sr-only">
         {notice}
       </p>
@@ -327,10 +341,10 @@ function ReportsPanel() {
               <ul className="flex flex-col gap-4">
                 {res.data.map((row) => (
                   <li key={row.id}>
-                    <Card as="article" aria-labelledby={`sig-${row.id}`} className="flex flex-col gap-3">
+                    <article aria-labelledby={`sig-${row.id}`} className={itemCardClasses}>
                       <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <h2 id={`sig-${row.id}`} className="text-lg heading-block">
+                        <div className="min-w-0">
+                          <h2 id={`sig-${row.id}`} className="text-lg font-bold break-words">
                             Avis sur {row.review.provider_name}
                           </h2>
                           <p className="text-sm text-muted">
@@ -340,22 +354,22 @@ function ReportsPanel() {
                         </div>
                         <StatusPill kind="report" status={row.status} />
                       </div>
-                      <blockquote className="border-l-4 border-ink pl-3">
+                      <blockquote className="rounded-md border border-line bg-surface-alt p-3 sm:p-4">
                         <p className="text-sm text-muted">Note : {row.review.rating} sur 5</p>
-                        <p className="whitespace-pre-line break-words">{row.review.body_excerpt}</p>
+                        <p className="break-words whitespace-pre-line">{row.review.body_excerpt}</p>
                       </blockquote>
                       <p>
                         <span className="font-semibold">Raison : </span>
                         {REPORT_REASON_LABELS[row.reason] ?? row.reason}
                       </p>
                       {row.details ? (
-                        <p className="whitespace-pre-line break-words">
+                        <p className="break-words whitespace-pre-line">
                           <span className="font-semibold">Détails : </span>
                           {row.details}
                         </p>
                       ) : null}
                       {row.status === 'open' ? (
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-wrap gap-2 border-t border-line pt-4">
                           <Button
                             variant="danger"
                             disabled={action.busy}
@@ -375,7 +389,7 @@ function ReportsPanel() {
                           </Button>
                         </div>
                       ) : null}
-                    </Card>
+                    </article>
                   </li>
                 ))}
               </ul>
@@ -401,4 +415,3 @@ function ReportsPanel() {
     </div>
   );
 }
-

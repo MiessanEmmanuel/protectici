@@ -31,9 +31,9 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
-      className="m-auto w-[min(92vw,32rem)] border-2 border-ink bg-white p-0 text-ink backdrop:bg-c3/70"
+      className="ui-modal m-auto w-[min(92vw,32rem)] border-2 border-ink bg-white p-0 text-ink backdrop:bg-c3/70"
     >
-      <div className="flex items-center justify-between gap-4 border-b-2 border-ink bg-c1 py-2 pr-2 pl-5 text-on-c1">
+      <div className="ui-modal-head flex items-center justify-between gap-4 border-b-2 border-ink bg-c1 py-2 pr-2 pl-5 text-on-c1">
         <h2 id={titleId} className="text-xl heading-block">
           {title}
         </h2>

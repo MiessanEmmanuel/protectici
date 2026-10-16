@@ -61,12 +61,13 @@ export function FeedbackDetail({
     <QueryBoundary state={detail} loadingLabel="Chargement du dossier…">
       {(f) => (
         <>
-          <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line pb-4">
             <div>
+              <p className="eyebrow text-muted">Dossier « Dis-moi tout »</p>
               <h2 className="text-xl heading-block">Dossier {f.reference}</h2>
               <p className="text-sm text-muted">Reçu le {formatDateTime(f.created_at)}</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <StatusPill kind="feedback" status={f.status} />
               <Button variant="ghost" onClick={onClose}>
                 Fermer le dossier
@@ -74,7 +75,7 @@ export function FeedbackDetail({
             </div>
           </div>
 
-          <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+          <dl className="grid gap-x-6 gap-y-3 rounded-[var(--a-r-md)] bg-surface-alt p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3">
             <Info label="Auteur">
               {[f.civility, f.author.first_name, f.author.last_name].filter(Boolean).join(' ')}
             </Info>
@@ -93,12 +94,14 @@ export function FeedbackDetail({
             </Info>
           </dl>
 
-          <div>
+          <div className="flex flex-col gap-2">
             <h3 className="font-semibold">Commentaire</h3>
-            <p className="mt-1 whitespace-pre-line break-words">{f.comment}</p>
+            <blockquote className="rounded-[var(--a-r-md)] border-l-4 border-l-[var(--a-gold)] bg-surface-alt p-4 whitespace-pre-line break-words">
+              {f.comment}
+            </blockquote>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 rounded-[var(--a-r-md)] border border-line p-4 sm:grid-cols-2">
             <Select
               label="Statut du dossier"
               value={f.status}
@@ -161,8 +164,8 @@ function assignable(f: AdminFeedback, admins: { id: number; first_name: string; 
 
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <dt className="text-sm text-muted">{label}</dt>
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <dt className="text-xs font-semibold tracking-wide text-muted uppercase">{label}</dt>
       <dd className="break-words">{children}</dd>
     </div>
   );
@@ -175,18 +178,22 @@ function Thread({ replies }: { replies: FeedbackReply[] }) {
         Échanges ({replies.length})
       </h3>
       {replies.length === 0 ? (
-        <p className="text-muted">Aucune réponse pour le moment.</p>
+        <p className="rounded-[var(--a-r-md)] border border-dashed border-line p-4 text-muted">
+          Aucune réponse pour le moment.
+        </p>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-3 border-l border-line pl-4">
           {replies.map((r) => (
             <li
               key={r.id}
               className={cn(
-                'rounded-md border p-3',
-                r.is_internal ? 'border-dashed border-line bg-surface-alt' : 'border-primary bg-surface',
+                'rounded-[var(--a-r-md)] border p-4',
+                r.is_internal
+                  ? 'border-dashed border-[var(--a-ctl)] bg-surface-alt'
+                  : 'border-line bg-c4',
               )}
             >
-              <div className="mb-1 flex flex-wrap items-center gap-2 text-sm text-muted">
+              <div className="mb-2 flex flex-wrap items-center gap-2 text-sm text-muted">
                 <Badge tone={r.is_internal ? 'neutral' : 'success'}>
                   {r.is_internal ? 'Note interne (non envoyée à l’auteur)' : 'Envoyée à l’auteur'}
                 </Badge>
@@ -258,7 +265,13 @@ function ReplyForm({ feedbackId, onSent }: { feedbackId: number; onSent: () => v
   }
 
   return (
-    <form method="post" onSubmit={submit} noValidate className="flex flex-col gap-3" aria-label="Répondre au dossier">
+    <form
+      method="post"
+      onSubmit={submit}
+      noValidate
+      className="flex flex-col gap-3 rounded-[var(--a-r-md)] border border-line bg-surface-alt p-4 sm:p-5"
+      aria-label="Répondre au dossier"
+    >
       <h3 className="font-semibold">Répondre</h3>
       <Textarea
         label="Votre réponse"
@@ -277,7 +290,7 @@ function ReplyForm({ feedbackId, onSent }: { feedbackId: number; onSent: () => v
       />
       <FormError message={action.error?.form} />
       <FormSuccess message={done} />
-      <div>
+      <div className="flex flex-wrap gap-2">
         <Button type="submit" loading={action.busy} disabled={action.busy}>
           {internal ? 'Enregistrer la note' : 'Envoyer la réponse'}
         </Button>

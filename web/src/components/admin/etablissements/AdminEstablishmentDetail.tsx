@@ -24,7 +24,6 @@ import {
 import { useResource } from '@/lib/use-async';
 import { MiniMap } from '../../map/MiniMap';
 import { Button } from '../../ui/Button';
-import { Card } from '../../ui/Card';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { ExternalLink } from '../../ui/ExternalLink';
 import { FormError } from '../../ui/Field';
@@ -37,6 +36,7 @@ import { formatChangeValue } from '../modifications/change-format';
 import { ChangeDiff } from '../modifications/ChangeDiff';
 import { AdminEstablishmentEditForm } from './AdminEstablishmentEditForm';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { DefList, DefRow, insetClasses, Panel, PanelNote } from './panel';
 
 type Dialog = 'approve' | 'reject' | 'suspend' | 'delete';
 
@@ -64,27 +64,23 @@ function friendly(e: unknown): unknown {
   return e;
 }
 
-function Row({ label, children }: { label: string; children: ReactNode }) {
-  const empty =
-    children === null || children === undefined || children === '' || children === false;
-  return (
-    <div className="grid gap-1 sm:grid-cols-[14rem_1fr] sm:gap-3">
-      <dt className="font-semibold">{label}</dt>
-      <dd className="break-words">
-        {empty ? <span className="text-muted">Non renseigné</span> : children}
-      </dd>
-    </div>
-  );
-}
+const Row = DefRow;
 
-function Section({ title, id, children }: { title: string; id: string; children: ReactNode }) {
+function Section({
+  title,
+  id,
+  hint,
+  children,
+}: {
+  title: string;
+  id: string;
+  hint?: ReactNode;
+  children: ReactNode;
+}) {
   return (
-    <Card as="section" aria-labelledby={id} className="flex flex-col gap-3">
-      <h2 id={id} className="text-lg heading-block">
-        {title}
-      </h2>
+    <Panel aria-labelledby={id} title={title} titleId={id} hint={hint}>
       {children}
-    </Card>
+    </Panel>
   );
 }
 
@@ -195,7 +191,12 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
   return (
     <div className="flex flex-col gap-6">
       <p>
-        <Link href="/admin/etablissements">← Retour aux établissements</Link>
+        <Link
+          href="/admin/etablissements"
+          className="inline-flex min-h-tap items-center gap-2 rounded-full border border-line bg-surface-alt px-4 text-sm font-semibold text-ink no-underline hover:bg-c4"
+        >
+          <span aria-hidden="true">←</span> Retour aux établissements
+        </Link>
       </p>
       <QueryBoundary state={state} loadingLabel="Chargement de la fiche…">
         {(e) => {
@@ -224,19 +225,23 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                 }
                 description={
                   e.rejection_reason ? (
-                    <p className="border-2 border-ink bg-c4 p-3 text-on-c4">
+                    <p className="rounded-md border border-danger bg-danger-soft px-4 py-3 text-ink">
                       <strong>Motif :</strong> {e.rejection_reason}
                     </p>
                   ) : null
                 }
               />
 
-              <section aria-label="Actions sur la fiche" className="flex flex-col gap-3">
+              <section
+                aria-label="Actions sur la fiche"
+                className="flex flex-col gap-3 rounded-lg border border-line bg-white p-4 sm:p-5"
+              >
+                <p className="text-sm font-semibold text-muted">Décision et mise en avant</p>
                 <FormError message={pageError} />
                 <p role="status" aria-live="polite" className="sr-only">
                   {notice}
                 </p>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                   {canApprove ? (
                     <Button disabled={busy} onClick={() => setDialog('approve')}>
                       Approuver
@@ -297,285 +302,311 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                 </div>
               </section>
 
-              {editing ? (
-                ref ? (
-                  <AdminEstablishmentEditForm
-                    establishment={e}
-                    reference={ref}
-                    onCancel={() => setEditing(false)}
-                    onSaved={(updated) => {
-                      state.setData(updated);
-                      setEditing(false);
-                      setNotice('Fiche enregistrée.');
-                      toast.show('Fiche enregistrée.', 'success');
-                    }}
-                  />
-                ) : (
-                  <LoadingBlock label="Chargement des listes…" />
-                )
-              ) : (
-                <>
-                  <Section title="Identité et statut" id="s-identite">
-                    <dl className="flex flex-col gap-2">
-                      <Row label="Type">{TYPE_LABELS[e.type]}</Row>
-                      <Row label="Identifiant public">{e.slug}</Row>
-                      <Row label="Description">{e.description}</Row>
-                      {e.type === 'provider' ? (
-                        <>
-                          <Row label="Types d’entreprise">
-                            {ids('company_type_ids', e.company_type_ids)}
-                          </Row>
-                          <Row label="Services">{ids('service_type_ids', e.service_type_ids)}</Row>
-                          <Row label="En service">{yesNo(e.is_in_service)}</Row>
-                          <Row label="Déposée par">
-                            {e.submitter_role ? SUBMITTER_LABELS[e.submitter_role] : null}
-                          </Row>
-                        </>
-                      ) : (
-                        <>
-                          <Row label="Type de structure">
-                            {forceType?.name ?? (e.force_type_id ? `n° ${e.force_type_id}` : null)}
-                          </Row>
-                          <Row label="Démarches">
-                            {ids('procedure_type_ids', e.procedure_type_ids)}
-                          </Row>
-                        </>
-                      )}
-                      <Row label="Soumise le">{formatDateTime(e.submitted_at)}</Row>
-                      <Row label="Examinée">
-                        {e.reviewed_at
-                          ? `${formatDateTime(e.reviewed_at)}${e.reviewed_by ? ` par ${e.reviewed_by.name}` : ''}`
-                          : null}
-                      </Row>
-                      <Row label="Visible sur le site">{yesNo(e.is_visible)}</Row>
-                      <Row label="Nombre de vues">{String(e.views_count)}</Row>
-                    </dl>
-                  </Section>
-
-                  <Section title="Propriétaire" id="s-proprietaire">
-                    <dl className="flex flex-col gap-2">
-                      <Row label="Nom">{`${e.owner.first_name} ${e.owner.last_name}`.trim()}</Row>
-                      <Row label="Adresse e-mail">{e.owner.email}</Row>
-                      <Row label="Téléphone">{e.owner.phone}</Row>
-                    </dl>
-                  </Section>
-
-                  {e.type === 'provider' ? (
-                    <Section title="Informations légales" id="s-legal">
-                      <p className="text-sm text-muted">
-                        Données sensibles : ne les communiquez pas en dehors de l’administration.
-                      </p>
-                      <dl className="flex flex-col gap-2">
-                        <Row label="Numéro RCCM">{e.rccm}</Row>
-                        <Row label="Forme juridique">{legalFormLabel(e.legal_form)}</Row>
-                        <Row label="Capital social">
-                          {e.share_capital !== null && e.share_capital !== undefined
-                            ? formatFcfa(e.share_capital)
-                            : null}
-                        </Row>
-                        <Row label="Objet social">{e.corporate_purpose}</Row>
-                        <Row label="Numéro d’agrément">{e.approval_number}</Row>
-                        <Row label="Fin de validité de l’agrément">{e.approval_expires_at}</Row>
-                      </dl>
-                    </Section>
-                  ) : null}
-
-                  {e.type === 'provider' ? (
-                    <Section title="Dirigeants" id="s-dirigeants">
-                      {e.executives.length === 0 ? (
-                        <p className="text-muted">Aucun dirigeant renseigné.</p>
-                      ) : (
-                        <ul className="flex flex-col gap-2">
-                          {e.executives.map((x) => (
-                            <li key={x.id} className="flex flex-wrap items-center gap-2">
-                              <span className="font-semibold">{x.full_name}</span>
-                              <span>
-                                {x.position === 'other' && x.position_label
-                                  ? x.position_label
-                                  : POSITIONS[x.position]}
-                              </span>
-                              <Badge>{x.is_visible ? 'Visible publiquement' : 'Masqué'}</Badge>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </Section>
-                  ) : null}
-
-                  <Section title="Localisation" id="s-localisation">
-                    <dl className="flex flex-col gap-2">
-                      <Row label="Ville">
-                        {city?.name ?? (e.city_id ? `n° ${e.city_id}` : null)}
-                      </Row>
-                      <Row label="Quartier">
-                        {district?.name ?? (e.district_id ? `n° ${e.district_id}` : null)}
-                      </Row>
-                      <Row label="Adresse">{e.address}</Row>
-                      <Row label="Repères géographiques">{e.geo_description}</Row>
-                      <Row label="Plus Code">{e.plus_code}</Row>
-                      <Row label="Coordonnées">
-                        {e.lat !== null && e.lng !== null ? `${e.lat}, ${e.lng}` : null}
-                      </Row>
-                    </dl>
-                    {e.lat !== null && e.lng !== null ? (
-                      <MiniMap name={e.name} lat={e.lat} lng={e.lng} address={e.address} />
-                    ) : null}
-                  </Section>
-
-                  <Section title="Contacts" id="s-contacts">
-                    <dl className="flex flex-col gap-2">
-                      <Row label="Téléphone">{e.phone}</Row>
-                      <Row label="Second téléphone">{e.phone_alt}</Row>
-                      <Row label="Téléphone d’urgence">{e.emergency_phone}</Row>
-                      <Row label="Adresse e-mail">{e.email}</Row>
-                      {e.type === 'provider' ? (
-                        <>
-                          <Row label="Site web">
-                            <ExternalLink href={e.website_url}>{e.website_url}</ExternalLink>
-                          </Row>
-                          <Row label="Facebook">
-                            <ExternalLink href={e.facebook_url}>{e.facebook_url}</ExternalLink>
-                          </Row>
-                          <Row label="Instagram">
-                            <ExternalLink href={e.instagram_url}>{e.instagram_url}</ExternalLink>
-                          </Row>
-                          <Row label="X (Twitter)">
-                            <ExternalLink href={e.twitter_url}>{e.twitter_url}</ExternalLink>
-                          </Row>
-                          <Row label="LinkedIn">
-                            <ExternalLink href={e.linkedin_url}>{e.linkedin_url}</ExternalLink>
-                          </Row>
-                          <Row label="Numéro WhatsApp">{e.whatsapp_number}</Row>
-                          <Row label="Tarif de départ">
-                            {e.price_from !== null && e.price_from !== undefined
-                              ? formatFcfa(e.price_from)
+              <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+                <div className="flex min-w-0 flex-col gap-6">
+                  {editing ? (
+                    ref ? (
+                      <AdminEstablishmentEditForm
+                        establishment={e}
+                        reference={ref}
+                        onCancel={() => setEditing(false)}
+                        onSaved={(updated) => {
+                          state.setData(updated);
+                          setEditing(false);
+                          setNotice('Fiche enregistrée.');
+                          toast.show('Fiche enregistrée.', 'success');
+                        }}
+                      />
+                    ) : (
+                      <LoadingBlock label="Chargement des listes…" />
+                    )
+                  ) : (
+                    <>
+                      <Section title="Identité et statut" id="s-identite">
+                        <DefList>
+                          <Row label="Type">{TYPE_LABELS[e.type]}</Row>
+                          <Row label="Identifiant public">{e.slug}</Row>
+                          <Row label="Description">{e.description}</Row>
+                          {e.type === 'provider' ? (
+                            <>
+                              <Row label="Types d’entreprise">
+                                {ids('company_type_ids', e.company_type_ids)}
+                              </Row>
+                              <Row label="Services">
+                                {ids('service_type_ids', e.service_type_ids)}
+                              </Row>
+                              <Row label="En service">{yesNo(e.is_in_service)}</Row>
+                              <Row label="Déposée par">
+                                {e.submitter_role ? SUBMITTER_LABELS[e.submitter_role] : null}
+                              </Row>
+                            </>
+                          ) : (
+                            <>
+                              <Row label="Type de structure">
+                                {forceType?.name ??
+                                  (e.force_type_id ? `n° ${e.force_type_id}` : null)}
+                              </Row>
+                              <Row label="Démarches">
+                                {ids('procedure_type_ids', e.procedure_type_ids)}
+                              </Row>
+                            </>
+                          )}
+                          <Row label="Soumise le">{formatDateTime(e.submitted_at)}</Row>
+                          <Row label="Examinée">
+                            {e.reviewed_at
+                              ? `${formatDateTime(e.reviewed_at)}${e.reviewed_by ? ` par ${e.reviewed_by.name}` : ''}`
                               : null}
                           </Row>
-                        </>
-                      ) : (
-                        <>
-                          <Row label="Horaires">{e.opening_hours}</Row>
-                          <Row label="Ouvert 24 h/24">{yesNo(e.is_open_24h)}</Row>
-                        </>
-                      )}
-                    </dl>
+                          <Row label="Visible sur le site">{yesNo(e.is_visible)}</Row>
+                          <Row label="Nombre de vues">{String(e.views_count)}</Row>
+                        </DefList>
+                      </Section>
+
+                      <Section title="Propriétaire" id="s-proprietaire">
+                        <DefList>
+                          <Row label="Nom">
+                            {`${e.owner.first_name} ${e.owner.last_name}`.trim()}
+                          </Row>
+                          <Row label="Adresse e-mail">{e.owner.email}</Row>
+                          <Row label="Téléphone">{e.owner.phone}</Row>
+                        </DefList>
+                      </Section>
+
+                      {e.type === 'provider' ? (
+                        <Section title="Informations légales" id="s-legal">
+                          <PanelNote>
+                            Données sensibles : ne les communiquez pas en dehors de
+                            l’administration.
+                          </PanelNote>
+                          <DefList>
+                            <Row label="Numéro RCCM">{e.rccm}</Row>
+                            <Row label="Forme juridique">{legalFormLabel(e.legal_form)}</Row>
+                            <Row label="Capital social">
+                              {e.share_capital !== null && e.share_capital !== undefined
+                                ? formatFcfa(e.share_capital)
+                                : null}
+                            </Row>
+                            <Row label="Objet social">{e.corporate_purpose}</Row>
+                            <Row label="Numéro d’agrément">{e.approval_number}</Row>
+                            <Row label="Fin de validité de l’agrément">{e.approval_expires_at}</Row>
+                          </DefList>
+                        </Section>
+                      ) : null}
+
+                      {e.type === 'provider' ? (
+                        <Section title="Dirigeants" id="s-dirigeants">
+                          {e.executives.length === 0 ? (
+                            <p className="text-muted">Aucun dirigeant renseigné.</p>
+                          ) : (
+                            <ul className="flex flex-col gap-2">
+                              {e.executives.map((x) => (
+                                <li
+                                  key={x.id}
+                                  className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${insetClasses}`}
+                                >
+                                  <span className="font-semibold">{x.full_name}</span>
+                                  <span className="text-muted">
+                                    {x.position === 'other' && x.position_label
+                                      ? x.position_label
+                                      : POSITIONS[x.position]}
+                                  </span>
+                                  <Badge className="ml-auto">
+                                    {x.is_visible ? 'Visible publiquement' : 'Masqué'}
+                                  </Badge>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </Section>
+                      ) : null}
+
+                      <Section title="Localisation" id="s-localisation">
+                        <DefList>
+                          <Row label="Ville">
+                            {city?.name ?? (e.city_id ? `n° ${e.city_id}` : null)}
+                          </Row>
+                          <Row label="Quartier">
+                            {district?.name ?? (e.district_id ? `n° ${e.district_id}` : null)}
+                          </Row>
+                          <Row label="Adresse">{e.address}</Row>
+                          <Row label="Repères géographiques">{e.geo_description}</Row>
+                          <Row label="Plus Code">{e.plus_code}</Row>
+                          <Row label="Coordonnées">
+                            {e.lat !== null && e.lng !== null ? `${e.lat}, ${e.lng}` : null}
+                          </Row>
+                        </DefList>
+                        {e.lat !== null && e.lng !== null ? (
+                          <MiniMap name={e.name} lat={e.lat} lng={e.lng} address={e.address} />
+                        ) : null}
+                      </Section>
+
+                      <Section title="Contacts" id="s-contacts">
+                        <DefList>
+                          <Row label="Téléphone">{e.phone}</Row>
+                          <Row label="Second téléphone">{e.phone_alt}</Row>
+                          <Row label="Téléphone d’urgence">{e.emergency_phone}</Row>
+                          <Row label="Adresse e-mail">{e.email}</Row>
+                          {e.type === 'provider' ? (
+                            <>
+                              <Row label="Site web">
+                                <ExternalLink href={e.website_url}>{e.website_url}</ExternalLink>
+                              </Row>
+                              <Row label="Facebook">
+                                <ExternalLink href={e.facebook_url}>{e.facebook_url}</ExternalLink>
+                              </Row>
+                              <Row label="Instagram">
+                                <ExternalLink href={e.instagram_url}>
+                                  {e.instagram_url}
+                                </ExternalLink>
+                              </Row>
+                              <Row label="X (Twitter)">
+                                <ExternalLink href={e.twitter_url}>{e.twitter_url}</ExternalLink>
+                              </Row>
+                              <Row label="LinkedIn">
+                                <ExternalLink href={e.linkedin_url}>{e.linkedin_url}</ExternalLink>
+                              </Row>
+                              <Row label="Numéro WhatsApp">{e.whatsapp_number}</Row>
+                              <Row label="Tarif de départ">
+                                {e.price_from !== null && e.price_from !== undefined
+                                  ? formatFcfa(e.price_from)
+                                  : null}
+                              </Row>
+                            </>
+                          ) : (
+                            <>
+                              <Row label="Horaires">{e.opening_hours}</Row>
+                              <Row label="Ouvert 24 h/24">{yesNo(e.is_open_24h)}</Row>
+                            </>
+                          )}
+                        </DefList>
+                      </Section>
+                    </>
+                  )}
+
+                  <Section title="Demandes de modification" id="s-demandes">
+                    {pendingChanges > 0 ? (
+                      <p className="rounded-md bg-warning-soft px-3 py-2">
+                        {pendingChanges} demande{pendingChanges > 1 ? 's' : ''} en attente.{' '}
+                        <Link href="/admin/modifications">Les traiter</Link>
+                      </p>
+                    ) : null}
+                    {e.change_requests.length === 0 ? (
+                      <p className="text-muted">Aucune demande de modification.</p>
+                    ) : (
+                      <ul className="flex flex-col gap-4">
+                        {e.change_requests.map((c) => (
+                          <li key={c.id} className={`flex flex-col gap-2 ${insetClasses}`}>
+                            <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
+                              <Badge
+                                tone={
+                                  c.status === 'approved'
+                                    ? 'success'
+                                    : c.status === 'rejected'
+                                      ? 'danger'
+                                      : 'accent'
+                                }
+                              >
+                                {CR_LABELS[c.status]}
+                              </Badge>
+                              demandée le {formatDateTime(c.created_at)}
+                              {c.reviewed_at
+                                ? ` · traitée le ${formatDateTime(c.reviewed_at)}`
+                                : ''}
+                            </p>
+                            {c.rejection_reason ? (
+                              <p>Motif du rejet : {c.rejection_reason}</p>
+                            ) : null}
+                            <ChangeDiff changes={c.changes} reference={ref} />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </Section>
-                </>
-              )}
+                </div>
+                <div className="flex min-w-0 flex-col gap-6">
+                  <Section title="Médias" id="s-medias">
+                    {e.media.length === 0 ? (
+                      <p className="text-muted">Aucun média.</p>
+                    ) : (
+                      <ul className="flex flex-wrap gap-4">
+                        {e.media.map((m) => (
+                          <li key={m.id} className="flex max-w-48 flex-col gap-1">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={m.url}
+                              alt={m.alt}
+                              loading="lazy"
+                              className="h-28 w-full rounded-md border border-line object-cover"
+                            />
+                            <span className="text-sm text-muted">
+                              {COLLECTION_LABELS[m.collection]}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </Section>
 
-              <Section title="Médias" id="s-medias">
-                {e.media.length === 0 ? (
-                  <p className="text-muted">Aucun média.</p>
-                ) : (
-                  <ul className="flex flex-wrap gap-4">
-                    {e.media.map((m) => (
-                      <li key={m.id} className="flex max-w-48 flex-col gap-1">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={m.url}
-                          alt={m.alt}
-                          loading="lazy"
-                          className="h-28 w-full border-2 border-ink object-cover"
-                        />
-                        <span className="text-sm text-muted">
-                          {COLLECTION_LABELS[m.collection]}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Section>
-
-              <Section title="Justificatifs" id="s-justificatifs">
-                <p className="text-sm text-muted">
-                  Documents privés. Chaque téléchargement est journalisé (qui, quand) dans
-                  l’historique.
-                </p>
-                {e.documents.length === 0 ? (
-                  <p className="text-muted">Aucun justificatif déposé.</p>
-                ) : (
-                  <ul className="flex flex-col gap-3">
-                    {e.documents.map((d) => (
-                      <li
-                        key={d.id}
-                        className="flex flex-wrap items-center justify-between gap-3 border-2 border-ink p-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="font-semibold break-words">{d.original_name}</p>
-                          <p className="text-sm text-muted">
-                            {DOCUMENT_TYPE_LABELS[d.type]} · {formatBytes(d.size_bytes)} · déposé le{' '}
-                            {formatDateTime(d.uploaded_at)}
-                            {d.verified_at ? ` · vérifié le ${formatDateTime(d.verified_at)}` : ''}
-                          </p>
-                        </div>
-                        <Button
-                          variant="secondary"
-                          aria-label={`Télécharger ${d.original_name}`}
-                          loading={downloading === d.id}
-                          disabled={downloading !== null}
-                          onClick={() => void download(d)}
-                        >
-                          Télécharger
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Section>
-
-              <Section title="Demandes de modification" id="s-demandes">
-                {pendingChanges > 0 ? (
-                  <p>
-                    {pendingChanges} demande{pendingChanges > 1 ? 's' : ''} en attente.{' '}
-                    <Link href="/admin/modifications">Les traiter</Link>
-                  </p>
-                ) : null}
-                {e.change_requests.length === 0 ? (
-                  <p className="text-muted">Aucune demande de modification.</p>
-                ) : (
-                  <ul className="flex flex-col gap-4">
-                    {e.change_requests.map((c) => (
-                      <li key={c.id} className="flex flex-col gap-2">
-                        <p className="text-sm text-muted">
-                          <Badge
-                            tone={
-                              c.status === 'approved'
-                                ? 'success'
-                                : c.status === 'rejected'
-                                  ? 'danger'
-                                  : 'accent'
-                            }
+                  <Section title="Justificatifs" id="s-justificatifs">
+                    <PanelNote>
+                      Documents privés. Chaque téléchargement est journalisé (qui, quand) dans
+                      l’historique.
+                    </PanelNote>
+                    {e.documents.length === 0 ? (
+                      <p className="text-muted">Aucun justificatif déposé.</p>
+                    ) : (
+                      <ul className="flex flex-col gap-3">
+                        {e.documents.map((d) => (
+                          <li
+                            key={d.id}
+                            className={`flex flex-wrap items-center justify-between gap-3 ${insetClasses}`}
                           >
-                            {CR_LABELS[c.status]}
-                          </Badge>{' '}
-                          demandée le {formatDateTime(c.created_at)}
-                          {c.reviewed_at ? ` · traitée le ${formatDateTime(c.reviewed_at)}` : ''}
-                        </p>
-                        {c.rejection_reason ? <p>Motif du rejet : {c.rejection_reason}</p> : null}
-                        <ChangeDiff changes={c.changes} reference={ref} />
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Section>
+                            <div className="min-w-0">
+                              <p className="font-semibold break-words">{d.original_name}</p>
+                              <p className="text-sm text-muted">
+                                {DOCUMENT_TYPE_LABELS[d.type]} · {formatBytes(d.size_bytes)} ·
+                                déposé le {formatDateTime(d.uploaded_at)}
+                                {d.verified_at
+                                  ? ` · vérifié le ${formatDateTime(d.verified_at)}`
+                                  : ''}
+                              </p>
+                            </div>
+                            <Button
+                              variant="secondary"
+                              aria-label={`Télécharger ${d.original_name}`}
+                              loading={downloading === d.id}
+                              disabled={downloading !== null}
+                              onClick={() => void download(d)}
+                            >
+                              Télécharger
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </Section>
 
-              <Section title="Historique" id="s-historique">
-                {e.audit.length === 0 ? (
-                  <p className="text-muted">Aucun événement.</p>
-                ) : (
-                  <ol className="flex flex-col gap-2">
-                    {e.audit.map((a, i) => (
-                      <li key={i}>
-                        <span className="font-semibold">{eventLabel(a.event)}</span>
-                        <span className="text-muted">
-                          {' '}
-                          · {a.user?.name ?? 'Système'} · {formatDateTime(a.created_at)}
-                        </span>
-                      </li>
-                    ))}
-                  </ol>
-                )}
-              </Section>
+                  <Section title="Historique" id="s-historique">
+                    {e.audit.length === 0 ? (
+                      <p className="text-muted">Aucun événement.</p>
+                    ) : (
+                      <ol className="flex flex-col">
+                        {e.audit.map((a, i) => (
+                          <li
+                            key={i}
+                            className="relative border-l border-line py-2 pl-5 before:absolute before:top-3.5 before:-left-[5px] before:size-2.5 before:rounded-full before:bg-accent-text"
+                          >
+                            <span className="font-semibold">{eventLabel(a.event)}</span>
+                            <span className="block text-sm text-muted">
+                              {a.user?.name ?? 'Système'} · {formatDateTime(a.created_at)}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                  </Section>
+                </div>
+              </div>
 
               <ConfirmDialog
                 open={dialog === 'approve'}

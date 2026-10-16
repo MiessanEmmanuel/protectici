@@ -12,7 +12,6 @@ import { useResource } from '@/lib/use-async';
 import { formToObject, validate, type FieldErrors } from '@/lib/validation';
 import { SanitizedHtml } from '../../content/SanitizedHtml';
 import { Button } from '../../ui/Button';
-import { Card } from '../../ui/Card';
 import { Checkbox } from '../../ui/Checkbox';
 import { FileInput } from '../../ui/FileInput';
 import { FormError } from '../../ui/Field';
@@ -24,6 +23,7 @@ import { useToast } from '../../ui/Toast';
 import { POST_STATUS_LABELS } from './labels';
 import { RichTextEditor } from './RichTextEditor';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { Block, FormSection, POST_TONES, StatusDot } from './AdminKit';
 
 type Cover = { id: number; url: string; alt: string | null } | null;
 
@@ -118,75 +118,94 @@ function PostForm({ post, categories }: { post?: ContentPost; categories: (PostC
   }
 
   return (
-    <form method="post" onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-5">
-      <AdminPageHeader section="Contenu" title={post ? 'Modifier l’article' : 'Nouvel article'} />
+    <form method="post" onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-6">
+      <AdminPageHeader
+        section="Contenu"
+        title={post ? 'Modifier l’article' : 'Nouvel article'}
+        meta={<StatusDot tone={POST_TONES[status]}>{POST_STATUS_LABELS[status]}</StatusDot>}
+        actions={
+          <>
+            <Button type="button" variant="secondary" aria-pressed={preview} onClick={() => setPreview((v) => !v)}>
+              {preview ? 'Masquer l’aperçu' : 'Aperçu'}
+            </Button>
+            <Button type="submit" loading={busy}>Enregistrer</Button>
+          </>
+        }
+      />
       <FormError message={formError} />
-      <Input label="Titre" name="title" defaultValue={post?.title} maxLength={160} required error={errors.title} />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Select label="Catégorie" name="category_id" defaultValue={post?.category.id ?? ''} required error={errors.category_id}>
-          <option value="">Choisir…</option>
-          {categories.map((c) => (
-            <option key={c.slug} value={c.id}>{c.name}</option>
-          ))}
-        </Select>
-        <Select label="Statut" name="status" value={status} onChange={(e) => setStatus(e.target.value as typeof status)} error={errors.status}>
-          {Object.entries(POST_STATUS_LABELS).map(([v, l]) => (
-            <option key={v} value={v}>{l}</option>
-          ))}
-        </Select>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="flex min-w-0 flex-col gap-6">
+          <Block className="flex flex-col gap-4">
+            <Input label="Titre" name="title" defaultValue={post?.title} maxLength={160} required error={errors.title} />
+            <Textarea label="Résumé" name="excerpt" defaultValue={post?.excerpt ?? ''} maxLength={300} rows={3} error={errors.excerpt} />
+          </Block>
+          <RichTextEditor label="Contenu" value={post?.body ?? ''} onChange={setBody} error={errors.body} />
+          {preview ? (
+            <Block as="section" aria-label="Aperçu de l’article" className="text-ink">
+              <p className="mb-3 text-xs font-semibold tracking-[0.06em] text-muted uppercase">Aperçu</p>
+              {/* Aperçu local : HTML filtré par la liste blanche du contrat (l'API refait l'assainissement à l'enregistrement). */}
+              <SanitizedHtml html={sanitizeEditorHtml(body)} />
+            </Block>
+          ) : null}
+        </div>
+        <div className="flex min-w-0 flex-col gap-6">
+          <FormSection legend="Publication">
+            <Select label="Catégorie" name="category_id" defaultValue={post?.category.id ?? ''} required error={errors.category_id}>
+              <option value="">Choisir…</option>
+              {categories.map((c) => (
+                <option key={c.slug} value={c.id}>{c.name}</option>
+              ))}
+            </Select>
+            <Select label="Statut" name="status" value={status} onChange={(e) => setStatus(e.target.value as typeof status)} error={errors.status}>
+              {Object.entries(POST_STATUS_LABELS).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </Select>
+            {status === 'scheduled' || status === 'published' ? (
+              <Input
+                label="Date de publication (heure d’Abidjan)"
+                name="published_at"
+                type="datetime-local"
+                defaultValue={isoToLocalInput(post?.published_at)}
+                hint={status === 'scheduled' ? 'Obligatoire : l’article sera publié automatiquement à cette date.' : 'Laissez vide pour publier immédiatement.'}
+                error={errors.published_at}
+              />
+            ) : (
+              <input type="hidden" name="published_at" value="" />
+            )}
+            <div className="flex flex-col gap-1">
+              <Checkbox name="is_featured" label="Article à la une" defaultChecked={post?.is_featured} />
+              <Checkbox name="is_flash" label="Afficher dans le bandeau Flash info" defaultChecked={post?.is_flash} />
+            </div>
+          </FormSection>
+          <FormSection legend="Image de couverture">
+            {cover ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={cover.url} alt={cover.alt ?? ''} width={320} height={180} className="aspect-video w-full rounded-md object-cover" />
+            ) : null}
+            <FileInput
+              label={cover ? 'Remplacer la couverture' : 'Ajouter une couverture'}
+              rules={IMAGE_RULES}
+              onChange={(f, err) => {
+                setCoverFile(f);
+                setCoverError(err);
+              }}
+              error={coverError ?? undefined}
+            />
+            <Input label="Texte alternatif de la couverture" value={coverAlt} onChange={(e) => setCoverAlt(e.target.value)} maxLength={200} error={errors.cover_alt} />
+          </FormSection>
+          <FormSection legend="Référencement">
+            <Input label="Titre SEO" name="seo_title" defaultValue={post?.seo_title ?? ''} maxLength={70} error={errors.seo_title} />
+            <Input label="Description SEO" name="seo_description" defaultValue={post?.seo_description ?? ''} maxLength={160} error={errors.seo_description} />
+          </FormSection>
+        </div>
       </div>
-      {status === 'scheduled' || status === 'published' ? (
-        <Input
-          label="Date de publication (heure d’Abidjan)"
-          name="published_at"
-          type="datetime-local"
-          defaultValue={isoToLocalInput(post?.published_at)}
-          hint={status === 'scheduled' ? 'Obligatoire : l’article sera publié automatiquement à cette date.' : 'Laissez vide pour publier immédiatement.'}
-          error={errors.published_at}
-        />
-      ) : (
-        <input type="hidden" name="published_at" value="" />
-      )}
-      <Textarea label="Résumé" name="excerpt" defaultValue={post?.excerpt ?? ''} maxLength={300} rows={3} error={errors.excerpt} />
-      <RichTextEditor label="Contenu" value={post?.body ?? ''} onChange={setBody} error={errors.body} />
-      <fieldset className="flex flex-col gap-3 border-2 border-ink p-4">
-        <legend className="px-1 font-semibold">Image de couverture</legend>
-        {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover.url} alt={cover.alt ?? ''} width={320} height={180} className="aspect-video w-80 max-w-full object-cover" />
-        ) : null}
-        <FileInput
-          label={cover ? 'Remplacer la couverture' : 'Ajouter une couverture'}
-          rules={IMAGE_RULES}
-          onChange={(f, err) => {
-            setCoverFile(f);
-            setCoverError(err);
-          }}
-          error={coverError ?? undefined}
-        />
-        <Input label="Texte alternatif de la couverture" value={coverAlt} onChange={(e) => setCoverAlt(e.target.value)} maxLength={200} error={errors.cover_alt} />
-      </fieldset>
-      <div className="flex flex-col gap-1">
-        <Checkbox name="is_featured" label="Article à la une" defaultChecked={post?.is_featured} />
-        <Checkbox name="is_flash" label="Afficher dans le bandeau Flash info" defaultChecked={post?.is_flash} />
-      </div>
-      <fieldset className="grid gap-4 border-2 border-ink p-4 sm:grid-cols-2">
-        <legend className="px-1 font-semibold">Référencement</legend>
-        <Input label="Titre SEO" name="seo_title" defaultValue={post?.seo_title ?? ''} maxLength={70} error={errors.seo_title} />
-        <Input label="Description SEO" name="seo_description" defaultValue={post?.seo_description ?? ''} maxLength={160} error={errors.seo_description} />
-      </fieldset>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 border-t border-line pt-4">
         <Button type="submit" loading={busy}>Enregistrer</Button>
         <Button type="button" variant="secondary" aria-pressed={preview} onClick={() => setPreview((v) => !v)}>
           {preview ? 'Masquer l’aperçu' : 'Aperçu'}
         </Button>
       </div>
-      {preview ? (
-        <Card as="section" aria-label="Aperçu de l’article">
-          {/* Aperçu local : HTML filtré par la liste blanche du contrat (l'API refait l'assainissement à l'enregistrement). */}
-          <SanitizedHtml html={sanitizeEditorHtml(body)} />
-        </Card>
-      ) : null}
     </form>
   );
 }

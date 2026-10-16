@@ -18,7 +18,10 @@ interface ModerationOptions {
  * traité comme un état déjà atteint — la liste est rechargée sans erreur ; un 404 devient un
  * message clair. Les autres erreurs (403, 422, 429…) sont relancées pour être affichées.
  */
-export async function moderate(action: () => Promise<unknown>, o: ModerationOptions): Promise<void> {
+export async function moderate(
+  action: () => Promise<unknown>,
+  o: ModerationOptions,
+): Promise<void> {
   try {
     await action();
     o.notify(o.success);

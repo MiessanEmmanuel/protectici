@@ -21,6 +21,7 @@ import { StatusBadge } from '../../ui/StatusBadge';
 import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { Badge } from '../../ui/Tag';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { filterPanelClasses } from './panel';
 
 type Sort = '-submitted_at' | 'name';
 
@@ -54,13 +55,17 @@ export function AdminEstablishmentsList({
 
   return (
     <div className="flex flex-col gap-6">
-      <AdminPageHeader section="Annuaire" title="Établissements" />
+      <AdminPageHeader
+        section="Annuaire"
+        title="Établissements"
+        description="Prestataires privés et forces étatiques : validation, vérification et mise en avant des fiches."
+      />
 
       <form
         role="search"
         aria-label="Filtrer les établissements"
         onSubmit={submit}
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.6fr] border-2 border-ink bg-c4 p-3 sm:p-4"
+        className={`${filterPanelClasses} sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.6fr]`}
       >
         <Select
           label="Type"
@@ -147,13 +152,12 @@ export function AdminEstablishmentsList({
                         </Link>
                       </Td>
                       <Td>{TYPE_LABELS[row.type]}</Td>
-                      <Td>{row.city.name}</Td>
+                      <Td className="text-muted">{row.city.name}</Td>
                       <Td className="min-w-48">
                         {row.owner ? (
                           <>
-                            {row.owner.name}
-                            <br />
-                            <span className="text-muted">{row.owner.email}</span>
+                            <span className="block">{row.owner.name}</span>
+                            <span className="block text-sm text-muted">{row.owner.email}</span>
                           </>
                         ) : (
                           <span className="text-muted">Aucun</span>
@@ -166,7 +170,9 @@ export function AdminEstablishmentsList({
                           {row.is_featured ? <Badge tone="accent">À la une</Badge> : null}
                         </div>
                       </Td>
-                      <Td className="whitespace-nowrap">{formatDate(row.submitted_at)}</Td>
+                      <Td className="whitespace-nowrap text-muted">
+                        {formatDate(row.submitted_at)}
+                      </Td>
                     </Tr>
                   ))}
                 </tbody>

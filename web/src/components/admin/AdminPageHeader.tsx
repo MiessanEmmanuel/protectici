@@ -3,8 +3,9 @@ import { cn } from '../ui/cn';
 
 /**
  * En-tête de page de travail (administration, espace prestataire) : sobre et dense.
- * Libellé de rubrique en petites capitales, titre 900, description courte, actions alignées à droite,
- * le tout posé sur un filet 2 px encre. Pas d'aplat : l'écran de travail reste lisible.
+ * Libellé de rubrique en petites capitales, titre, description courte, actions alignées à droite,
+ * posé sur un filet. Dans l'administration (data-admin-theme), le filet devient discret (1 px,
+ * couleur --a-line) et les actions sont des pilules (styles/admin.css) ; ailleurs, style v9 inchangé.
  */
 export function AdminPageHeader({
   title,
@@ -26,7 +27,7 @@ export function AdminPageHeader({
   return (
     <header
       className={cn(
-        'flex flex-col gap-3 border-b-2 border-ink pb-4 sm:flex-row sm:items-end sm:justify-between',
+        'admin-page-header flex flex-col gap-3 border-b-2 border-ink pb-4 sm:flex-row sm:items-end sm:justify-between',
         className,
       )}
     >

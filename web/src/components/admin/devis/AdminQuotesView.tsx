@@ -46,11 +46,21 @@ export function AdminQuotesView({ initialStatus = '' }: { initialStatus?: QuoteS
 
   return (
     <div className="flex flex-col gap-6">
-      <AdminPageHeader section="Demandes" title="Demandes de devis" />
-      <p className="text-muted">
-        Les demandes sans prestataire choisi sont à acheminer vers un à cinq prestataires publiés.
-      </p>
-      <form onSubmit={search} role="search" className="flex flex-col gap-3 sm:flex-row sm:items-end border-2 border-ink bg-c4 p-3 sm:p-4">
+      <AdminPageHeader
+        section="Demandes"
+        title="Demandes de devis"
+        description={
+          <p>
+            Les demandes sans prestataire choisi sont à acheminer vers un à cinq prestataires publiés.
+          </p>
+        }
+      />
+      <form
+        onSubmit={search}
+        role="search"
+        aria-label="Filtrer les demandes"
+        className="flex flex-col gap-3 rounded-[var(--a-r-lg)] border border-line bg-white p-4 sm:flex-row sm:items-end sm:p-5"
+      >
         <Select
           label="Statut de la demande"
           value={status}
@@ -105,16 +115,16 @@ export function AdminQuotesView({ initialStatus = '' }: { initialStatus?: QuoteS
                     <Tr key={row.id}>
                       <Td className="font-semibold whitespace-nowrap">{row.reference}</Td>
                       <Td>
-                        {row.requester_name}
-                        <span className="block text-muted">{row.requester_email}</span>
+                        <span className="font-medium">{row.requester_name}</span>
+                        <span className="block text-sm text-muted">{row.requester_email}</span>
                       </Td>
                       <Td>{row.service.name}</Td>
                       <Td>{row.city.name}</Td>
-                      <Td>{row.recipients_count}</Td>
+                      <Td className="tabular-nums">{row.recipients_count}</Td>
                       <Td>
                         <StatusPill kind="quote" status={row.status} />
                       </Td>
-                      <Td className="whitespace-nowrap">{formatDateTime(row.created_at)}</Td>
+                      <Td className="whitespace-nowrap text-muted">{formatDateTime(row.created_at)}</Td>
                       <Td>
                         <Button
                           variant={selected === row.id ? 'primary' : 'secondary'}
@@ -141,9 +151,9 @@ export function AdminQuotesView({ initialStatus = '' }: { initialStatus?: QuoteS
           ref={detailRef}
           tabIndex={-1}
           aria-label="Détail de la demande"
-          className="scroll-mt-4 focus:outline-none"
+          className="scroll-mt-4 rounded-[var(--a-r-lg)] focus:outline-none"
         >
-          <Card className="flex flex-col gap-5">
+          <Card className="flex flex-col gap-6">
             <QuoteDetail
               key={selected}
               id={selected}

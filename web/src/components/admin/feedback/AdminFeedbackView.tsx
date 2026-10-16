@@ -60,13 +60,23 @@ export function AdminFeedbackView({ initialStatus = '' }: { initialStatus?: Feed
 
   return (
     <div className="flex flex-col gap-6">
-      <AdminPageHeader section="Demandes" title="Dis-moi tout" />
-      <p className="text-muted">
-        Retours des internautes sur les prestataires : encouragements, questions, plaintes et
-        suggestions. Ouvrez un dossier pour changer son statut, l’affecter et répondre.
-      </p>
+      <AdminPageHeader
+        section="Demandes"
+        title="Dis-moi tout"
+        description={
+          <p>
+            Retours des internautes sur les prestataires : encouragements, questions, plaintes et
+            suggestions. Ouvrez un dossier pour changer son statut, l’affecter et répondre.
+          </p>
+        }
+      />
 
-      <form onSubmit={search} role="search" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 border-2 border-ink bg-c4 p-3 sm:p-4">
+      <form
+        onSubmit={search}
+        role="search"
+        aria-label="Filtrer les dossiers"
+        className="grid gap-3 rounded-[var(--a-r-lg)] border border-line bg-white p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-4"
+      >
         <Select
           label="Statut du dossier"
           value={status}
@@ -149,8 +159,10 @@ export function AdminFeedbackView({ initialStatus = '' }: { initialStatus?: Feed
                     <Tr key={row.id}>
                       <Td className="font-semibold whitespace-nowrap">{row.reference}</Td>
                       <Td>
-                        {row.author.first_name} {row.author.last_name}
-                        <span className="block text-muted">{row.author.email}</span>
+                        <span className="font-medium">
+                          {row.author.first_name} {row.author.last_name}
+                        </span>
+                        <span className="block text-sm text-muted">{row.author.email}</span>
                       </Td>
                       <Td>{row.provider?.name ?? '—'}</Td>
                       <Td>{FEEDBACK_ACTION_LABELS[row.action_type]}</Td>
@@ -158,8 +170,10 @@ export function AdminFeedbackView({ initialStatus = '' }: { initialStatus?: Feed
                       <Td>
                         <StatusPill kind="feedback" status={row.status} />
                       </Td>
-                      <Td>{row.assigned_to?.name ?? 'Non affecté'}</Td>
-                      <Td className="whitespace-nowrap">{formatDateTime(row.created_at)}</Td>
+                      <Td className={row.assigned_to ? undefined : 'text-muted'}>
+                        {row.assigned_to?.name ?? 'Non affecté'}
+                      </Td>
+                      <Td className="whitespace-nowrap text-muted">{formatDateTime(row.created_at)}</Td>
                       <Td>
                         <Button
                           variant={selected === row.id ? 'primary' : 'secondary'}
@@ -186,9 +200,9 @@ export function AdminFeedbackView({ initialStatus = '' }: { initialStatus?: Feed
           ref={detailRef}
           tabIndex={-1}
           aria-label="Détail du dossier"
-          className="scroll-mt-4 focus:outline-none"
+          className="scroll-mt-4 rounded-[var(--a-r-lg)] focus:outline-none"
         >
-          <Card className="flex flex-col gap-5">
+          <Card className="flex flex-col gap-6">
             <FeedbackDetail
               key={selected}
               id={selected}

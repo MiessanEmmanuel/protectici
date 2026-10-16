@@ -2,12 +2,16 @@
 
 import {
   Building2,
+  Check,
+  ExternalLink,
   FilePen,
   FileSignature,
   FileText,
   Handshake,
   LayoutDashboard,
   ListTree,
+  LockKeyhole,
+  LogOut,
   Mail,
   Megaphone,
   Menu,
@@ -18,6 +22,7 @@ import {
   Settings,
   Star,
   Tags,
+  TriangleAlert,
   Users,
   X,
   type LucideIcon,
@@ -25,12 +30,14 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
-import { adminNavFor, type AdminNavItem } from '@/lib/admin-access';
+import { adminHomeFor, adminNavFor, type AdminNavItem } from '@/lib/admin-access';
+import { persistAdminTheme, type AdminTheme } from '@/lib/admin-theme';
 import { useSession } from '../layout/SessionProvider';
 import { cn } from '../ui/cn';
-import { Button } from '../ui/Button';
 import { AdminAccessGate } from './AdminAccessGate';
+import { AdminThemeToggle } from './AdminThemeToggle';
 import { NotificationBell } from './NotificationBell';
+import { navCounts, totalTodo, useAdminCounts } from './admin-counts';
 
 function isActive(pathname: string, href: string, exact?: boolean) {
   return exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
@@ -68,78 +75,180 @@ function groupNav(items: AdminNavItem[]) {
   return [...groups.entries()].sort(([a], [b]) => rank(a) - rank(b));
 }
 
-/** Cadre de la zone d'administration : garde d'accès, navigation latérale repliable, cloche. */
-export function AdminShell({ children }: { children: ReactNode }) {
+function initials(first?: string, last?: string): string {
+  return `${(first ?? '').trim().charAt(0)}${(last ?? '').trim().charAt(0)}`.toUpperCase() || '?';
+}
+
+/**
+ * Coquille de l'administration (maquette admin-v1) : thème clair/sombre scopé (data-admin-theme,
+ * sombre par défaut, choix mémorisé en cookie et relu côté serveur), barre latérale à rubriques,
+ * barre du haut (indicateurs, thème, notifications, compte), menu repliable sur mobile.
+ */
+export function AdminShell({
+  children,
+  initialTheme = 'dark',
+}: {
+  children: ReactNode;
+  initialTheme?: AdminTheme;
+}) {
+  const [theme, setTheme] = useState<AdminTheme>(initialTheme);
+
+  function toggleTheme() {
+    const next: AdminTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    persistAdminTheme(next);
+  }
+
+  return (
+    <div data-admin-theme={theme} className="admin-app">
+      <AdminAccessGate>
+        <AdminFrame theme={theme} onToggleTheme={toggleTheme}>
+          {children}
+        </AdminFrame>
+      </AdminAccessGate>
+    </div>
+  );
+}
+
+function AdminFrame({
+  children,
+  theme,
+  onToggleTheme,
+}: {
+  children: ReactNode;
+  theme: AdminTheme;
+  onToggleTheme: () => void;
+}) {
   const pathname = usePathname();
-  const { user } = useSession();
+  const { user, logout } = useSession();
   const nav = adminNavFor(user?.role);
+  const isAdmin = user?.role === 'admin';
+  const counts = useAdminCounts(isAdmin, pathname);
+  const perNav = navCounts(counts);
   // Le menu mobile se referme à chaque changement de page (état lié au chemin).
   const [openFor, setOpenFor] = useState<string | null>(null);
   const open = openFor === pathname;
   const zone = user?.role === 'editor' ? 'Gestion du contenu' : 'Administration';
+  const displayName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || 'Mon compte';
 
   return (
-    <AdminAccessGate>
-      <div className="wrap flex flex-col gap-5 py-6 lg:flex-row lg:items-start lg:gap-8 lg:py-8">
-        <aside className="border-2 border-ink bg-white lg:sticky lg:top-[calc(var(--spacing-header)+1rem)] lg:max-h-[calc(100dvh-var(--spacing-header)-2rem)] lg:w-64 lg:shrink-0 lg:overflow-y-auto">
-          <div className="flex items-center justify-between gap-3 bg-c3 px-4 py-2 text-on-c3">
-            <p className="eyebrow">{zone}</p>
-            <Button
-              variant="light"
-              size="sm"
-              className="lg:hidden"
-              aria-expanded={open}
-              aria-controls="menu-admin"
-              onClick={() => setOpenFor(open ? null : pathname)}
-            >
-              {open ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-              {open ? 'Fermer le menu' : 'Menu d’administration'}
-            </Button>
-          </div>
-          <nav
-            id="menu-admin"
-            aria-label="Administration"
-            className={cn('lg:block', open ? 'block' : 'hidden')}
+    <div className="admin-frame">
+      <a href="#contenu-admin" className="admin-skip">
+        Aller au contenu de l’administration
+      </a>
+      <aside className="admin-side" aria-label="Navigation de l’administration">
+        <div className="admin-side-head">
+          <Link href={adminHomeFor(user?.role)} className="admin-brand">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/elephant-icon-192.png" alt="" width={34} height={34} />
+            <span>
+              <span>PROTECT</span>
+              <b>ICI</b>
+              <small>{zone}</small>
+            </span>
+          </Link>
+          <button
+            type="button"
+            className="admin-burger"
+            aria-expanded={open}
+            aria-controls="menu-admin"
+            onClick={() => setOpenFor(open ? null : pathname)}
           >
-            {groupNav(nav).map(([group, items]) => (
-              <div key={group} className="border-t-2 border-ink first:border-t-0">
-                <p className="eyebrow px-4 pt-3 pb-1 text-ink-2" aria-hidden="true">
-                  {group}
-                </p>
-                <ul className="flex flex-col pb-2">
-                  {items.map((l) => {
-                    const active = isActive(pathname, l.href, l.exact);
-                    const Icon = NAV_META[l.href]?.icon;
-                    return (
-                      <li key={l.href}>
-                        <Link
-                          href={l.href}
-                          aria-current={active ? 'page' : undefined}
-                          className={cn(
-                            'flex min-h-tap items-center gap-2.5 border-l-4 px-3 text-sm no-underline [&_svg]:size-4 [&_svg]:shrink-0',
-                            active
-                              ? 'border-ink bg-c1 font-extrabold text-on-c1'
-                              : 'border-transparent font-semibold text-ink hover:border-ink hover:bg-c4',
-                          )}
-                        >
-                          {Icon ? <Icon aria-hidden="true" /> : null}
-                          {l.label}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </nav>
-        </aside>
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="flex justify-end">
-            <NotificationBell />
+            {open ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+            {open ? 'Fermer le menu' : 'Menu'}
+          </button>
+        </div>
+        <nav
+          id="menu-admin"
+          aria-label="Administration"
+          className={cn('admin-nav', open && 'admin-nav-open')}
+        >
+          {groupNav(nav).map(([group, items]) => (
+            <div key={group} className="admin-nav-group">
+              <p className="admin-nav-title" aria-hidden="true">
+                {group}
+              </p>
+              <ul>
+                {items.map((l) => {
+                  const active = isActive(pathname, l.href, l.exact);
+                  const Icon = NAV_META[l.href]?.icon;
+                  const count = perNav[l.href] ?? 0;
+                  return (
+                    <li key={l.href}>
+                      <Link
+                        href={l.href}
+                        aria-current={active ? 'page' : undefined}
+                        className="admin-nav-link"
+                      >
+                        {Icon ? <Icon aria-hidden="true" /> : null}
+                        <span className="min-w-0 flex-1">{l.label}</span>
+                        {count > 0 ? (
+                          <span className="admin-count">
+                            {count}
+                            <span className="sr-only"> à traiter</span>
+                          </span>
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
+        {user?.two_factor_enabled ? (
+          <div className="admin-promo">
+            <p className="admin-promo-title">Double authentification active</p>
+            <p>Votre session expire après 30 minutes d’inactivité.</p>
+            <Link href="/compte">
+              <LockKeyhole aria-hidden="true" />
+              Sécurité du compte
+            </Link>
           </div>
+        ) : null}
+      </aside>
+
+      <div className="admin-main">
+        <header className="admin-top">
+          {counts ? (
+            <ul className="admin-chips" aria-label="Indicateurs">
+              <li className="admin-chip">
+                <span className="admin-chip-dot">
+                  <TriangleAlert aria-hidden="true" />
+                </span>
+                {totalTodo(counts)} à traiter
+              </li>
+              <li className="admin-chip">
+                <span className="admin-chip-dot admin-chip-dot-ok">
+                  <Check aria-hidden="true" />
+                </span>
+                {counts.providers_approved + counts.state_forces_approved} fiches publiées
+              </li>
+            </ul>
+          ) : null}
+          <div className="admin-top-actions">
+            <Link href="/" className="admin-pill-link">
+              <ExternalLink aria-hidden="true" />
+              <span className="max-sm:sr-only">Voir le site</span>
+            </Link>
+            <AdminThemeToggle theme={theme} onToggle={onToggleTheme} />
+            <NotificationBell />
+            <Link href="/compte" className="admin-avatar" title={displayName}>
+              <span aria-hidden="true">
+                {initials(user?.first_name, user?.last_name)}
+              </span>
+              <span className="sr-only">Mon compte ({displayName})</span>
+            </Link>
+            <button type="button" className="admin-icon-btn" onClick={() => void logout()}>
+              <LogOut aria-hidden="true" />
+              <span className="sr-only">Déconnexion</span>
+            </button>
+          </div>
+        </header>
+        <div id="contenu-admin" tabIndex={-1} className="admin-page">
           {children}
         </div>
       </div>
-    </AdminAccessGate>
+    </div>
   );
 }

@@ -11,6 +11,7 @@ import { Input } from '../../ui/Input';
 import { QueryBoundary } from '../../ui/QueryBoundary';
 import { useToast } from '../../ui/Toast';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { FormSection } from './AdminKit';
 
 const LABELS: Record<string, string> = {
   'contact.phone': 'Téléphone',
@@ -79,11 +80,10 @@ export function AdminSettingsView() {
           <form method="post" onSubmit={(e) => void submit(e)} noValidate className="flex max-w-2xl flex-col gap-5">
             <FormError message={formError} />
             {settings.map((s) => (
-              <fieldset key={s.key} className="flex flex-col gap-2 border-2 border-ink p-4">
-                <legend className="px-1 font-semibold">{LABELS[s.key] ?? s.key}</legend>
+              <FormSection key={s.key} legend={LABELS[s.key] ?? s.key}>
                 <Input label="Valeur" name={`v:${s.key}`} defaultValue={s.value ?? ''} maxLength={255} error={errors[s.key]} />
                 <Checkbox name={`p:${s.key}`} label="Afficher publiquement sur le site" defaultChecked={s.is_public} />
-              </fieldset>
+              </FormSection>
             ))}
             <div><Button type="submit" loading={busy}>Enregistrer</Button></div>
           </form>

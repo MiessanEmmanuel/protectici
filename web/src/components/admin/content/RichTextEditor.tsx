@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef } from 'react';
 import { isSafeLink, sanitizeEditorHtml } from '@/lib/sanitize-html';
 import { Button } from '../../ui/Button';
+import { cn } from '../../ui/cn';
 
 /**
  * Éditeur riche sobre (contenteditable). Seules les mises en forme de la liste blanche du contrat
@@ -21,6 +22,9 @@ const TOOLS: { label: string; cmd: string; arg?: string }[] = [
   { label: 'Citation', cmd: 'formatBlock', arg: 'blockquote' },
   { label: 'Lien', cmd: 'link' },
 ];
+
+/** Index des outils précédés d'un espacement (groupes : style · blocs · listes · citation/lien). */
+const SEPARATED = new Set([2, 5, 7]);
 
 export function RichTextEditor({
   label,
@@ -58,39 +62,53 @@ export function RichTextEditor({
   return (
     <div className="flex flex-col gap-2">
       <span id={`${id}-label`} className="font-semibold">{label}</span>
-      <div role="toolbar" aria-label="Mise en forme" aria-controls={id} className="flex flex-wrap gap-2">
-        {TOOLS.map((t) => (
-          <Button
-            key={t.label}
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => (t.cmd === 'link' ? link() : exec(t.cmd, t.arg))}
-          >
-            {t.label}
-          </Button>
-        ))}
-      </div>
+      {/* Éditeur dans une carte arrondie : barre d'outils en pilules, zone de saisie dessous. */}
       <div
-        id={id}
-        ref={ref}
-        role="textbox"
-        aria-multiline="true"
-        aria-labelledby={`${id}-label`}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${id}-error` : undefined}
-        contentEditable
-        suppressContentEditableWarning
-        tabIndex={0}
-        onInput={emit}
-        onBlur={emit}
-        onPaste={(e) => {
-          // Collage en texte brut : aucun HTML externe n'entre dans l'éditeur.
-          e.preventDefault();
-          document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
-        }}
-        className="rich-text min-h-64 border-2 border-ink bg-surface p-3"
-      />
+        className={cn(
+          'rounded-lg border bg-white',
+          error ? 'border-danger' : 'border-line',
+        )}
+      >
+        <div
+          role="toolbar"
+          aria-label="Mise en forme"
+          aria-controls={id}
+          className="flex flex-wrap gap-1.5 rounded-t-lg border-b border-line bg-surface-alt p-2 sm:p-2.5"
+        >
+          {TOOLS.map((t, i) => (
+            <Button
+              key={t.label}
+              type="button"
+              variant="ghost"
+              size="sm"
+              className={cn(SEPARATED.has(i) && 'sm:ml-2')}
+              onClick={() => (t.cmd === 'link' ? link() : exec(t.cmd, t.arg))}
+            >
+              {t.label}
+            </Button>
+          ))}
+        </div>
+        <div
+          id={id}
+          ref={ref}
+          role="textbox"
+          aria-multiline="true"
+          aria-labelledby={`${id}-label`}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+          contentEditable
+          suppressContentEditableWarning
+          tabIndex={0}
+          onInput={emit}
+          onBlur={emit}
+          onPaste={(e) => {
+            // Collage en texte brut : aucun HTML externe n'entre dans l'éditeur.
+            e.preventDefault();
+            document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+          }}
+          className="rich-text min-h-64 rounded-b-lg bg-white p-4 text-ink focus-visible:-outline-offset-2 sm:p-5"
+        />
+      </div>
       {error ? <p id={`${id}-error`} className="text-sm text-danger">{error}</p> : null}
     </div>
   );

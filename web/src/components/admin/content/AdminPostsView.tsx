@@ -17,6 +17,7 @@ import { Badge } from '../../ui/Tag';
 import { useToast } from '../../ui/Toast';
 import { POST_STATUS_LABELS } from './labels';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { FilterPanel, POST_TONES, StatusDot } from './AdminKit';
 
 /** Liste des articles (tous statuts) du back-office de contenu. */
 export function AdminPostsView() {
@@ -34,28 +35,33 @@ export function AdminPostsView() {
       <AdminPageHeader
         section="Contenu"
         title="Articles du blog"
+        description="Rédigez, planifiez et publiez les articles du blog."
         actions={<ButtonLink href="/admin/blog/nouveau">Nouvel article</ButtonLink>}
       />
-      <Select
-        label="Filtrer par statut"
-        value={status}
-        wrapperClassName="sm:w-64"
-        onChange={(e) => {
-          setStatus(e.target.value as PostStatus | '');
-          setPage(1);
-        }}
-      >
-        <option value="">Tous les statuts</option>
-        {(Object.keys(POST_STATUS_LABELS) as PostStatus[]).map((s) => (
-          <option key={s} value={s}>
-            {POST_STATUS_LABELS[s]}
-          </option>
-        ))}
-      </Select>
+      <FilterPanel>
+        <Select
+          label="Filtrer par statut"
+          value={status}
+          wrapperClassName="sm:w-64"
+          onChange={(e) => {
+            setStatus(e.target.value as PostStatus | '');
+            setPage(1);
+          }}
+        >
+          <option value="">Tous les statuts</option>
+          {(Object.keys(POST_STATUS_LABELS) as PostStatus[]).map((s) => (
+            <option key={s} value={s}>
+              {POST_STATUS_LABELS[s]}
+            </option>
+          ))}
+        </Select>
+      </FilterPanel>
       <QueryBoundary state={list} loadingLabel="Chargement des articles…">
         {(res) =>
           res.data.length === 0 ? (
-            <EmptyState title="Aucun article" />
+            <EmptyState title="Aucun article">
+              {status ? 'Aucun article dans ce statut. Modifiez le filtre ou créez un article.' : 'Le blog ne contient encore aucun article.'}
+            </EmptyState>
           ) : (
             <>
               <Table caption="Articles du blog">
@@ -76,17 +82,19 @@ export function AdminPostsView() {
                         <Link href={`/admin/blog/${p.id}`} className="font-semibold">
                           {p.title}
                         </Link>
-                        <div className="flex gap-1 pt-1">
+                        <div className="flex flex-wrap gap-1 pt-1.5 empty:hidden">
                           {p.is_featured ? <Badge tone="accent">À la une</Badge> : null}
                           {p.is_flash ? <Badge>Flash info</Badge> : null}
                         </div>
                       </Td>
-                      <Td>{POST_STATUS_LABELS[p.status]}</Td>
-                      <Td>{p.category.name}</Td>
-                      <Td>{p.published_at ? formatDateTime(p.published_at) : '—'}</Td>
-                      <Td>{p.views_count}</Td>
                       <Td>
-                        <div className="flex gap-2">
+                        <StatusDot tone={POST_TONES[p.status]}>{POST_STATUS_LABELS[p.status]}</StatusDot>
+                      </Td>
+                      <Td>{p.category.name}</Td>
+                      <Td className="whitespace-nowrap text-muted">{p.published_at ? formatDateTime(p.published_at) : '—'}</Td>
+                      <Td className="tabular-nums">{p.views_count}</Td>
+                      <Td>
+                        <div className="flex flex-wrap gap-2">
                           <ButtonLink href={`/admin/blog/${p.id}`} variant="secondary" size="sm">
                             Modifier<span className="sr-only"> {p.title}</span>
                           </ButtonLink>

@@ -109,7 +109,7 @@ export function AdminProviderPicker({
             return (
               <li
                 key={p.id}
-                className="flex flex-wrap items-center justify-between gap-2 border-2 border-ink p-3"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--a-r-sm)] border border-line bg-surface-alt px-4 py-3"
               >
                 <span>
                   <span className="font-semibold">{p.name}</span>
@@ -139,7 +139,7 @@ export function AdminProviderPicker({
             {selected.map((p) => (
               <li
                 key={p.id}
-                className="flex flex-wrap items-center justify-between gap-2 bg-c4 p-3"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--a-pill)] border border-line bg-c4 py-2 pr-2 pl-4"
               >
                 <span className="font-semibold">{p.name}</span>
                 <Button

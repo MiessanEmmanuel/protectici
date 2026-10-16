@@ -75,9 +75,17 @@ export function AdminContactMessagesView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <AdminPageHeader section="Demandes" title="Messages de contact" />
-      <p className="text-muted">Messages reçus depuis le formulaire de contact du site.</p>
-      <form onSubmit={search} role="search" className="flex flex-col gap-3 sm:flex-row sm:items-end border-2 border-ink bg-c4 p-3 sm:p-4">
+      <AdminPageHeader
+        section="Demandes"
+        title="Messages de contact"
+        description={<p>Messages reçus depuis le formulaire de contact du site.</p>}
+      />
+      <form
+        onSubmit={search}
+        role="search"
+        aria-label="Filtrer les messages"
+        className="flex flex-col gap-3 rounded-[var(--a-r-lg)] border border-line bg-white p-4 sm:flex-row sm:items-end sm:p-5"
+      >
         <Select
           label="Statut des messages"
           value={status}
@@ -118,26 +126,37 @@ export function AdminContactMessagesView() {
               <ul className="flex flex-col gap-4">
                 {res.data.map((m) => (
                   <li key={m.id}>
-                    <Card as="article" aria-labelledby={`msg-${m.id}`} className="flex flex-col gap-3">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <h2 id={`msg-${m.id}`} className="text-lg heading-block break-words">
-                            {m.subject}
-                          </h2>
-                          <p className="text-sm text-muted">
-                            {m.name} ({m.email}) · {formatDateTime(m.created_at)}
-                          </p>
+                    <Card as="article" aria-labelledby={`msg-${m.id}`} className="flex flex-col gap-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <span
+                            aria-hidden="true"
+                            className="grid size-10 shrink-0 place-items-center rounded-full border border-line bg-surface-alt text-sm font-bold uppercase"
+                          >
+                            {m.name.trim().charAt(0) || '?'}
+                          </span>
+                          <div className="min-w-0">
+                            <h2 id={`msg-${m.id}`} className="text-lg heading-block break-words">
+                              {m.subject}
+                            </h2>
+                            <p className="text-sm break-words text-muted">
+                              <span className="font-medium text-ink">{m.name}</span> ({m.email}) ·{' '}
+                              {formatDateTime(m.created_at)}
+                            </p>
+                          </div>
                         </div>
                         <StatusPill kind="contact" status={m.status} />
                       </div>
-                      <p className="whitespace-pre-line break-words">{m.message}</p>
+                      <p className="rounded-[var(--a-r-md)] bg-surface-alt p-4 whitespace-pre-line break-words">
+                        {m.message}
+                      </p>
                       {m.handled_by ? (
                         <p className="text-sm text-muted">
                           Traité par {m.handled_by.name}
                           {m.handled_at ? ` le ${formatDateTime(m.handled_at)}` : ''}
                         </p>
                       ) : null}
-                      <div className="flex flex-wrap gap-3">
+                      <div className="flex flex-wrap gap-2 border-t border-line pt-4">
                         <Button
                           disabled={action.busy}
                           onClick={() => setReplying(m)}

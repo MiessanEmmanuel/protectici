@@ -7,7 +7,6 @@ import { formatDateTime } from '@/lib/format';
 import { ROLE_LABELS } from '@/lib/labels';
 import { useResource } from '@/lib/use-async';
 import { useSession } from '../../layout/SessionProvider';
-import { Badge } from '../../ui/Tag';
 import { Button } from '../../ui/Button';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { EmptyState } from '../../ui/EmptyState';
@@ -18,6 +17,7 @@ import { Select } from '../../ui/Select';
 import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { flattenError } from './flatten-error';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { StatusDot } from '../content/AdminKit';
 
 const ROLES = Object.keys(ROLE_LABELS) as Role[];
 
@@ -123,7 +123,7 @@ export function AdminUsersView() {
         role="search"
         aria-label="Filtrer les utilisateurs"
         onSubmit={apply}
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end border-2 border-ink bg-c4 p-3 sm:p-4"
+        className="grid gap-4 rounded-lg border border-line bg-white p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-4 lg:items-end"
         noValidate
       >
         <Input
@@ -155,7 +155,7 @@ export function AdminUsersView() {
           <option value="1">Actifs</option>
           <option value="0">Inactifs</option>
         </Select>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Button type="submit">Appliquer</Button>
           <Button variant="secondary" onClick={reset}>
             Réinitialiser
@@ -163,14 +163,16 @@ export function AdminUsersView() {
         </div>
       </form>
 
-      <p role="status" aria-live="polite" className="text-sm text-success">
+      <p role="status" aria-live="polite" className="text-sm font-semibold text-success empty:hidden">
         {notice}
       </p>
 
       <QueryBoundary state={state} loadingLabel="Chargement des utilisateurs…">
         {(list) =>
           list.data.length === 0 ? (
-            <EmptyState title="Aucun utilisateur ne correspond à ces filtres" />
+            <EmptyState title="Aucun utilisateur ne correspond à ces filtres">
+              Modifiez ou réinitialisez les filtres pour élargir la recherche.
+            </EmptyState>
           ) : (
             <div>
               <Table caption="Utilisateurs">
@@ -194,20 +196,28 @@ export function AdminUsersView() {
                     return (
                       <Tr key={u.id}>
                         <Td className="font-semibold">{fullName(u)}</Td>
-                        <Td className="break-all">{u.email}</Td>
+                        <Td className="break-all text-muted">{u.email}</Td>
                         <Td>{ROLE_LABELS[u.role]}</Td>
                         <Td>
-                          <Badge tone={u.is_active ? 'success' : 'danger'}>
+                          <StatusDot tone={u.is_active ? 'success' : 'danger'}>
                             {u.is_active ? 'Actif' : 'Inactif'}
-                          </Badge>
+                          </StatusDot>
                         </Td>
-                        <Td>{u.email_verified ? 'Oui' : 'Non'}</Td>
-                        <Td>{u.two_factor_enabled ? 'Activée' : 'Non'}</Td>
-                        <Td className="whitespace-nowrap">
+                        <Td>
+                          <StatusDot tone={u.email_verified ? 'success' : 'warning'}>
+                            {u.email_verified ? 'Oui' : 'Non'}
+                          </StatusDot>
+                        </Td>
+                        <Td>
+                          <StatusDot tone={u.two_factor_enabled ? 'success' : 'neutral'}>
+                            {u.two_factor_enabled ? 'Activée' : 'Non'}
+                          </StatusDot>
+                        </Td>
+                        <Td className="whitespace-nowrap text-muted">
                           {u.last_login_at ? formatDateTime(u.last_login_at) : 'Jamais'}
                         </Td>
-                        <Td>{u.establishments_count}</Td>
-                        <Td className="whitespace-nowrap">{formatDateTime(u.created_at)}</Td>
+                        <Td className="tabular-nums">{u.establishments_count}</Td>
+                        <Td className="whitespace-nowrap text-muted">{formatDateTime(u.created_at)}</Td>
                         <Td>
                           <div className="flex flex-wrap gap-2">
                             <Button

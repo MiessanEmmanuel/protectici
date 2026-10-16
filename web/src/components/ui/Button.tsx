@@ -41,7 +41,8 @@ export function buttonClasses(
   size: ButtonSize = 'md',
   extra?: string,
 ) {
-  return cn(base, variants[variant], sizes[size], extra);
+  // `ui-btn*` : classes repères sans style public (habillage propre à l'administration, styles/admin.css).
+  return cn('ui-btn', `ui-btn-${variant}`, base, variants[variant], sizes[size], extra);
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

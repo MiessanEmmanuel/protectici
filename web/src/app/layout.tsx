@@ -7,6 +7,7 @@ import { FlashBanner } from '@/components/layout/FlashBanner';
 import { Footer } from '@/components/layout/Footer';
 import { Header } from '@/components/layout/Header';
 import { MobileDock } from '@/components/layout/MobileDock';
+import { PublicChrome } from '@/components/layout/PublicChrome';
 import { SessionProvider } from '@/components/layout/SessionProvider';
 import { SkipLink } from '@/components/layout/SkipLink';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -51,13 +52,17 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <SessionProvider>
           <ToastProvider>
             <SkipLink />
-            <Header />
-            <FlashBanner items={flash ?? []} />
+            <PublicChrome>
+              <Header />
+              <FlashBanner items={flash ?? []} />
+            </PublicChrome>
             <main id="contenu" tabIndex={-1} className="outline-none">
               {children}
             </main>
-            <Footer />
-            <MobileDock />
+            <PublicChrome>
+              <Footer />
+              <MobileDock />
+            </PublicChrome>
             <CookieConsent />
           </ToastProvider>
         </SessionProvider>

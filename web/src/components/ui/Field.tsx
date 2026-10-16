@@ -79,4 +79,4 @@ export function FormSuccess({ message }: { message?: string | null }) {
 
 /** Contrôle v9 : filet 2 px encre, angles droits, 50 px de haut, fond sable au focus. */
 export const controlClasses =
-  'min-h-btn w-full border-2 border-ink bg-white px-3 text-base text-ink placeholder:text-ink-2 focus:bg-c4 aria-[invalid=true]:border-danger disabled:bg-c4 disabled:text-ink-2';
+  'ui-control min-h-btn w-full border-2 border-ink bg-white px-3 text-base text-ink placeholder:text-ink-2 focus:bg-c4 aria-[invalid=true]:border-danger disabled:bg-c4 disabled:text-ink-2';

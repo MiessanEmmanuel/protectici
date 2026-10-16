@@ -203,7 +203,8 @@ export function AdminEstablishmentEditForm({
   }
 
   return (
-    <form method="post"
+    <form
+      method="post"
       onSubmit={submit}
       noValidate
       className="flex flex-col gap-6"
@@ -338,7 +339,7 @@ export function AdminEstablishmentEditForm({
             <legend className="font-semibold">Dirigeants</legend>
             <FieldError id="executives-error" message={err('executives')} />
             {draft.executives.map((x, i) => (
-              <div key={i} className="grid gap-3 border-2 border-ink p-3 sm:grid-cols-2">
+              <div key={i} className="grid gap-3 rounded-md border border-line bg-surface-alt p-3 sm:grid-cols-2 sm:p-4">
                 <Input
                   label={`Nom du dirigeant ${i + 1}`}
                   required

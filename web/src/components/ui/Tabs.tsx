@@ -37,7 +37,7 @@ export function Tabs({ tabs, label, initial }: { tabs: TabDef[]; label: string; 
       <div
         role="tablist"
         aria-label={label}
-        className="flex overflow-x-auto overscroll-x-contain border-b-2 border-ink"
+        className="ui-tablist flex overflow-x-auto overscroll-x-contain border-b-2 border-ink"
       >
         {tabs.map((t, i) => {
           const selected = t.id === active;
@@ -56,7 +56,7 @@ export function Tabs({ tabs, label, initial }: { tabs: TabDef[]; label: string; 
               onClick={() => setActive(t.id)}
               onKeyDown={(e) => onKeyDown(e, i)}
               className={cn(
-                'min-h-tap shrink-0 px-4 text-sm font-extrabold whitespace-nowrap',
+                'ui-tab min-h-tap shrink-0 px-4 text-sm font-extrabold whitespace-nowrap',
                 selected
                   ? 'bg-ink text-white'
                   : 'text-ink-2 underline-offset-4 hover:text-ink hover:underline',

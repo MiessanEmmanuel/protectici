@@ -20,6 +20,7 @@ import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { Textarea } from '../../ui/Textarea';
 import { useToast } from '../../ui/Toast';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { FilterPanel, StatusDot } from './AdminKit';
 
 const TYPE_LABELS: Record<PartnerType, string> = { partner: 'Partenaire', client: 'Client' };
 
@@ -38,15 +39,17 @@ export function AdminPartnersView() {
         title="Partenaires et clients"
         actions={<Button onClick={() => setEditing('new')}>Ajouter</Button>}
       />
-      <Select label="Type" value={type} wrapperClassName="sm:w-64" onChange={(e) => setType(e.target.value as PartnerType | '')}>
-        <option value="">Tous</option>
-        <option value="partner">Partenaires</option>
-        <option value="client">Clients</option>
-      </Select>
+      <FilterPanel>
+        <Select label="Type" value={type} wrapperClassName="sm:w-64" onChange={(e) => setType(e.target.value as PartnerType | '')}>
+          <option value="">Tous</option>
+          <option value="partner">Partenaires</option>
+          <option value="client">Clients</option>
+        </Select>
+      </FilterPanel>
       <QueryBoundary state={list} loadingLabel="Chargement…">
         {(rows) =>
           rows.length === 0 ? (
-            <EmptyState title="Aucune entrée" />
+            <EmptyState title="Aucune entrée">Ajoutez un partenaire ou un client pour l’afficher sur le site.</EmptyState>
           ) : (
             <Table caption="Partenaires et clients">
               <THead>
@@ -57,10 +60,12 @@ export function AdminPartnersView() {
                   <Tr key={p.id}>
                     <Td className="font-semibold">{p.name}</Td>
                     <Td>{TYPE_LABELS[p.type]}</Td>
-                    <Td>{p.sort_order}</Td>
-                    <Td>{p.is_visible ? 'Oui' : 'Non'}</Td>
+                    <Td className="tabular-nums">{p.sort_order}</Td>
                     <Td>
-                      <div className="flex gap-2">
+                      <StatusDot tone={p.is_visible ? 'success' : 'neutral'}>{p.is_visible ? 'Oui' : 'Non'}</StatusDot>
+                    </Td>
+                    <Td>
+                      <div className="flex flex-wrap gap-2">
                         <Button size="sm" variant="secondary" onClick={() => setEditing(p)}>
                           Modifier<span className="sr-only"> {p.name}</span>
                         </Button>
@@ -137,7 +142,7 @@ function PartnerForm({ partner, onDone }: { partner?: ContentPartner; onDone: ()
   }
 
   return (
-    <form method="post" onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-3">
+    <form method="post" onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
       <FormError message={formError} />
       <Select label="Type" name="type" defaultValue={partner?.type ?? 'partner'} error={errors.type}>
         <option value="partner">Partenaire</option>

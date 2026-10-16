@@ -1,6 +1,18 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { createElement, useState, type FormEvent } from 'react';
+import {
+  BadgeCheck,
+  FileText,
+  KeyRound,
+  LogIn,
+  Pencil,
+  ScrollText,
+  ShieldAlert,
+  Trash2,
+  UserPlus,
+  type LucideIcon,
+} from 'lucide-react';
 import { clientApi } from '@/lib/api/client';
 import type { AdminAuditLog, AuditLogQuery } from '@/lib/api/types';
 import { formatDateTime } from '@/lib/format';
@@ -12,9 +24,9 @@ import { Input } from '../../ui/Input';
 import { PagerButtons } from '../../ui/PagerButtons';
 import { QueryBoundary } from '../../ui/QueryBoundary';
 import { Select } from '../../ui/Select';
-import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { auditJson } from './redact';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { FILTER_PANEL } from '../content/AdminKit';
 
 /** Clés du morph map de l'API (liste blanche côté serveur). */
 const TYPE_LABELS: Record<string, string> = {
@@ -44,6 +56,20 @@ interface Filters {
 }
 const EMPTY: Filters = { event: '', user_id: '', auditable_type: '', from: '', to: '' };
 type Errors = Partial<Record<keyof Filters, string>>;
+
+/** Icône indicative de l'événement (décorative : le libellé français porte le sens). */
+function eventIcon(event: string): LucideIcon {
+  const e = event.toLowerCase();
+  if (/login|logout|session/.test(e)) return LogIn;
+  if (/password|two_factor|2fa|token/.test(e)) return KeyRound;
+  if (/fail|denied|block|lock|suspend|spam|reject/.test(e)) return ShieldAlert;
+  if (/delet|anonymi|purge/.test(e)) return Trash2;
+  if (/approv|validat|publish|confirm|verif/.test(e)) return BadgeCheck;
+  if (/creat|regist|signup/.test(e)) return UserPlus;
+  if (/download|document|export/.test(e)) return FileText;
+  if (/updat|chang|edit|role/.test(e)) return Pencil;
+  return ScrollText;
+}
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 function validDate(v: string): boolean {
@@ -115,7 +141,7 @@ export function AdminAuditView() {
         aria-label="Filtrer le journal"
         onSubmit={apply}
         noValidate
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 border-2 border-ink bg-c4 p-3 sm:p-4"
+        className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${FILTER_PANEL}`}
       >
         <Input
           label="Événement"
@@ -164,7 +190,7 @@ export function AdminAuditView() {
           maxLength={10}
           autoComplete="off"
         />
-        <div className="flex items-end gap-3">
+        <div className="flex flex-wrap items-end gap-3">
           <Button type="submit">Appliquer</Button>
           <Button variant="secondary" onClick={reset}>
             Réinitialiser
@@ -175,26 +201,27 @@ export function AdminAuditView() {
       <QueryBoundary state={state} loadingLabel="Chargement du journal…">
         {(list) =>
           list.data.length === 0 ? (
-            <EmptyState title="Aucune entrée ne correspond à ces filtres" />
+            <EmptyState title="Aucune entrée ne correspond à ces filtres">
+              Modifiez ou réinitialisez les filtres pour élargir la recherche.
+            </EmptyState>
           ) : (
-            <div>
-              <Table caption="Journal d’audit">
-                <THead>
-                  <Tr>
-                    <Th>Date (UTC)</Th>
-                    <Th>Événement</Th>
-                    <Th>Utilisateur</Th>
-                    <Th>Objet</Th>
-                    <Th>Adresse IP</Th>
-                    <Th>Détail</Th>
-                  </Tr>
-                </THead>
-                <tbody>
+            <div className="flex flex-col gap-4">
+              <section
+                aria-labelledby="audit-list-title"
+                className="rounded-lg border border-line bg-white p-4 sm:p-6"
+              >
+                <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 id="audit-list-title" className="text-lg font-bold">
+                    Événements
+                  </h2>
+                  <p className="text-sm text-muted">Dates en UTC</p>
+                </div>
+                <ul className="flex flex-col divide-y divide-line-soft">
                   {list.data.map((l) => (
                     <LogRow key={l.id} log={l} />
                   ))}
-                </tbody>
-              </Table>
+                </ul>
+              </section>
               <PagerButtons meta={list.meta} onPage={setPage} disabled={state.loading} />
             </div>
           )
@@ -207,44 +234,61 @@ export function AdminAuditView() {
 function LogRow({ log }: { log: AdminAuditLog }) {
   const hasDetail = log.old_values !== null || log.new_values !== null;
   return (
-    <Tr>
-      <Td className="whitespace-nowrap">{formatDateTime(log.created_at)}</Td>
-      <Td>
-        <div>{eventLabel(log.event)}</div>
-        <div className="text-xs text-muted">{log.event}</div>
-      </Td>
-      <Td>{log.user ? `${log.user.name} (n° ${log.user.id})` : 'Système'}</Td>
-      <Td className="whitespace-nowrap">
-        {TYPE_LABELS[log.auditable_type] ?? log.auditable_type} n° {log.auditable_id}
-      </Td>
-      <Td className="whitespace-nowrap">{log.ip_address ?? '—'}</Td>
-      <Td>
+    <li className="flex gap-3 py-3">
+      <span
+        aria-hidden="true"
+        className="grid size-9 shrink-0 place-items-center rounded-pill border border-line bg-surface-alt text-ink"
+      >
+        {createElement(eventIcon(log.event), { className: 'size-4' })}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <p className="font-semibold text-ink">{eventLabel(log.event)}</p>
+          <time dateTime={log.created_at} className="text-sm whitespace-nowrap text-muted">
+            {formatDateTime(log.created_at)}
+          </time>
+        </div>
+        <p className="font-mono text-xs text-muted">{log.event}</p>
+        <dl className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
+          <div className="flex gap-1">
+            <dt>Utilisateur :</dt>
+            <dd className="text-ink">{log.user ? `${log.user.name} (n° ${log.user.id})` : 'Système'}</dd>
+          </div>
+          <div className="flex gap-1">
+            <dt>Objet :</dt>
+            <dd className="text-ink">
+              {TYPE_LABELS[log.auditable_type] ?? log.auditable_type} n° {log.auditable_id}
+            </dd>
+          </div>
+          <div className="flex gap-1">
+            <dt>Adresse IP :</dt>
+            <dd className="text-ink">{log.ip_address ?? '—'}</dd>
+          </div>
+        </dl>
         {hasDetail ? (
-          <details>
-            <summary className="min-h-tap cursor-pointer py-2">Voir le détail</summary>
-            <div className="flex flex-col gap-3">
+          <details className="mt-1">
+            <summary className="min-h-tap cursor-pointer py-2 text-sm font-semibold">Voir le détail</summary>
+            <div className="grid gap-3 sm:grid-cols-2">
               {log.old_values !== null ? (
-                <div>
-                  <p className="font-semibold">Avant</p>
-                  <pre className="max-w-md overflow-x-auto bg-c4 p-2 text-xs">
+                <div className="min-w-0">
+                  <p className="mb-1 text-sm font-semibold">Avant</p>
+                  <pre className="overflow-x-auto rounded-md border border-line bg-surface-alt p-3 text-xs">
                     {auditJson(log.old_values)}
                   </pre>
                 </div>
               ) : null}
               {log.new_values !== null ? (
-                <div>
-                  <p className="font-semibold">Après</p>
-                  <pre className="max-w-md overflow-x-auto bg-c4 p-2 text-xs">
+                <div className="min-w-0">
+                  <p className="mb-1 text-sm font-semibold">Après</p>
+                  <pre className="overflow-x-auto rounded-md border border-line bg-surface-alt p-3 text-xs">
                     {auditJson(log.new_values)}
                   </pre>
                 </div>
               ) : null}
             </div>
           </details>
-        ) : (
-          <span className="text-muted">—</span>
-        )}
-      </Td>
-    </Tr>
+        ) : null}
+      </div>
+    </li>
   );
 }

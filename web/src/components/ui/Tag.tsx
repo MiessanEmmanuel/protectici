@@ -6,7 +6,7 @@ export function Tag({ children, className }: { children: ReactNode; className?: 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 border-2 border-current px-2 py-0.5 text-sm font-bold',
+        'ui-tag inline-flex items-center gap-1.5 border-2 border-current px-2 py-0.5 text-sm font-bold',
         className,
       )}
     >
@@ -41,11 +41,14 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 px-2 py-1 eyebrow whitespace-nowrap [&_svg]:size-[1.3em]',
+        'ui-badge inline-flex items-center gap-1.5 px-2 py-1 eyebrow whitespace-nowrap [&_svg]:size-[1.3em]',
+        `ui-badge-${tone}`,
         tones[tone],
         className,
       )}
     >
+      {/* Pastille de couleur : visible seulement dans le thème d'administration (styles/admin.css). */}
+      <span className="ui-badge-dot" aria-hidden="true" />
       {children}
     </span>
   );

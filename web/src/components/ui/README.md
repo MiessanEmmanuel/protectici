@@ -28,4 +28,11 @@ Référence visuelle : `design/maquette/landing-v9.html` · règles : `design.md
 | `InlineField` + `inlineControlClasses` | Cellule de barre de recherche (hero) : libellé capitales + champ sans bord. |
 | `Card` | Bloc blanc à filet 2 px. |
 
+## Thème de l'administration (maquette `design/maquette/admin-v1.html`)
+
+- `styles/admin.css`, entièrement scopé sous `[data-admin-theme="dark|light"]` (posé par `AdminShell`) : jetons `--a-*` (fonds, filets, texte, or, bleu, rayons `--a-r-lg/md/sm`, `--a-pill`) et redéfinition des jetons Tailwind (`--color-white` = panneau, `--color-ink` = texte, `--color-c4` = carte…) dans la coquille. Aucun effet sur les pages publiques.
+- Sombre par défaut ; cookie `pi_admin_theme` (`lib/admin-theme.ts`) lu côté serveur par `app/admin/layout.tsx`.
+- Classes repères sans style public, habillées dans l'admin : `ui-btn` + `ui-btn-<variante>`, `ui-badge` + `ui-badge-<ton>` (+ `ui-badge-dot`, masquée hors admin), `ui-tag`, `ui-control`, `ui-card`, `ui-subcard`, `ui-empty`, `ui-table`/`ui-thead`/`ui-th`, `ui-tablist`/`ui-tab`, `ui-modal`/`ui-modal-head`.
+- `Card variant="subcard"` : sous-carte arrondie (`--a-r-md`) sur `bg-surface-alt` ; angles droits hors admin.
+
 Mise en page : `components/layout` (`Header`/`Logo`, `HeaderNav` + `nav-links.ts`, `FlashBanner`, `Footer`, `MobileDock`). Hooks : `lib/use-reduced-motion.ts`, `lib/geolocation.ts` (position sur action explicite seulement).

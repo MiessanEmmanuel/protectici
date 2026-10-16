@@ -17,7 +17,7 @@ export function Table({
 }) {
   return (
     <div
-      className="max-w-full overflow-x-auto overscroll-x-contain border-2 border-ink bg-white"
+      className="ui-table max-w-full overflow-x-auto overscroll-x-contain border-2 border-ink bg-white"
       tabIndex={0}
       role="region"
       aria-label={caption}
@@ -31,7 +31,7 @@ export function Table({
 }
 
 export function THead({ children }: { children: ReactNode }) {
-  return <thead className="bg-c4 text-on-c4">{children}</thead>;
+  return <thead className="ui-thead bg-c4 text-on-c4">{children}</thead>;
 }
 
 export function Th({ className, ...rest }: ThHTMLAttributes<HTMLTableCellElement>) {
@@ -39,7 +39,7 @@ export function Th({ className, ...rest }: ThHTMLAttributes<HTMLTableCellElement
     <th
       scope="col"
       className={cn(
-        'eyebrow border-b-2 border-ink px-3 py-2.5 align-bottom whitespace-nowrap',
+        'ui-th eyebrow border-b-2 border-ink px-3 py-2.5 align-bottom whitespace-nowrap',
         className,
       )}
       {...rest}

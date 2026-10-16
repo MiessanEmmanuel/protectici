@@ -17,6 +17,7 @@ import { Select } from '../../ui/Select';
 import { useToast } from '../../ui/Toast';
 import { RichTextEditor } from './RichTextEditor';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { Block, FilterPanel, FormSection, Notice, StatusDot } from './AdminKit';
 
 const PAGES = [
   { slug: 'qui-sommes-nous', label: 'Qui sommes-nous' },
@@ -31,11 +32,13 @@ export function AdminPagesView() {
   return (
     <div className="flex flex-col gap-6">
       <AdminPageHeader section="Contenu" title="Pages institutionnelles" />
-      <Select label="Page" value={slug} onChange={(e) => setSlug(e.target.value)} wrapperClassName="sm:w-80">
-        {PAGES.map((p) => (
-          <option key={p.slug} value={p.slug}>{p.label}</option>
-        ))}
-      </Select>
+      <FilterPanel>
+        <Select label="Page" value={slug} onChange={(e) => setSlug(e.target.value)} wrapperClassName="sm:w-80">
+          {PAGES.map((p) => (
+            <option key={p.slug} value={p.slug}>{p.label}</option>
+          ))}
+        </Select>
+      </FilterPanel>
       <PageEditor key={slug} slug={slug} />
     </div>
   );
@@ -80,24 +83,35 @@ function PageEditor({ slug }: { slug: string }) {
     <QueryBoundary state={state} loadingLabel="Chargement de la page…">
       {(page) =>
         canEdit ? (
-          <form method="post" onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
+          <form method="post" onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-5">
             <FormError message={formError} />
-            <Input label="Titre" name="title" defaultValue={page.title} maxLength={160} required error={errors.title} />
-            <RichTextEditor label="Contenu" value={page.body} onChange={setBody} error={errors.body} />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Input label="Titre SEO" name="seo_title" defaultValue={page.seo_title ?? ''} maxLength={70} error={errors.seo_title} />
-              <Input label="Description SEO" name="seo_description" defaultValue={page.seo_description ?? ''} maxLength={160} error={errors.seo_description} />
-            </div>
-            <Checkbox name="is_visible" label="Page visible sur le site" defaultChecked={page.is_visible} />
+            <FormSection legend="Contenu de la page">
+              <Input label="Titre" name="title" defaultValue={page.title} maxLength={160} required error={errors.title} />
+              <RichTextEditor label="Contenu" value={page.body} onChange={setBody} error={errors.body} />
+            </FormSection>
+            <FormSection legend="Référencement et visibilité">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Input label="Titre SEO" name="seo_title" defaultValue={page.seo_title ?? ''} maxLength={70} error={errors.seo_title} />
+                <Input label="Description SEO" name="seo_description" defaultValue={page.seo_description ?? ''} maxLength={160} error={errors.seo_description} />
+              </div>
+              <Checkbox name="is_visible" label="Page visible sur le site" defaultChecked={page.is_visible} />
+            </FormSection>
             <div><Button type="submit" loading={busy}>Enregistrer</Button></div>
           </form>
         ) : (
-          <div className="flex flex-col gap-3">
-            <p className="border-2 border-ink bg-c4 p-3">
+          <div className="flex flex-col gap-4">
+            <Notice>
               Lecture seule : la modification des pages institutionnelles est réservée aux administrateurs.
-            </p>
-            <h2 className="text-xl heading-block">{page.title}</h2>
-            <p className="text-sm text-muted">{page.seo_description ?? 'Aucune description SEO.'}</p>
+            </Notice>
+            <Block className="flex flex-col gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-bold break-words">{page.title}</h2>
+                <StatusDot tone={page.is_visible ? 'success' : 'neutral'}>
+                  {page.is_visible ? 'Visible' : 'Masquée'}
+                </StatusDot>
+              </div>
+              <p className="text-sm text-muted">{page.seo_description ?? 'Aucune description SEO.'}</p>
+            </Block>
           </div>
         )
       }

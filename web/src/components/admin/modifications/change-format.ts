@@ -48,7 +48,11 @@ function names(ids: unknown[], options: { id: number; name: string }[] | undefin
  * Valeur d'une demande de modification en texte lisible : null → « (vide) », booléen → Oui/Non,
  * tableaux → liste, identifiants → noms quand le référentiel est chargé.
  */
-export function formatChangeValue(field: string, value: unknown, reference?: ReferenceData | null): string {
+export function formatChangeValue(
+  field: string,
+  value: unknown,
+  reference?: ReferenceData | null,
+): string {
   if (value === null || value === undefined || value === '') return EMPTY_VALUE;
   if (typeof value === 'boolean') return value ? 'Oui' : 'Non';
   if (Array.isArray(value)) {
@@ -59,13 +63,18 @@ export function formatChangeValue(field: string, value: unknown, reference?: Ref
       procedure_type_ids: reference?.procedure_types,
     };
     if (field in lists) return names(value, lists[field]);
-    return value.map((v) => (typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v))).join(', ');
+    return value
+      .map((v) => (typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v)))
+      .join(', ');
   }
   if (typeof value === 'number' || typeof value === 'string') {
     if (field === 'force_type_id') return names([value], reference?.state_force_types);
     if (field === 'city_id') return names([value], reference?.cities);
     if (field === 'district_id') {
-      return names([value], reference?.cities.flatMap((c) => c.districts));
+      return names(
+        [value],
+        reference?.cities.flatMap((c) => c.districts),
+      );
     }
     return String(value);
   }

@@ -76,12 +76,13 @@ export function QuoteDetail({
     <QueryBoundary state={detail} loadingLabel="Chargement de la demande…">
       {(q) => (
         <>
-          <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line pb-4">
             <div>
+              <p className="eyebrow text-muted">Demande de devis</p>
               <h2 className="text-xl heading-block">Demande {q.reference}</h2>
               <p className="text-sm text-muted">Reçue le {formatDateTime(q.created_at)}</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <StatusPill kind="quote" status={q.status} />
               <Button variant="ghost" onClick={onClose}>
                 Fermer la demande
@@ -89,7 +90,7 @@ export function QuoteDetail({
             </div>
           </div>
 
-          <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+          <dl className="grid gap-x-6 gap-y-3 rounded-[var(--a-r-md)] bg-surface-alt p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-4">
             <Info label="Demandeur">{q.requester_name}</Info>
             <Info label="E-mail">{q.requester_email}</Info>
             <Info label="Téléphone">{formatPhone(q.phone)}</Info>
@@ -101,9 +102,11 @@ export function QuoteDetail({
             </Info>
             <Info label="Budget">{q.budget_range ?? '—'}</Info>
           </dl>
-          <div>
+          <div className="flex flex-col gap-2">
             <h3 className="font-semibold">Besoin exprimé</h3>
-            <p className="mt-1 whitespace-pre-line break-words">{q.description}</p>
+            <blockquote className="rounded-[var(--a-r-md)] border-l-4 border-l-[var(--a-gold)] bg-surface-alt p-4 whitespace-pre-line break-words">
+              {q.description}
+            </blockquote>
           </div>
 
           <Select
@@ -127,11 +130,13 @@ export function QuoteDetail({
               Destinataires ({q.recipients.length})
             </h3>
             {q.recipients.length === 0 ? (
-              <p className="text-muted">Cette demande n’a encore été transmise à aucun prestataire.</p>
+              <p className="rounded-[var(--a-r-md)] border border-dashed border-line p-4 text-muted">
+                Cette demande n’a encore été transmise à aucun prestataire.
+              </p>
             ) : (
               <ul className="flex flex-col gap-3">
                 {q.recipients.map((r) => (
-                  <li key={r.id} className="border-2 border-ink p-3">
+                  <li key={r.id} className="rounded-[var(--a-r-md)] border border-line bg-surface-alt p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="font-semibold">{r.provider.name}</p>
                       <StatusPill kind="recipient" status={r.status} />
@@ -142,10 +147,12 @@ export function QuoteDetail({
                       {r.replied_at ? ` · répondue le ${formatDateTime(r.replied_at)}` : ''}
                     </p>
                     {r.response_message ? (
-                      <p className="mt-2 whitespace-pre-line break-words">{r.response_message}</p>
+                      <p className="mt-3 rounded-[var(--a-r-sm)] bg-c4 p-3 whitespace-pre-line break-words">
+                        {r.response_message}
+                      </p>
                     ) : null}
                     {r.quoted_amount !== null ? (
-                      <p className="mt-1 font-semibold">Montant proposé : {formatFcfa(r.quoted_amount)}</p>
+                      <p className="mt-2 font-semibold tabular-nums">Montant proposé : {formatFcfa(r.quoted_amount)}</p>
                     ) : null}
                   </li>
                 ))}
@@ -153,7 +160,10 @@ export function QuoteDetail({
             )}
           </section>
 
-          <section aria-labelledby="acheminer" className="flex flex-col gap-3">
+          <section
+            aria-labelledby="acheminer"
+            className="flex flex-col gap-3 rounded-[var(--a-r-md)] border border-line p-4 sm:p-5"
+          >
             <h3 id="acheminer" className="font-semibold">
               Acheminer à des prestataires
             </h3>
@@ -192,8 +202,8 @@ export function QuoteDetail({
 
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <dt className="text-sm text-muted">{label}</dt>
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <dt className="text-xs font-semibold tracking-wide text-muted uppercase">{label}</dt>
       <dd className="break-words">{children}</dd>
     </div>
   );

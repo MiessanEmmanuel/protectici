@@ -14,6 +14,13 @@ import { Select } from '../../ui/Select';
 import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { SUBSCRIBER_STATUS_LABELS } from './labels';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { FILTER_PANEL, FILTER_ROW, StatusDot, type DotTone } from './AdminKit';
+
+const STATUS_TONES: Record<NewsletterStatus, DotTone> = {
+  pending: 'warning',
+  confirmed: 'success',
+  unsubscribed: 'neutral',
+};
 
 /** Abonnés à la lettre d'information (lecture seule ; données personnelles : écran réservé aux administrateurs). */
 export function AdminNewsletterView() {
@@ -35,7 +42,7 @@ export function AdminNewsletterView() {
   return (
     <div className="flex flex-col gap-6">
       <AdminPageHeader section="Site" title="Newsletter" />
-      <form onSubmit={search} role="search" className="flex flex-col gap-3 sm:flex-row sm:items-end border-2 border-ink bg-c4 p-3 sm:p-4">
+      <form onSubmit={search} role="search" className={`${FILTER_PANEL} ${FILTER_ROW}`}>
         <Select label="Statut" value={status} wrapperClassName="sm:w-64" onChange={(e) => { setStatus(e.target.value as NewsletterStatus | ''); setPage(1); }}>
           <option value="">Tous</option>
           {(Object.keys(SUBSCRIBER_STATUS_LABELS) as NewsletterStatus[]).map((s) => (
@@ -48,7 +55,7 @@ export function AdminNewsletterView() {
       <QueryBoundary state={list} loadingLabel="Chargement des abonnés…">
         {(res) =>
           res.data.length === 0 ? (
-            <EmptyState title="Aucun abonné" />
+            <EmptyState title="Aucun abonné">Aucune adresse ne correspond à ces critères.</EmptyState>
           ) : (
             <>
               <Table caption="Abonnés à la lettre d’information">
@@ -58,11 +65,11 @@ export function AdminNewsletterView() {
                 <tbody>
                   {res.data.map((s) => (
                     <Tr key={s.id}>
-                      <Td>{s.email}</Td>
-                      <Td>{SUBSCRIBER_STATUS_LABELS[s.status]}</Td>
+                      <Td className="font-semibold break-all">{s.email}</Td>
+                      <Td><StatusDot tone={STATUS_TONES[s.status]}>{SUBSCRIBER_STATUS_LABELS[s.status]}</StatusDot></Td>
                       <Td>{s.source ?? '—'}</Td>
-                      <Td>{formatDateTime(s.created_at)}</Td>
-                      <Td>{s.confirmed_at ? formatDateTime(s.confirmed_at) : '—'}</Td>
+                      <Td className="whitespace-nowrap text-muted">{formatDateTime(s.created_at)}</Td>
+                      <Td className="whitespace-nowrap text-muted">{s.confirmed_at ? formatDateTime(s.confirmed_at) : '—'}</Td>
                     </Tr>
                   ))}
                 </tbody>
