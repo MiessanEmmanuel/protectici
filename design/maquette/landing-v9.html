@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="fr" data-palette="logo">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProtectIci — Maquette accueil v9 (hero en image de fond + actualités illustrées)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Skill ui-ux-pro-max : style « Vibrant & Block-based » / « Flat Design ».
+   Aplats de couleur pleins, 4 à 6 couleurs maximum, aucun dégradé, aucune ombre, angles droits.
+   Trois palettes au choix (sélecteur en bas à droite), contrastes texte ≥ 4,5:1. */
+:root,[data-palette="logo"]{
+  --c1:#0343A4; --on-c1:#fff;          /* aplat principal : bleu du logo */
+  --c2:#EAAB13; --on-c2:#0d1b2a;       /* aplat d'accent : or du logo (texte foncé uniquement) */
+  --c3:#0d1b2a; --on-c3:#fff;          /* aplat profond : nuit */
+  --c4:#f3eee4; --on-c4:#0d1b2a;       /* aplat doux : sable */
+  --link:#0343A4;
+}
+[data-palette="signal"]{
+  --c1:#0b2545; --on-c1:#fff;
+  --c2:#f26b1d; --on-c2:#111;
+  --c3:#111111; --on-c3:#fff;
+  --c4:#eef1f4; --on-c4:#0b2545;
+  --link:#0b4fae;
+}
+[data-palette="ivoire"]{
+  --c1:#0f6b43; --on-c1:#fff;          /* vert */
+  --c2:#f28c28; --on-c2:#111;          /* orange */
+  --c3:#0343A4; --on-c3:#fff;          /* bleu du logo */
+  --c4:#f6f3ec; --on-c4:#13261d;
+  --link:#0d5c39;
+}
+:root{--ink:#111;--ink-2:#4b4f55;--line:#111;--white:#fff;--font:"Archivo",Arial,sans-serif;--w:1200px}
+*{box-sizing:border-box;border-radius:0}
+body{margin:0;font-family:var(--font);font-size:17px;line-height:1.5;color:var(--ink);background:var(--white);font-variant-numeric:tabular-nums}
+.w{width:min(var(--w),100% - 32px);margin-inline:auto}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px;box-shadow:0 0 0 6px #fff}
+h1,h2,h3{margin:0;font-weight:900;line-height:1;letter-spacing:-.02em;text-wrap:balance}
+p{margin:0}
+.lab{font-size:.74rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:-9999px}.skip:focus{left:12px;top:12px;background:#111;color:#fff;padding:10px;z-index:20}
+.btn{display:inline-flex;align-items:center;gap:10px;min-height:50px;padding:0 22px;font-weight:800;text-decoration:none;border:2px solid currentColor;transition:background .15s,color .15s}
+.btn.solid{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.solid:hover{background:#fff;color:var(--ink)}
+.btn.light{background:#fff;color:var(--ink);border-color:#fff}
+.btn.light:hover{background:transparent;color:#fff}
+.arr{display:inline-block;transition:transform .15s}
+a:hover .arr{transform:translateX(4px)}
+
+/* En-tête */
+.head{background:var(--c1);color:var(--on-c1)}
+.head .w{display:flex;align-items:center;gap:28px;min-height:76px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:900;font-size:1.5rem;letter-spacing:.04em}
+.logo img{width:46px;height:46px;background:#fff;padding:4px}
+.head nav{display:flex;margin-left:auto}
+.head nav a{padding:0 16px;line-height:76px;font-weight:700;text-decoration:none;font-size:.95rem}
+.head nav a:hover,.head nav a[aria-current]{background:var(--c3);color:var(--on-c3)}
+.head .acc{font-weight:700;text-decoration:underline;text-underline-offset:.2em}
+@media (max-width:960px){.head nav{display:none}.head .acc{margin-left:auto}}
+
+/* Flash info : aplat d'accent */
+.flash{background:var(--c2);color:var(--on-c2)}
+.flash .w{display:flex;align-items:stretch;min-height:50px}
+.flash .tag{flex:none;background:var(--c3);color:var(--on-c3);display:flex;align-items:center;gap:10px;padding:0 16px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;font-size:.85rem}
+.flash .tag i{width:9px;height:9px;background:var(--c2);animation:bl 1.4s steps(2) infinite}
+.flash .track{flex:1;overflow:hidden;display:flex;align-items:center}
+.flash ul{display:flex;margin:0;padding:0;list-style:none;width:max-content;animation:tick 60s linear infinite}
+.flash.paused ul,.flash .track:hover ul,.flash .track:focus-within ul{animation-play-state:paused}
+.flash li{white-space:nowrap;padding:0 26px;font-weight:600;font-size:.95rem}
+.flash li + li{border-left:2px solid currentColor}
+.flash time{font-weight:900;margin-right:8px}
+.flash a{text-decoration:none}.flash a:hover{text-decoration:underline}
+.flash button{flex:none;background:transparent;border:0;border-left:2px solid currentColor;color:inherit;font:inherit;font-weight:800;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;padding:0 16px;cursor:pointer}
+@keyframes tick{to{transform:translateX(-50%)}}
+@keyframes bl{50%{opacity:0}}
+
+/* Hero en blocs : 2/3 – 1/3 */
+.hero{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.hero .main{background:var(--c1);color:var(--on-c1);padding:64px max(16px,calc((100vw - var(--w))/2)) 64px max(16px,calc((100vw - var(--w))/2));padding-right:56px}
+.hero h1{font-size:clamp(2.8rem,6.2vw,5.4rem);margin:16px 0 22px;max-width:12ch}
+.hero .lead{font-size:1.2rem;max-width:44ch;opacity:.92}
+.find{margin-top:34px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.1fr) auto auto;max-width:none;background:#fff;color:var(--ink)}
+.find label{display:block;padding:12px 16px;border-right:2px solid var(--ink)}
+.find label span{display:block;font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.find input,.find select{width:100%;border:0;background:transparent;font:inherit;font-size:1.05rem;padding:4px 0;outline:none;color:var(--ink)}
+.find button{border:0;background:var(--c3);color:var(--on-c3);font:inherit;font-weight:900;font-size:1rem;padding:0 28px;cursor:pointer}
+.find button:hover{background:var(--c2);color:var(--on-c2)}
+.find label:focus-within{background:var(--c4)}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.tags a{font-size:.85rem;font-weight:700;text-decoration:none;border:2px solid currentColor;padding:5px 10px}
+.tags a:hover{background:var(--on-c1);color:var(--c1)}
+.hero .rail{display:grid;grid-template-rows:auto 1fr}
+.blk{padding:34px 32px}
+.blk.urg{background:var(--c2);color:var(--on-c2)}
+.blk.urg h2{font-size:1.9rem}
+.blk.urg ul{list-style:none;margin:18px 0 0;padding:0}
+.blk.urg li{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-top:2px solid currentColor;font-weight:700}
+.blk.urg li a{font-size:2.3rem;font-weight:900;text-decoration:none;line-height:1}
+.blk.urg small{display:block;margin-top:10px;font-size:.72rem;font-weight:600}
+.blk.dmt{background:var(--c3);color:var(--on-c3);display:flex;flex-direction:column;gap:14px}
+.blk.dmt h2{font-size:1.9rem}
+.blk.dmt p{opacity:.85}
+.blk.dmt .kinds{display:flex;flex-wrap:wrap;gap:6px}
+.blk.dmt .kinds span{border:2px solid currentColor;padding:3px 8px;font-size:.78rem;font-weight:700}
+@media (max-width:960px){.hero{grid-template-columns:1fr}.hero .main{padding:48px 16px}.find label{border-right:0;border-bottom:2px solid var(--ink)}.find button[type=submit]{padding:18px}}
+
+/* Services : mosaïque d'aplats */
+section.s{padding:72px 0}
+.sh{display:flex;justify-content:space-between;align-items:end;gap:12px 20px;margin-bottom:28px;flex-wrap:wrap}
+.sh h2{font-size:clamp(2.1rem,4vw,3.2rem)}
+.sh a{font-weight:800;text-decoration:none;white-space:nowrap}
+.sh a:hover{text-decoration:underline}
+.mosaic{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:170px;gap:0;border:2px solid var(--ink)}
+.mosaic a{display:flex;flex-direction:column;justify-content:space-between;padding:20px;text-decoration:none;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transition:transform .15s}
+.mosaic a:nth-child(4n){border-right:0}
+.mosaic a:nth-last-child(-n+4){border-bottom:0}
+.mosaic b{font-size:2.6rem;font-weight:900;line-height:1}
+.mosaic span{font-weight:800;font-size:1.05rem;line-height:1.15}
+.mosaic a:hover span{text-decoration:underline}
+.t1{background:var(--c1);color:var(--on-c1)}.t2{background:var(--c2);color:var(--on-c2)}.t3{background:var(--c3);color:var(--on-c3)}.t4{background:var(--c4);color:var(--on-c4)}.t5{background:#fff;color:var(--ink)}
+.mosaic .wide{grid-column:span 2}
+@media (max-width:860px){.mosaic{grid-template-columns:1fr 1fr;grid-auto-rows:140px}.mosaic a{border-right:2px solid var(--ink)!important;border-bottom:2px solid var(--ink)!important}.mosaic a:nth-child(2n){border-right:0!important}.mosaic .wide{grid-column:span 2;border-right:0!important}}
+
+/* 2/3 – 1/3 : fiches sur fond sable + aplat forces */
+.band{background:var(--c4);color:var(--on-c4)}
+.two{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:0}
+.two > .l{padding-right:48px}
+@media (max-width:960px){.two{grid-template-columns:1fr}.two > .l{padding-right:0;margin-bottom:40px}}
+.fiche{display:grid;grid-template-columns:84px 1fr auto;gap:20px;align-items:center;padding:18px;background:#fff;color:var(--ink);border:2px solid var(--ink);margin-bottom:-2px;text-decoration:none;transition:background .15s,color .15s}
+.fiche:hover{background:var(--ink);color:#fff}
+.fiche:hover .mono{background:var(--c2);color:var(--on-c2)}
+.mono{width:84px;height:84px;display:grid;place-items:center;font-weight:900;font-size:2rem;background:var(--c1);color:var(--on-c1)}
+.fiche h3{font-size:1.35rem;font-weight:800;letter-spacing:-.01em}
+.fiche .m{font-size:.85rem;margin-top:4px;opacity:.75}
+.fiche .ver{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+.fiche .n{text-align:right}
+.fiche .n b{display:block;font-size:2.2rem;font-weight:900;line-height:1}
+.fiche .n small{font-size:.75rem;opacity:.75}
+@media (max-width:560px){.fiche{grid-template-columns:56px 1fr}.mono{width:56px;height:56px;font-size:1.4rem}.fiche .n{grid-column:2;text-align:left}}
+.forces{background:var(--c1);color:var(--on-c1);padding:30px}
+.forces h3{font-size:1.7rem;margin-bottom:14px}
+.forces ul{list-style:none;margin:0;padding:0}
+.forces li a{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:2px solid currentColor;text-decoration:none;font-weight:700}
+.forces li a:hover{text-decoration:underline}
+.forces .km{font-weight:900;white-space:nowrap}
+.forces .btn{margin-top:20px}
+
+/* Méthode : trois aplats chiffrés */
+.method{display:grid;grid-template-columns:repeat(3,1fr)}
+.method > div{padding:34px 30px;min-height:280px;display:flex;flex-direction:column;gap:12px}
+.method b{font-size:5rem;font-weight:900;line-height:.85}
+.method h3{font-size:1.5rem}
+.method p{opacity:.88}
+@media (max-width:860px){.method{grid-template-columns:1fr}.method > div{min-height:0}}
+
+/* Démarches : grille de liens en aplat blanc */
+.dem{display:grid;grid-template-columns:repeat(3,1fr);border:2px solid var(--ink)}
+.dem a{padding:22px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);text-decoration:none;display:flex;justify-content:space-between;gap:16px;font-weight:800;font-size:1.1rem;transition:background .15s,color .15s}
+.dem a:nth-child(3n){border-right:0}.dem a:nth-last-child(-n+3){border-bottom:0}
+.dem a:hover{background:var(--c2);color:var(--on-c2)}
+.dem small{display:block;font-weight:500;font-size:.82rem;margin-top:4px;color:var(--ink-2)}
+.dem a:hover small{color:inherit}
+@media (max-width:760px){.dem{grid-template-columns:1fr}.dem a{border-right:0!important;border-bottom:2px solid var(--ink)!important}.dem a:last-child{border-bottom:0!important}}
+
+/* Actualités : bande catégorie en aplat */
+.news{display:grid;grid-template-columns:2fr 1fr 1fr;gap:24px}
+.news article{border:2px solid var(--ink);display:flex;flex-direction:column}
+.news .cat{padding:8px 14px;font-size:.74rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.news .img{aspect-ratio:16/10;background:repeating-linear-gradient(45deg,rgba(0,0,0,.08) 0 2px,transparent 2px 12px)}
+.news .big .img{aspect-ratio:16/9}
+.news .body{padding:18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.news h3{font-size:1.3rem;font-weight:800;line-height:1.15}
+.news .big h3{font-size:2rem}
+.news h3 a{text-decoration:none}.news h3 a:hover{text-decoration:underline}
+.news .d{font-size:.8rem;color:var(--ink-2);margin-top:auto}
+@media (max-width:960px){.news{grid-template-columns:1fr}}
+
+/* Appel pro : aplat accent pleine largeur */
+.pro{background:var(--c2);color:var(--on-c2)}
+.pro .w{display:grid;grid-template-columns:3fr 2fr;gap:40px;align-items:center;padding:64px 0}
+.pro h2{font-size:clamp(2.2rem,4.6vw,3.8rem)}
+.pro ul{margin:0;padding:0;list-style:none;font-weight:700}
+.pro li{padding:10px 0;border-top:2px solid currentColor}
+.pro .acts{margin-top:26px;display:flex;gap:14px;flex-wrap:wrap}
+@media (max-width:860px){.pro .w{grid-template-columns:1fr}}
+
+/* Pied */
+footer{background:var(--c3);color:var(--on-c3);font-size:.9rem}
+footer .w{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px;padding:56px 0 28px}
+footer h4{margin:0 0 12px;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase}
+footer ul{list-style:none;margin:0;padding:0}footer li{margin-bottom:8px}
+footer a{text-decoration:none}footer a:hover{text-decoration:underline}
+footer .legal{grid-column:1 / -1;border-top:2px solid currentColor;padding-top:16px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;opacity:.85}
+@media (max-width:760px){footer .w{grid-template-columns:1fr 1fr}}
+
+/* Sélecteur de palette (maquette uniquement) */
+.pal{position:fixed;right:16px;bottom:16px;max-width:calc(100% - 32px);z-index:30;background:#fff;color:#111;border:2px solid #111;padding:10px 12px;font-size:.78rem;font-weight:700}
+.pal p{margin:0 0 8px;letter-spacing:.08em;text-transform:uppercase;font-size:.7rem}
+.pal div{display:flex;gap:6px}
+.pal button{border:2px solid #111;background:#fff;font:inherit;font-size:.78rem;font-weight:800;padding:6px 8px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.pal button[aria-pressed="true"]{background:#111;color:#fff}
+.pal .sw{display:inline-flex}.pal .sw i{width:10px;height:14px;display:block}
+
+
+/* ===== v7 : icônes Lucide (tracé 2 px, taille alignée sur le texte) ===== */
+svg.li{width:1.15em;height:1.15em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em}
+.head nav a{display:inline-flex;align-items:center;gap:8px}
+.head .acc{display:inline-flex;align-items:center;gap:8px}
+.menu a{gap:12px}
+.lab{display:inline-flex;align-items:center;gap:8px}
+.lab svg.li{width:1.4em;height:1.4em}
+.flash .ctl button{display:inline-flex;align-items:center;justify-content:center}
+.flash .tag svg.li{width:1.2em;height:1.2em}
+.find label span{display:flex;align-items:center;gap:6px}
+.find button[type=submit]{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.tags a{gap:8px}
+.blk h2{display:flex;align-items:center;gap:12px}
+.blk h2 svg.li{width:1.1em;height:1.1em}
+.blk.urg a.row span{display:inline-flex;align-items:center;gap:10px}
+.blk.dmt .kinds span{display:inline-flex;align-items:center;gap:6px}
+.mosaic a{position:relative}
+.mosaic .ico{position:absolute;right:18px;top:18px;width:44px;height:44px;stroke-width:1.75}
+.fiche .m,.fiche .ver{display:flex;align-items:center;gap:6px}
+.fiche .ver svg.li{color:var(--c1)}
+.fiche:hover .ver svg.li{color:var(--c2)}
+.fiche .n b{display:flex;justify-content:flex-end;align-items:center;gap:6px}.fiche .n small{display:block}
+.fiche .n b svg.li{width:.6em;height:.6em;fill:var(--c2);stroke:var(--c2)}
+.forces li a span:first-child{display:inline-flex;gap:10px;align-items:flex-start}
+.forces li a span:first-child svg.li{margin-top:.15em}
+.forces .geo2{gap:8px}
+.method .ico{width:40px;height:40px;stroke-width:1.75}
+.method .top{display:flex;justify-content:space-between;align-items:flex-start}
+.dem a > span:first-child{display:flex;gap:14px;align-items:flex-start}
+.dem a > span:first-child svg.li{width:28px;height:28px;flex:none;margin-top:2px;stroke-width:1.75}
+.news .d{display:inline-flex;align-items:center;gap:6px}
+.pro li{display:flex;gap:12px;align-items:center}
+footer li{display:flex;gap:8px;align-items:center;min-width:0;overflow-wrap:anywhere}
+@media (max-width:760px){footer .w{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+@media (max-width:520px){footer .w{grid-template-columns:minmax(0,1fr)}}
+.btn svg.li{width:1.2em;height:1.2em}
+.sh h2{display:flex;align-items:center;gap:14px}
+.sh h2 svg.li{width:.85em;height:.85em;stroke-width:2.25}
+.sh a{gap:6px}
+
+/* ===== v6 : ergonomie ===== */
+.blk.urg li{padding:0}
+.blk.urg a.row{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:56px;text-decoration:none;font-weight:700;font-size:1rem;line-height:1.2}
+.blk.urg a.row b{font-size:2.3rem;font-weight:900;line-height:1}
+.blk.urg a.row:hover b{text-decoration:underline}
+.sh a{display:inline-flex;align-items:center;min-height:44px}
+.head{position:sticky;top:0;z-index:40}
+.burger{display:none;margin-left:auto;min-width:48px;min-height:48px;background:transparent;border:2px solid currentColor;color:inherit;font:inherit;font-weight:800;font-size:.85rem;padding:0 12px;cursor:pointer;align-items:center;gap:8px}
+.burger .bars{width:18px;height:12px;border-top:2px solid currentColor;border-bottom:2px solid currentColor;position:relative}
+.burger .bars::after{content:"";position:absolute;left:0;right:0;top:3px;border-top:2px solid currentColor}
+.menu{display:none;background:var(--c3);color:var(--on-c3)}
+.menu.open{display:block}
+.menu a{display:flex;align-items:center;min-height:56px;padding:0 16px;border-top:2px solid rgba(255,255,255,.15);font-weight:800;text-decoration:none}
+.menu a:hover{background:var(--c2);color:var(--on-c2)}
+@media (max-width:960px){.burger{display:inline-flex}.head .acc{display:none}}
+@media (min-width:961px){.menu{display:none!important}}
+
+/* Flash info : une dépêche à la fois, contrôlable */
+.flash .now{flex:1;display:flex;align-items:center;gap:10px;padding:0 16px;min-width:0}
+.flash .now a{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.flash .now time{font-weight:900;flex:none}
+.flash .ctl{display:flex;flex:none}
+.flash .ctl button{min-width:48px;min-height:50px;border-left:2px solid currentColor;padding:0 12px}
+.flash .count{font-size:.78rem;font-weight:800;flex:none;padding:0 12px;display:flex;align-items:center;border-left:2px solid currentColor}
+@media (max-width:600px){.flash .count{display:none}.flash .tag span{display:none}}
+.fade{animation:fd .35s ease}
+@keyframes fd{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* Recherche : géolocalisation + suggestions */
+.find{grid-template-columns:minmax(0,1.5fr) minmax(0,1.1fr) auto auto}
+.find .geo{border:0;border-left:2px solid var(--ink);background:#fff;color:var(--ink);font:inherit;font-weight:800;font-size:.85rem;padding:0 16px;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:56px}
+.find .geo:hover{background:var(--c4)}
+.find .geo svg{width:18px;height:18px}
+@media (max-width:960px){.find{grid-template-columns:1fr}.find .geo{border-left:0;border-bottom:2px solid var(--ink);justify-content:center}}
+.tags a{min-height:44px;display:inline-flex;align-items:center;padding:0 14px}
+
+/* Mosaïque : libellé explicite */
+.mosaic b small{display:block;font-size:.8rem;font-weight:700;letter-spacing:0;margin-top:4px;opacity:.85}
+
+/* Fiches : lien principal + actions directes */
+.fiche{position:relative;grid-template-columns:84px 1fr auto}
+.fiche h3 a{text-decoration:none}
+.fiche h3 a::after{content:"";position:absolute;inset:0}
+.fiche .acts{grid-column:2 / -1;display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.fiche .acts a{position:relative;z-index:1;min-height:44px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border:2px solid currentColor;font-weight:800;font-size:.85rem;text-decoration:none;background:transparent}
+.fiche .acts a:hover{background:var(--c2);color:var(--on-c2);border-color:var(--c2)}
+.fiche:hover .acts a{border-color:#fff}
+.fiche .dist{font-size:.78rem;font-weight:800;margin-top:6px}
+@media (max-width:560px){.fiche .acts{grid-column:1 / -1}}
+
+/* Forces : position */
+.forces .geo2{display:inline-flex;align-items:center;gap:8px;min-height:44px;background:transparent;border:2px solid currentColor;color:inherit;font:inherit;font-weight:800;font-size:.85rem;padding:0 14px;cursor:pointer;margin-bottom:14px}
+.forces .geo2:hover{background:var(--on-c1);color:var(--c1)}
+
+/* Barre d'actions mobile (3 entrées, toujours accessible au pouce) */
+.dock{display:none}
+@media (max-width:760px){
+  .dock{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;z-index:45;background:var(--c3);color:var(--on-c3);border-top:2px solid var(--on-c3)}
+  .dock a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:60px;font-size:.78rem;font-weight:800;text-decoration:none}
+  .dock a + a{border-left:2px solid rgba(255,255,255,.2)}
+  .dock a.sos{background:var(--c2);color:var(--on-c2)}
+  .dock svg.li{width:22px;height:22px}
+  body{padding-bottom:62px}
+  .pal{bottom:74px}
+}
+/* Sélecteur de palette repliable */
+.pal summary{cursor:pointer;list-style:none;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;min-height:32px;display:flex;align-items:center}
+.pal summary::-webkit-details-marker{display:none}
+.pal[open] summary{margin-bottom:8px}
+svg.ic{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:square}
+
+
+/* ===== v9 : hero avec image de fond (voile bleu plein, pas de dégradé) ===== */
+.hero .stage{position:relative;overflow:hidden;background:var(--c3)}
+.hero .photo{position:absolute;inset:0;margin:0}
+.hero .photo img{width:100%;height:100%;object-fit:cover;object-position:30% 55%;display:block}
+.hero .photo::after{content:"";position:absolute;inset:0;background:var(--c1);opacity:.8}
+.hero .photo figcaption{position:absolute;right:0;bottom:0;z-index:1;background:var(--c3);color:var(--on-c3);font-size:.68rem;font-weight:600;padding:5px 9px}
+.hero .stage .main{position:relative;z-index:1;background:transparent}
+@media (max-width:960px){.hero .photo img{object-position:20% 50%}}
+
+
+.news figure{margin:0;position:relative;overflow:hidden;background:var(--c4)}
+.news figure img{display:block;width:100%;height:auto;aspect-ratio:16/10;object-fit:cover;transition:transform .4s ease}
+.news .big figure img{aspect-ratio:16/9}
+.news article:hover figure img{transform:scale(1.04)}
+.news figcaption{position:absolute;right:0;bottom:0;background:rgba(13,27,42,.85);color:#fff;font-size:.62rem;padding:3px 7px}
+@media (prefers-reduced-motion:reduce){.news article:hover figure img{transform:none}}
+
+/* Apparition par blocs */
+/* Contenu visible par défaut ; l'animation ne s'active que si le script tourne. */
+.anim .rv:not(.in){clip-path:inset(0 0 100% 0)}
+.anim .rv{transition:clip-path .7s cubic-bezier(.7,0,.2,1)}
+@media (prefers-reduced-motion:reduce){.rv{clip-path:none;transition:none}.flash ul{animation:none;flex-wrap:wrap;width:auto}.flash li[aria-hidden]{display:none}.flash .tag i{animation:none}*{transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu principal</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<symbol id="l-building-2" viewBox="0 0 24 24"><path d="M10 12h4"/><path d="M10 8h4"/><path d="M14 21v-3a2 2 0 0 0-4 0v3"/><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/></symbol>
+<symbol id="l-landmark" viewBox="0 0 24 24"><path d="M10 18v-7"/><path d="M11.119 2.205a2 2 0 0 1 1.762 0l7.84 3.846A.5.5 0 0 1 20.5 7h-17a.5.5 0 0 1-.22-.949z"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M3 22h18"/><path d="M6 18v-7"/></symbol>
+<symbol id="l-file-text" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+<symbol id="l-message-square-warning" viewBox="0 0 24 24"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M12 15h.01"/><path d="M12 7v4"/></symbol>
+<symbol id="l-newspaper" viewBox="0 0 24 24"><path d="M15 18h-5"/><path d="M18 14h-8"/><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-4 0v-9a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="10" y="6" rx="1"/></symbol>
+<symbol id="l-user-round" viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></symbol>
+<symbol id="l-menu" viewBox="0 0 24 24"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></symbol>
+<symbol id="l-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="l-radio" viewBox="0 0 24 24"><path d="M16.247 7.761a6 6 0 0 1 0 8.478"/><path d="M19.075 4.933a10 10 0 0 1 0 14.134"/><path d="M4.925 19.067a10 10 0 0 1 0-14.134"/><path d="M7.753 16.239a6 6 0 0 1 0-8.478"/><circle cx="12" cy="12" r="2"/></symbol>
+<symbol id="l-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+<symbol id="l-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="l-pause" viewBox="0 0 24 24"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></symbol>
+<symbol id="l-play" viewBox="0 0 24 24"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></symbol>
+<symbol id="l-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="l-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></symbol>
+<symbol id="l-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="l-locate-fixed" viewBox="0 0 24 24"><line x1="2" x2="5" y1="12" y2="12"/><line x1="19" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="5"/><line x1="12" x2="12" y1="19" y2="22"/><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="l-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></symbol>
+<symbol id="l-shield-alert" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/></symbol>
+<symbol id="l-cctv" viewBox="0 0 24 24"><path d="M16.75 12h3.632a1 1 0 0 1 .894 1.447l-2.034 4.069a1 1 0 0 1-1.708.134l-2.124-2.97"/><path d="M17.106 9.053a1 1 0 0 1 .447 1.341l-3.106 6.211a1 1 0 0 1-1.342.447L3.61 12.3a2.92 2.92 0 0 1-1.3-3.91L3.69 5.6a2.92 2.92 0 0 1 3.92-1.3z"/><path d="M2 19h3.76a2 2 0 0 0 1.8-1.1L9 15"/><path d="M2 21v-4"/><path d="M7 9h.01"/></symbol>
+<symbol id="l-dog" viewBox="0 0 24 24"><path d="M11.25 16.25h1.5L12 17z"/><path d="M16 14v.5"/><path d="M4.42 11.247A13.152 13.152 0 0 0 4 14.556C4 18.728 7.582 21 12 21s8-2.272 8-6.444a11.702 11.702 0 0 0-.493-3.309"/><path d="M8 14v.5"/><path d="M8.5 8.5c-.384 1.05-1.083 2.028-2.344 2.5-1.931.722-3.576-.297-3.656-1-.113-.994 1.177-6.53 4-7 1.923-.321 3.651.845 3.651 2.235A7.497 7.497 0 0 1 14 5.277c0-1.39 1.844-2.598 3.767-2.277 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.45-2.239-2.5"/></symbol>
+<symbol id="l-flame" viewBox="0 0 24 24"><path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/></symbol>
+<symbol id="l-siren" viewBox="0 0 24 24"><path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M2 12h1"/><path d="M12 2v1"/><path d="m4.929 4.929.707.707"/><path d="M12 12v6"/></symbol>
+<symbol id="l-ambulance" viewBox="0 0 24 24"><path d="M10 10H6"/><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.28a1 1 0 0 0-.684-.948l-1.923-.641a1 1 0 0 1-.578-.502l-1.539-3.076A1 1 0 0 0 16.382 8H14"/><path d="M8 8v4"/><path d="M9 18h6"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
+<symbol id="l-phone" viewBox="0 0 24 24"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></symbol>
+<symbol id="l-message-square-text" viewBox="0 0 24 24"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></symbol>
+<symbol id="l-thumbs-up" viewBox="0 0 24 24"><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/><path d="M7 10v12"/></symbol>
+<symbol id="l-circle-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+<symbol id="l-triangle-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+<symbol id="l-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
+<symbol id="l-send" viewBox="0 0 24 24"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></symbol>
+<symbol id="l-bell-ring" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M22 8c0-2.3-.8-4.3-2-6"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/><path d="M4 2C2.8 3.7 2 5.7 2 8"/></symbol>
+<symbol id="l-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></symbol>
+<symbol id="l-graduation-cap" viewBox="0 0 24 24"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></symbol>
+<symbol id="l-layout-grid" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></symbol>
+<symbol id="l-badge-check" viewBox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m16 9-5.5 5.5L8 12"/></symbol>
+<symbol id="l-star" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></symbol>
+<symbol id="l-map" viewBox="0 0 24 24"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></symbol>
+<symbol id="l-navigation" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></symbol>
+<symbol id="l-clipboard-list" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol>
+<symbol id="l-file-search" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><circle cx="11.5" cy="14.5" r="2.5"/><path d="M13.3 16.3 15 18"/></symbol>
+<symbol id="l-file-pen-line" viewBox="0 0 24 24"><path d="M14.364 13.634a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506l4.013-4.009a1 1 0 0 0-3.004-3.004z"/><path d="M14.487 7.858A1 1 0 0 1 14 7V2"/><path d="M20 19.645V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l2.516 2.516"/><path d="M8 18h1"/></symbol>
+<symbol id="l-eye" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="l-package-search" viewBox="0 0 24 24"><path d="M12 22V12"/><path d="M20.27 18.27 22 20"/><path d="M21 10.498V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l.98-.559"/><path d="M3.29 7 12 12l8.71-5"/><path d="m7.5 4.27 8.997 5.148"/><circle cx="18.5" cy="16.5" r="2.5"/></symbol>
+<symbol id="l-car-front" viewBox="0 0 24 24"><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8"/><path d="M7 14h.01"/><path d="M17 14h.01"/><rect width="18" height="8" x="3" y="10" rx="2"/><path d="M5 18v2"/><path d="M19 18v2"/></symbol>
+<symbol id="l-party-popper" viewBox="0 0 24 24"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z"/></symbol>
+<symbol id="l-map-pinned" viewBox="0 0 24 24"><path d="M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 01-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0112 0"/><path d="M4.474 15h-.197a1 1 0 00-.969.753l-1.097 4.35a1.5 1.5 0 001.444 1.898L20.344 22a1.5 1.5 0 001.446-1.897l-1.098-4.35a1 1 0 00-.969-.753h-.197"/><circle cx="12" cy="8" r="2"/></symbol>
+<symbol id="l-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+<symbol id="l-calendar" viewBox="0 0 24 24"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></symbol>
+<symbol id="l-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="l-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="l-mail" viewBox="0 0 24 24"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></symbol>
+<symbol id="l-shield-half" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 22V2"/></symbol>
+</svg>
+
+<header class="head">
+  <div class="w">
+    <a class="logo" href="#"><img src="../assets/elephant-icon-192.png" alt="" width="46" height="46">PROTECTICI</a>
+    <nav aria-label="Navigation principale">
+      <a href="#" aria-current="page"><svg class="li" aria-hidden="true"><use href="#l-building-2"/></svg>Prestataires</a><a href="#dem"><svg class="li" aria-hidden="true"><use href="#l-landmark"/></svg>Forces de l’État</a><a href="#"><svg class="li" aria-hidden="true"><use href="#l-file-text"/></svg>Devis</a><a href="#"><svg class="li" aria-hidden="true"><use href="#l-message-square-warning"/></svg>Dis-moi tout</a><a href="#news"><svg class="li" aria-hidden="true"><use href="#l-newspaper"/></svg>Actualités</a>
+    </nav>
+    <a class="acc" href="#"><svg class="li" aria-hidden="true"><use href="#l-user-round"/></svg>Se connecter</a>
+    <button class="burger" type="button" aria-expanded="false" aria-controls="menu"><svg class="li" aria-hidden="true"><use href="#l-menu"/></svg>Menu</button>
+  </div>
+  <nav class="menu" id="menu" aria-label="Menu mobile">
+    <a href="#"><svg class="li" aria-hidden="true"><use href="#l-building-2"/></svg>Prestataires</a><a href="#dem"><svg class="li" aria-hidden="true"><use href="#l-landmark"/></svg>Forces de l’État</a><a href="#"><svg class="li" aria-hidden="true"><use href="#l-file-text"/></svg>Demande de devis</a><a href="#"><svg class="li" aria-hidden="true"><use href="#l-message-square-warning"/></svg>Dis-moi tout</a><a href="#news"><svg class="li" aria-hidden="true"><use href="#l-newspaper"/></svg>Actualités</a><a href="#"><svg class="li" aria-hidden="true"><use href="#l-user-round"/></svg>Se connecter</a>
+  </nav>
+</header>
+
+<div class="flash" id="flash" role="region" aria-roledescription="dépêches" aria-label="Flash info">
+  <div class="w">
+    <span class="tag"><svg class="li" aria-hidden="true"><use href="#l-radio"/></svg><span>Flash info</span></span>
+    <div class="now" id="now" aria-live="off"><time>09H42</time><a href="#">Patrouilles de nuit renforcées à Cocody et Marcory</a></div>
+    <span class="count" id="count" aria-hidden="true">1 / 4</span>
+    <div class="ctl">
+      <button type="button" id="prev" aria-label="Dépêche précédente"><svg class="li" aria-hidden="true"><use href="#l-chevron-left"/></svg></button>
+      <button type="button" id="play" aria-pressed="false" aria-label="Mettre en pause"><svg class="li" aria-hidden="true"><use href="#l-pause"/></svg></button>
+      <button type="button" id="next" aria-label="Dépêche suivante"><svg class="li" aria-hidden="true"><use href="#l-chevron-right"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<main id="main">
+  <section class="hero" aria-labelledby="h1">
+    <div class="stage">
+      <figure class="photo">
+        <img src="https://images.unsplash.com/photo-1485230405346-71acb9518d9c?auto=format&fit=crop&w=1800&q=70" srcset="https://images.unsplash.com/photo-1485230405346-71acb9518d9c?auto=format&fit=crop&w=900&q=70 900w, https://images.unsplash.com/photo-1485230405346-71acb9518d9c?auto=format&fit=crop&w=1800&q=70 1800w" sizes="(max-width:960px) 100vw, 66vw" alt="Agent de sécurité en faction dans le hall d’un immeuble de bureaux" width="1800" height="1166" fetchpriority="high">
+        <figcaption>Photo : Collin · Unsplash (illustration)</figcaption>
+      </figure>
+    <div class="main">
+      <span class="lab">370 établissements vérifiés en Côte d’Ivoire</span>
+      <h1 id="h1">La sécurité, entre de bonnes mains.</h1>
+      <p class="lead">Trouvez une entreprise de sécurité agréée, un centre de formation ou la force de l’ordre la plus proche. Chaque fiche est contrôlée avant publication.</p>
+      <form class="find" id="search" role="search" onsubmit="return false">
+        <label><span>Service ou entreprise</span><input type="search" list="sugg" autocomplete="off" placeholder="Gardiennage, alarme, escorte…"></label>
+        <datalist id="sugg"><option value="Gardiennage armé"><option value="Gardiennage non armé"><option value="Vidéosurveillance"><option value="Alarme et contrôle d’accès"><option value="Brigade canine"><option value="Sécurité incendie"><option value="Escorte"><option value="Garde rapprochée"><option value="Formation"><option value="Dauphin Sécurité"><option value="Sentinelle Garde"></datalist>
+        <label><span>Ville</span><select><option>Toutes les villes</option><option>Abidjan</option><option>Yamoussoukro</option><option>Bouaké</option><option>San-Pédro</option></select></label>
+        <button class="geo" type="button" id="geo"><svg class="li" aria-hidden="true"><use href="#l-locate-fixed"/></svg>Autour de moi</button>
+        <button type="submit"><svg class="li" aria-hidden="true"><use href="#l-search"/></svg>Rechercher</button>
+      </form>
+      <div class="tags"><a href="#">Gardiennage armé</a><a href="#">Vidéosurveillance</a><a href="#">Brigade canine</a><a href="#">Sécurité incendie</a></div>
+    </div>
+    </div><!-- /stage -->
+    <div class="rail">
+      <div class="blk urg" id="urgence">
+        <h2><svg class="li" aria-hidden="true"><use href="#l-siren"/></svg>Urgence</h2>
+        <ul>
+          <li><a class="row" href="tel:110"><span><svg class="li" aria-hidden="true"><use href="#l-shield-half"/></svg>Police secours</span><b>110</b></a></li>
+          <li><a class="row" href="tel:180"><span><svg class="li" aria-hidden="true"><use href="#l-flame"/></svg>Sapeurs-pompiers</span><b>180</b></a></li>
+          <li><a class="row" href="tel:185"><span><svg class="li" aria-hidden="true"><use href="#l-ambulance"/></svg>SAMU</span><b>185</b></a></li>
+        </ul>
+        <small>Numéros à confirmer avant la mise en ligne.</small>
+      </div>
+      <div class="blk dmt">
+        <span class="lab">Dis-moi tout</span>
+        <h2>Une prestation à signaler&nbsp;?</h2>
+        <p>Chaque message reçoit un numéro de suivi et une réponse de notre équipe.</p>
+        <div class="kinds"><span>Encouragement</span><span>Question</span><span>Plainte</span><span>Suggestion</span></div>
+        <a class="btn light" href="#" style="align-self:flex-start;margin-top:auto">Envoyer un message</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="s w" aria-labelledby="t-svc">
+    <div class="sh rv"><h2 id="t-svc">Que recherchez-vous&nbsp;?</h2><a href="#">Les 25 services <svg class="li" aria-hidden="true"><use href="#l-arrow-right"/></svg></a></div>
+    <div class="mosaic rv">
+      <a class="t1" href="#"><b>88<small>établissements</small></b><span>Gardiennage non armé</span><svg class="li ico" aria-hidden="true"><use href="#l-shield"/></svg></a>
+      <a class="t2" href="#"><b>61<small>établissements</small></b><span>Gardiennage armé</span><svg class="li ico" aria-hidden="true"><use href="#l-shield-alert"/></svg></a>
+      <a class="t4" href="#"><b>52<small>établissements</small></b><span>Vidéosurveillance</span><svg class="li ico" aria-hidden="true"><use href="#l-cctv"/></svg></a>
+      <a class="t3" href="#"><b>42<small>établissements</small></b><span>Alarme et contrôle d’accès</span><svg class="li ico" aria-hidden="true"><use href="#l-bell-ring"/></svg></a>
+      <a class="t5" href="#"><b>37<small>établissements</small></b><span>Sécurité événementielle</span><svg class="li ico" aria-hidden="true"><use href="#l-users"/></svg></a>
+      <a class="t2" href="#"><b>34<small>établissements</small></b><span>Formation</span><svg class="li ico" aria-hidden="true"><use href="#l-graduation-cap"/></svg></a>
+      <a class="t1" href="#"><b>31<small>établissements</small></b><span>Sécurité incendie</span><svg class="li ico" aria-hidden="true"><use href="#l-flame"/></svg></a>
+      <a class="t3" href="#"><b>+18<small>autres services</small></b><span>Voir les 25 services →</span><svg class="li ico" aria-hidden="true"><use href="#l-layout-grid"/></svg></a>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="t-fic">
+    <div class="w s two" style="padding:72px 0">
+      <div class="l">
+        <div class="sh rv"><h2 id="t-fic">Les plus consultés</h2><a href="#">Tout l’annuaire <svg class="li" aria-hidden="true"><use href="#l-arrow-right"/></svg></a></div>
+        <div class="rv">
+          <article class="fiche"><span class="mono" aria-hidden="true">D</span><div><h3><a href="#">Dauphin Sécurité</a></h3><p class="m">Abidjan, Plateau · Gardiennage armé, garde rapprochée</p><p class="ver"><svg class="li" aria-hidden="true"><use href="#l-badge-check"/></svg>Fiche vérifiée le 12/09/2026</p></div><div class="n"><b><svg class="li" aria-hidden="true"><use href="#l-star"/></svg>4,6</b><small>38 avis</small></div><div class="acts"><a href="tel:+2250700000000"><svg class="li" aria-hidden="true"><use href="#l-phone"/></svg>Appeler</a><a href="#">Demander un devis</a></div></article>
+          <article class="fiche"><span class="mono" aria-hidden="true">S</span><div><h3><a href="#">Sentinelle Garde</a></h3><p class="m">Abidjan, Cocody · Vidéosurveillance, alarme</p><p class="ver"><svg class="li" aria-hidden="true"><use href="#l-badge-check"/></svg>Fiche vérifiée le 03/10/2026</p></div><div class="n"><b><svg class="li" aria-hidden="true"><use href="#l-star"/></svg>4,8</b><small>52 avis</small></div><div class="acts"><a href="tel:+2250700000000"><svg class="li" aria-hidden="true"><use href="#l-phone"/></svg>Appeler</a><a href="#">Demander un devis</a></div></article>
+          <article class="fiche"><span class="mono" aria-hidden="true">B</span><div><h3><a href="#">Bouclier Canin</a></h3><p class="m">Yamoussoukro · Brigade canine, détection</p><p class="ver"><svg class="li" aria-hidden="true"><use href="#l-badge-check"/></svg>Fiche vérifiée le 21/08/2026</p></div><div class="n"><b><svg class="li" aria-hidden="true"><use href="#l-star"/></svg>4,4</b><small>17 avis</small></div><div class="acts"><a href="tel:+2250700000000"><svg class="li" aria-hidden="true"><use href="#l-phone"/></svg>Appeler</a><a href="#">Demander un devis</a></div></article>
+          <article class="fiche"><span class="mono" aria-hidden="true">R</span><div><h3><a href="#">Rempart Incendie</a></h3><p class="m">San-Pédro · Sécurité incendie, formation</p><p class="ver"><svg class="li" aria-hidden="true"><use href="#l-badge-check"/></svg>Fiche vérifiée le 30/09/2026</p></div><div class="n"><b><svg class="li" aria-hidden="true"><use href="#l-star"/></svg>4,7</b><small>24 avis</small></div><div class="acts"><a href="tel:+2250700000000"><svg class="li" aria-hidden="true"><use href="#l-phone"/></svg>Appeler</a><a href="#">Demander un devis</a></div></article>
+        </div>
+      </div>
+      <aside class="forces rv" aria-label="Forces de l’État les plus proches">
+        <span class="lab">Autour de vous</span>
+        <h3 style="margin-top:10px">Forces de l’État les plus proches</h3>
+        <button class="geo2" type="button"><svg class="li" aria-hidden="true"><use href="#l-locate-fixed"/></svg>Utiliser ma position</button>
+        <ul>
+          <li><a href="#"><span>Commissariat du 1er arrondissement</span><span class="km">0,8 km</span></a></li>
+          <li><a href="#"><span>Brigade de gendarmerie du Plateau</span><span class="km">1,4 km</span></a></li>
+          <li><a href="#"><span>Caserne des sapeurs-pompiers</span><span class="km">2,1 km</span></a></li>
+          <li><a href="#"><span>Commissariat de Treichville</span><span class="km">3,6 km</span></a></li>
+        </ul>
+        <a class="btn light" href="#">Voir la carte</a>
+      </aside>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-met">
+    <h2 id="t-met" class="sr">Notre méthode</h2>
+    <div class="method rv">
+      <div class="t3"><div class="top"><b>01</b></div><h3>Inscription</h3><p>L’établissement transmet son RCCM, son agrément et ses coordonnées.</p></div>
+      <div class="t1"><div class="top"><b>02</b></div><h3>Vérification</h3><p>Notre équipe contrôle chaque pièce avant toute publication.</p></div>
+      <div class="t2"><div class="top"><b>03</b></div><h3>Publication</h3><p>La fiche affiche sa date de vérification. Les avis sont modérés.</p></div>
+    </div>
+  </section>
+
+  <section class="s w" id="dem" aria-labelledby="t-dem">
+    <div class="sh rv"><h2 id="t-dem">Une démarche auprès de l’État&nbsp;?</h2><a href="#">Toutes les structures <svg class="li" aria-hidden="true"><use href="#l-arrow-right"/></svg></a></div>
+    <div class="dem rv">
+      <a href="#"><span><span>Déposer une plainte<small>Commissariats et brigades</small></span></span></a>
+      <a href="#"><span><span>Signaler un fait suspect<small>Police et gendarmerie</small></span></span></a>
+      <a href="#"><span><span>Déclarer une perte<small>Pièces, documents, objets</small></span></span></a>
+      <a href="#"><span><span>Constat d’accident<small>Circulation routière</small></span></span></a>
+      <a href="#"><span><span>Sécuriser une cérémonie<small>Encadrement d’événements</small></span></span></a>
+      <a href="#"><span><span>La structure la plus proche<small>Recherche par position</small></span></span></a>
+    </div>
+  </section>
+
+  <section class="s w" id="news" style="padding-top:0" aria-labelledby="t-news">
+    <div class="sh rv"><h2 id="t-news">Actualités</h2><a href="#">Tous les articles <svg class="li" aria-hidden="true"><use href="#l-arrow-right"/></svg></a></div>
+    <div class="news rv">
+      <article class="big"><span class="cat t1">Actualités</span><figure><img src="https://images.unsplash.com/photo-1762474293029-6a7f3698312c?auto=format&fit=crop&w=1200&q=70" alt="Agent de sécurité en faction devant l’entrée d’un bâtiment" width="1200" height="675" loading="lazy"><figcaption>Chad Nathan · Unsplash</figcaption></figure><div class="body"><h3><a href="#">Choisir une société de gardiennage : les cinq vérifications à faire</a></h3><p>Agrément, assurance, formation des agents : notre guide avant de signer.</p><span class="d">2 septembre 2026 · 5 min</span></div></article>
+      <article><span class="cat t2">Cybercriminalité</span><figure><img src="https://images.unsplash.com/photo-1592890288564-76628a30a657?auto=format&fit=crop&w=700&q=70" alt="Personne tenant un smartphone" width="700" height="437" loading="lazy"><figcaption>Jonas Leupe · Unsplash</figcaption></figure><div class="body"><h3><a href="#">Arnaques au mobile money : les signes qui doivent alerter</a></h3><span class="d">8 septembre 2026</span></div></article>
+      <article><span class="cat t3">Sécurité incendie</span><figure><img src="https://images.unsplash.com/photo-1625958936686-a9343dc35b5b?auto=format&fit=crop&w=700&q=70" alt="Extincteur rouge fixé à un mur" width="700" height="437" loading="lazy"><figcaption>Tak Kei Wong · Unsplash</figcaption></figure><div class="body"><h3><a href="#">Prévention incendie dans les commerces : l’essentiel</a></h3><span class="d">18 septembre 2026</span></div></article>
+    </div>
+  </section>
+
+  <section class="pro" aria-labelledby="t-pro">
+    <div class="w">
+      <div class="rv">
+        <span class="lab">Professionnels de la sécurité</span>
+        <h2 id="t-pro" style="margin-top:14px">Votre entreprise mérite d’être trouvée.</h2>
+        <div class="acts"><a class="btn solid" href="#">Inscrire mon établissement <svg class="li" aria-hidden="true"><use href="#l-arrow-right"/></svg></a></div>
+      </div>
+      <ul class="rv">
+        <li>Inscription gratuite</li>
+        <li>Fiche vérifiée et datée</li>
+        <li>Demandes de devis reçues directement</li>
+        <li>Réponse aux avis clients</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="w">
+    <div><a class="logo" href="#"><img src="../assets/elephant-icon-192.png" alt="" width="46" height="46">PROTECTICI</a><p style="margin-top:14px;max-width:36ch;opacity:.85">Première plateforme d’information et de services dédiée à la sécurité et à la sûreté privées en Côte d’Ivoire.</p></div>
+    <div><h4>Annuaire</h4><ul><li><a href="#">Prestataires</a></li><li><a href="#">Forces de l’État</a></li><li><a href="#">Inscrire un établissement</a></li><li><a href="#">Demande de devis</a></li></ul></div>
+    <div><h4>ProtectIci</h4><ul><li><a href="#">Qui sommes-nous</a></li><li><a href="#">Partenaires</a></li><li><a href="#">Clients</a></li><li><a href="#">Contact</a></li></ul></div>
+    <div><h4>Nous joindre</h4><ul><li>Abidjan Plateau, immeuble Eden</li><li><a href="tel:+2250709445111">+225 07 09 44 51 11</a></li><li><a href="mailto:info@protectici.ci">info@protectici.ci</a></li></ul></div>
+    <div class="legal"><span>© 2022–2026 ProtectIci · FYG Technologies</span><span><a href="#">Mentions légales</a> · <a href="#">Confidentialité</a> · <a href="#">Cookies</a></span></div>
+  </div>
+</footer>
+
+<nav class="dock" aria-label="Actions rapides">
+  <a href="#search" id="dock-search"><svg class="li" aria-hidden="true"><use href="#l-search"/></svg>Rechercher</a>
+  <a class="sos" href="#urgence"><svg class="li" aria-hidden="true"><use href="#l-siren"/></svg>Urgences</a>
+  <a href="#"><svg class="li" aria-hidden="true"><use href="#l-message-square-warning"/></svg>Dis-moi tout</a>
+</nav>
+
+
+
+<script>
+/* Menu mobile */
+const bg=document.querySelector('.burger'),menu=document.getElementById('menu');
+bg.addEventListener('click',()=>{const o=menu.classList.toggle('open');bg.setAttribute('aria-expanded',o);});
+/* Flash info : une dépêche à la fois, pause au survol/focus, contrôles clavier */
+const news=[["09H42","Patrouilles de nuit renforcées à Cocody et Marcory"],["10H15","Arnaques au mobile money : les signes qui doivent alerter"],["11H30","Formation des agents de sécurité incendie à Yamoussoukro"],["13H05","Vérifier l’agrément d’une société de gardiennage"]];
+let k=0,timer=null,paused=matchMedia('(prefers-reduced-motion: reduce)').matches,hold=false;
+const now=document.getElementById('now'),cnt=document.getElementById('count'),play=document.getElementById('play'),fl=document.getElementById('flash');
+const show=d=>{k=(k+d+news.length)%news.length;now.innerHTML=`<time>${news[k][0]}</time><a href="#">${news[k][1]}</a>`;now.classList.remove('fade');void now.offsetWidth;now.classList.add('fade');cnt.textContent=`${k+1} / ${news.length}`;};
+const tick=()=>{clearInterval(timer);if(!paused&&!hold)timer=setInterval(()=>show(1),6000);};
+const setPaused=p=>{paused=p;play.setAttribute('aria-pressed',p);play.setAttribute('aria-label',p?'Reprendre':'Mettre en pause');play.innerHTML=p?'<svg class="li" aria-hidden="true"><use href="#l-play"/></svg>':'<svg class="li" aria-hidden="true"><use href="#l-pause"/></svg>';now.setAttribute('aria-live',p?'polite':'off');tick();};
+document.getElementById('prev').onclick=()=>{show(-1);setPaused(true)};
+document.getElementById('next').onclick=()=>{show(1);setPaused(true)};
+play.onclick=()=>setPaused(!paused);
+fl.addEventListener('mouseenter',()=>{hold=true;tick()});fl.addEventListener('mouseleave',()=>{hold=false;tick()});
+fl.addEventListener('focusin',()=>{hold=true;tick()});fl.addEventListener('focusout',()=>{hold=false;tick()});
+setPaused(paused);
+/* Géolocalisation (maquette : simulée) */
+document.getElementById('geo').onclick=e=>{e.currentTarget.lastChild.textContent='Position utilisée';};
+document.querySelector('.geo2').onclick=e=>{e.currentTarget.lastChild.textContent='Position utilisée';};
+/* Raccourci « Rechercher » du dock : place le focus dans le champ */
+document.getElementById('dock-search').onclick=e=>{e.preventDefault();const f=document.querySelector('#search input');f.scrollIntoView({block:'center'});f.focus({preventScroll:true});};
+if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const els=[...document.querySelectorAll('.rv')], show=()=>els.forEach(e=>e.classList.add('in'));
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:0,rootMargin:'0px 0px -8% 0px'});
+  els.forEach(el=>{const r=el.getBoundingClientRect(); if(r.top<innerHeight) el.classList.add('in'); else io.observe(el);});
+  document.documentElement.classList.add('anim');
+  setTimeout(show,4000); // filet de sécurité : rien ne reste jamais masqué
+}
+</script>
+</body>
+</html>
