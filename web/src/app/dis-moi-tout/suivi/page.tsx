@@ -15,8 +15,10 @@ export default function FeedbackTrackingPage() {
         title="Suivre un dossier"
         intro="Saisissez la référence reçue par e-mail (DMT-…) et l’adresse e-mail utilisée lors de l’envoi."
       />
-      <Container className="py-8">
-        <FeedbackTracker />
+      <Container className="py-section">
+        <div className="max-w-[52rem] border-2 border-ink bg-white p-5 md:p-8">
+          <FeedbackTracker />
+        </div>
       </Container>
     </>
   );

@@ -24,13 +24,14 @@ import { StatusPill } from '../../ui/StatusPill';
 import { Tabs } from '../../ui/Tabs';
 import { useToast } from '../../ui/Toast';
 import { moderate } from './moderation';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 export type ReviewsTab = 'reviews' | 'reports';
 
 export function AdminReviewsView({ initialTab = 'reviews' }: { initialTab?: ReviewsTab }) {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Avis et signalements</h1>
+      <AdminPageHeader section="Annuaire" title="Avis et signalements" />
       <p className="text-muted">
         Un avis n’est publié qu’après votre validation. Les signalements des internautes sont traités
         ici : accepter un signalement masque l’avis.
@@ -110,7 +111,7 @@ function ReviewsPanel() {
 
   return (
     <div className="flex flex-col gap-5">
-      <form onSubmit={search} className="flex flex-col gap-3 sm:flex-row sm:items-end" role="search">
+      <form onSubmit={search} className="flex flex-col gap-3 sm:flex-row sm:items-end border-2 border-ink bg-c4 p-3 sm:p-4" role="search">
         <Select
           label="Statut des avis"
           value={status}
@@ -154,7 +155,7 @@ function ReviewsPanel() {
                     <Card as="article" aria-labelledby={`avis-${row.id}`} className="flex flex-col gap-3">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <h2 id={`avis-${row.id}`} className="text-lg font-bold">
+                          <h2 id={`avis-${row.id}`} className="text-lg heading-block">
                             {row.provider.name}
                           </h2>
                           <p className="text-sm text-muted">
@@ -329,7 +330,7 @@ function ReportsPanel() {
                     <Card as="article" aria-labelledby={`sig-${row.id}`} className="flex flex-col gap-3">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <h2 id={`sig-${row.id}`} className="text-lg font-bold">
+                          <h2 id={`sig-${row.id}`} className="text-lg heading-block">
                             Avis sur {row.review.provider_name}
                           </h2>
                           <p className="text-sm text-muted">
@@ -339,7 +340,7 @@ function ReportsPanel() {
                         </div>
                         <StatusPill kind="report" status={row.status} />
                       </div>
-                      <blockquote className="border-l-4 border-line pl-3">
+                      <blockquote className="border-l-4 border-ink pl-3">
                         <p className="text-sm text-muted">Note : {row.review.rating} sur 5</p>
                         <p className="whitespace-pre-line break-words">{row.review.body_excerpt}</p>
                       </blockquote>

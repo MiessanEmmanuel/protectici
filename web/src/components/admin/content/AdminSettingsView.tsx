@@ -10,6 +10,7 @@ import { FormError } from '../../ui/Field';
 import { Input } from '../../ui/Input';
 import { QueryBoundary } from '../../ui/QueryBoundary';
 import { useToast } from '../../ui/Toast';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 const LABELS: Record<string, string> = {
   'contact.phone': 'Téléphone',
@@ -72,13 +73,13 @@ export function AdminSettingsView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Paramètres du site</h1>
+      <AdminPageHeader section="Site" title="Paramètres du site" />
       <QueryBoundary state={state} loadingLabel="Chargement des paramètres…">
         {(settings) => (
           <form onSubmit={(e) => void submit(e)} noValidate className="flex max-w-2xl flex-col gap-5">
             <FormError message={formError} />
             {settings.map((s) => (
-              <fieldset key={s.key} className="flex flex-col gap-2 rounded-lg border border-line p-4">
+              <fieldset key={s.key} className="flex flex-col gap-2 border-2 border-ink p-4">
                 <legend className="px-1 font-semibold">{LABELS[s.key] ?? s.key}</legend>
                 <Input label="Valeur" name={`v:${s.key}`} defaultValue={s.value ?? ''} maxLength={255} error={errors[s.key]} />
                 <Checkbox name={`p:${s.key}`} label="Afficher publiquement sur le site" defaultChecked={s.is_public} />

@@ -89,8 +89,14 @@ export function LoginForm({ redirect, verified }: { redirect?: string; verified?
 
   if (step === 'two_factor') {
     return (
-      <form onSubmit={(e) => void onTwoFactor(e)} noValidate className="flex flex-col gap-4">
-        <h2 className="text-lg font-bold">Vérification en deux étapes</h2>
+      <form
+        method="post"
+        action="/connexion"
+        onSubmit={(e) => void onTwoFactor(e)}
+        noValidate
+        className="flex flex-col gap-4"
+      >
+        <h2 className="text-xl heading-block">Vérification en deux étapes</h2>
         <p className="text-muted">
           {useRecovery
             ? 'Saisissez l’un de vos codes de secours.'
@@ -125,21 +131,21 @@ export function LoginForm({ redirect, verified }: { redirect?: string; verified?
   }
 
   return (
-    <form onSubmit={(e) => void onCredentials(e)} noValidate className="flex flex-col gap-4">
+    <form
+      method="post"
+      action="/connexion"
+      onSubmit={(e) => void onCredentials(e)}
+      noValidate
+      className="flex flex-col gap-4"
+    >
       {verified === '0' ? (
-        <div
-          role="alert"
-          className="rounded-md border border-danger bg-danger-soft p-3 text-danger"
-        >
+        <div role="alert" className="border-2 border-danger bg-danger-soft p-3 text-danger">
           Lien invalide ou expiré. Connectez-vous pour recevoir un nouveau lien de confirmation, ou
           créez à nouveau votre compte.
         </div>
       ) : null}
       {verified === '1' ? (
-        <div
-          role="status"
-          className="rounded-md border border-success bg-success-soft p-3 text-success"
-        >
+        <div role="status" className="border-2 border-success bg-success-soft p-3 text-success">
           Adresse e-mail confirmée. Vous pouvez vous connecter.
         </div>
       ) : null}

@@ -185,7 +185,7 @@ function LocationStep(p: StepProps) {
 function LegalStep(p: StepProps) {
   return (
     <div className="flex flex-col gap-5">
-      <p className="rounded-md bg-surface-alt p-3 text-sm text-muted">
+      <p className="bg-c4 p-3 text-sm text-muted">
         Ces informations légales sont utilisées pour la vérification par notre équipe. Elles ne sont
         pas affichées publiquement sans nécessité.
       </p>
@@ -209,7 +209,7 @@ function LegalStep(p: StepProps) {
       </div>
       <Textarea {...bind(p, 'corporate_purpose')} label="Objet social" rows={3} maxLength={1000} />
       <section aria-labelledby="executives-title" className="flex flex-col gap-3">
-        <h3 id="executives-title" className="text-lg font-semibold">
+        <h3 id="executives-title" className="text-xl heading-block">
           Dirigeants
         </h3>
         <ExecutivesEditor
@@ -291,7 +291,7 @@ function DocumentsStep(p: StepProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="rounded-md bg-surface-alt p-3 text-sm text-muted">
+      <p className="bg-c4 p-3 text-sm text-muted">
         Les justificatifs (agrément, extrait du RCCM, pièce d’identité…) servent uniquement à la
         vérification par notre équipe. Ils sont stockés de façon privée et ne sont jamais publiés.
         Cette étape est facultative : vous pourrez aussi les ajouter plus tard depuis votre espace
@@ -330,7 +330,7 @@ function DocumentsStep(p: StepProps) {
           {p.draft.documents.map((d, i) => (
             <li
               key={`${d.file.name}-${i}`}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line p-3"
+              className="flex flex-wrap items-center justify-between gap-2 border-2 border-ink p-3"
             >
               <span>
                 <span className="font-medium">{d.file.name}</span>
@@ -381,7 +381,7 @@ function ReviewStep(p: StepProps) {
   const ph = (v: string) => (v.trim() ? normalizePhone(v) : '');
   return (
     <div className="flex flex-col gap-5">
-      <dl className="divide-y divide-line rounded-lg border border-line px-4">
+      <dl className="divide-y divide-line border-2 border-ink px-4">
         <Row label="Type">{d.type ? TYPE_LABELS[d.type] : ''}</Row>
         <Row label="Votre qualité">
           {d.submitter_role ? SUBMITTER_LABELS[d.submitter_role] : ''}

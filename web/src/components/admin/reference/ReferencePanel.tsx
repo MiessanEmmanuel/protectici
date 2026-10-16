@@ -84,7 +84,7 @@ export function ReferencePanel({ resource }: { resource: ReferenceResource }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold">{label}</h2>
+        <h2 className="text-xl heading-block">{label}</h2>
         <Button onClick={() => setEditing({ item: null })}>Ajouter une valeur</Button>
       </div>
 
@@ -92,7 +92,7 @@ export function ReferencePanel({ resource }: { resource: ReferenceResource }) {
         {notice}
       </p>
       {conflict ? (
-        <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-danger bg-danger-soft p-4">
+        <div role="alert" className="flex flex-wrap items-center gap-3 border-2 border-danger bg-danger-soft p-4">
           <p className="flex-1">
             <strong>{conflict.item.name}</strong> : {conflict.message}
           </p>

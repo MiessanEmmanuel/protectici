@@ -4,11 +4,7 @@ import { useState, type FormEvent } from 'react';
 import type { ReviewInput } from '@/lib/api/types';
 import { useAsyncAction } from '@/lib/use-async';
 import { validate } from '@/lib/validation';
-import {
-  REVIEW_BODY_MAX,
-  REVIEW_BODY_MIN,
-  reviewSchema,
-} from '@/lib/wave-b-schemas';
+import { REVIEW_BODY_MAX, REVIEW_BODY_MIN, reviewSchema } from '@/lib/wave-b-schemas';
 import { Button } from '../ui/Button';
 import { FormError } from '../ui/Field';
 import { Input } from '../ui/Input';
@@ -25,7 +21,13 @@ interface Props {
 }
 
 /** Champs et validation communs au dépôt d'un avis (fiche) et à sa modification (compte). */
-export function ReviewEditor({ initial, submitLabel, onSubmit, onCancel, idPrefix = 'avis' }: Props) {
+export function ReviewEditor({
+  initial,
+  submitLabel,
+  onSubmit,
+  onCancel,
+  idPrefix = 'avis',
+}: Props) {
   const [rating, setRating] = useState(initial?.rating ?? 0);
   const [title, setTitle] = useState(initial?.title ?? '');
   const [body, setBody] = useState(initial?.body ?? '');
@@ -60,7 +62,7 @@ export function ReviewEditor({ initial, submitLabel, onSubmit, onCancel, idPrefi
   }
 
   return (
-    <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
+    <form method="post" onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
       <StarRatingInput
         value={rating}
         onChange={(v) => {

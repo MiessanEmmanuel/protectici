@@ -123,7 +123,7 @@ function ReportBody({
 
   const fieldErrors = { ...errors, ...(error?.fields ?? {}) };
   return (
-    <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
+    <form method="post" onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
       <Select
         label="Raison du signalement"
         required

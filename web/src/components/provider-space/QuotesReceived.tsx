@@ -64,7 +64,7 @@ export function QuotesReceived() {
     <section aria-labelledby="quotes-title" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 id="quotes-title" className="text-xl font-bold">
+          <h2 id="quotes-title" className="text-xl heading-block">
             Demandes de devis
           </h2>
           {counts.data ? (
@@ -299,7 +299,7 @@ function QuoteDetail({
     <Card as="section" aria-labelledby="quote-detail-title" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 id="quote-detail-title" ref={heading} tabIndex={-1} className="text-lg font-bold">
+          <h3 id="quote-detail-title" ref={heading} tabIndex={-1} className="text-lg heading-block">
             Devis {quote.reference}
           </h3>
           <p className="mt-1">
@@ -334,7 +334,7 @@ function QuoteDetail({
       </div>
 
       {quote.status === 'replied' ? (
-        <div className="rounded-md border-l-4 border-primary bg-surface-alt p-3">
+        <div className="border-l-4 border-primary bg-c4 p-3">
           <p className="font-semibold">
             Votre réponse{quote.replied_at ? ` du ${formatDate(quote.replied_at)}` : ''}
           </p>

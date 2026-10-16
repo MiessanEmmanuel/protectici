@@ -18,7 +18,7 @@ export function pageWindow(current: number, last: number, size = 5): number[] {
 }
 
 const item =
-  'inline-flex min-h-tap min-w-tap items-center justify-center rounded-md border px-3 no-underline';
+  'inline-flex min-h-tap min-w-tap items-center justify-center border-2 px-3 font-extrabold no-underline';
 
 export function Pagination({
   currentPage,
@@ -29,18 +29,18 @@ export function Pagination({
   if (lastPage <= 1) return null;
   return (
     <nav aria-label={label} className="mt-8">
-      <ul className="flex flex-wrap items-center justify-center gap-2">
+      <ul className="flex flex-wrap items-center justify-center gap-1.5">
         <li>
           {currentPage > 1 ? (
             <Link
               href={hrefFor(currentPage - 1)}
               rel="prev"
-              className={cn(item, 'border-line bg-surface hover:bg-primary-soft')}
+              className={cn(item, 'border-ink bg-white text-ink hover:bg-ink hover:text-white')}
             >
               <span aria-hidden="true">‹&nbsp;</span>Précédent
             </Link>
           ) : (
-            <span aria-disabled="true" className={cn(item, 'border-line text-muted opacity-60')}>
+            <span aria-disabled="true" className={cn(item, 'border-ink-2 text-ink-2 opacity-60')}>
               <span aria-hidden="true">‹&nbsp;</span>Précédent
             </span>
           )}
@@ -48,17 +48,14 @@ export function Pagination({
         {pageWindow(currentPage, lastPage).map((p) => (
           <li key={p}>
             {p === currentPage ? (
-              <span
-                aria-current="page"
-                className={cn(item, 'border-primary bg-primary font-semibold text-on-primary')}
-              >
+              <span aria-current="page" className={cn(item, 'border-ink bg-c2 text-on-c2')}>
                 <span className="sr-only">Page </span>
                 {p}
               </span>
             ) : (
               <Link
                 href={hrefFor(p)}
-                className={cn(item, 'border-line bg-surface hover:bg-primary-soft')}
+                className={cn(item, 'border-ink bg-white text-ink hover:bg-ink hover:text-white')}
               >
                 <span className="sr-only">Page </span>
                 {p}
@@ -71,12 +68,12 @@ export function Pagination({
             <Link
               href={hrefFor(currentPage + 1)}
               rel="next"
-              className={cn(item, 'border-line bg-surface hover:bg-primary-soft')}
+              className={cn(item, 'border-ink bg-white text-ink hover:bg-ink hover:text-white')}
             >
               Suivant<span aria-hidden="true">&nbsp;›</span>
             </Link>
           ) : (
-            <span aria-disabled="true" className={cn(item, 'border-line text-muted opacity-60')}>
+            <span aria-disabled="true" className={cn(item, 'border-ink-2 text-ink-2 opacity-60')}>
               Suivant<span aria-hidden="true">&nbsp;›</span>
             </span>
           )}

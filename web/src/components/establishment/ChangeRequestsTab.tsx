@@ -62,7 +62,7 @@ export function ChangeRequestsTab({ est, reference, readOnly, reload }: TabProps
           Ces informations servent à vérifier votre établissement. Pour les modifier, envoyez une
           demande : notre équipe l’examinera avant de l’appliquer.
         </p>
-        <dl className="divide-y divide-line rounded-lg border border-line px-4">
+        <dl className="divide-y divide-line-soft border-2 border-ink px-4">
           {fields.map((f) => (
             <div key={f} className="grid gap-0.5 py-2 sm:grid-cols-3 sm:gap-4">
               <dt className="font-semibold">{FIELD_LABELS[f] ?? f}</dt>
@@ -110,7 +110,7 @@ export function ChangeRequestsTab({ est, reference, readOnly, reload }: TabProps
         ) : (
           <ul className="flex flex-col gap-3">
             {history.map((c) => (
-              <li key={c.id} className="rounded-lg border border-line p-3">
+              <li key={c.id} className="border-2 border-ink p-3">
                 <p className="flex flex-wrap items-center gap-2">
                   <Badge tone={STATUS[c.status].tone}>{STATUS[c.status].label}</Badge>
                   <span className="text-sm text-muted">
@@ -169,10 +169,7 @@ function PendingRequest({
   const [open, setOpen] = useState(false);
   const toast = useToast();
   return (
-    <section
-      aria-labelledby="pending-title"
-      className="rounded-lg border border-accent-text bg-warning-soft p-4"
-    >
+    <section aria-labelledby="pending-title" className="border-2 border-c2 bg-warning-soft p-4">
       <h3 id="pending-title" className="text-lg font-semibold">
         Demande en attente
       </h3>
@@ -294,7 +291,7 @@ function RequestForm({
   return (
     <form
       noValidate
-      className="flex flex-col gap-4 rounded-lg border border-line p-4"
+      className="flex flex-col gap-4 border-2 border-ink p-4"
       onSubmit={(e) => {
         e.preventDefault();
         void submit();

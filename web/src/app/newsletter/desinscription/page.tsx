@@ -19,8 +19,10 @@ export default async function Page({
   return (
     <>
       <PageHeader title="Désinscription de la lettre d’information" />
-      <Container className="max-w-2xl py-8">
-        <NewsletterUnsubscribe token={token} />
+      <Container className="py-section">
+        <div className="max-w-[42rem] border-2 border-ink p-5 md:p-8">
+          <NewsletterUnsubscribe token={token} />
+        </div>
       </Container>
     </>
   );

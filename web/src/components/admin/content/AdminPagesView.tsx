@@ -16,6 +16,7 @@ import { QueryBoundary } from '../../ui/QueryBoundary';
 import { Select } from '../../ui/Select';
 import { useToast } from '../../ui/Toast';
 import { RichTextEditor } from './RichTextEditor';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 const PAGES = [
   { slug: 'qui-sommes-nous', label: 'Qui sommes-nous' },
@@ -29,7 +30,7 @@ export function AdminPagesView() {
   const [slug, setSlug] = useState<string>(PAGES[0].slug);
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Pages institutionnelles</h1>
+      <AdminPageHeader section="Contenu" title="Pages institutionnelles" />
       <Select label="Page" value={slug} onChange={(e) => setSlug(e.target.value)} wrapperClassName="sm:w-80">
         {PAGES.map((p) => (
           <option key={p.slug} value={p.slug}>{p.label}</option>
@@ -92,10 +93,10 @@ function PageEditor({ slug }: { slug: string }) {
           </form>
         ) : (
           <div className="flex flex-col gap-3">
-            <p className="rounded-md border border-line bg-surface-alt p-3">
+            <p className="border-2 border-ink bg-c4 p-3">
               Lecture seule : la modification des pages institutionnelles est réservée aux administrateurs.
             </p>
-            <h2 className="text-xl font-bold">{page.title}</h2>
+            <h2 className="text-xl heading-block">{page.title}</h2>
             <p className="text-sm text-muted">{page.seo_description ?? 'Aucune description SEO.'}</p>
           </div>
         )

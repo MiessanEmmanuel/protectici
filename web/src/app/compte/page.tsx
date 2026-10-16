@@ -13,9 +13,11 @@ export default async function AccountPage({
   const v = (await searchParams).verified;
   return (
     <>
-      <PageHeader title="Mon compte" />
-      <Container className="max-w-3xl py-8">
-        <AccountView justVerified={(Array.isArray(v) ? v[0] : v) === '1'} />
+      <PageHeader eyebrow="Espace ProtectIci" title="Mon compte" />
+      <Container className="py-section">
+        <div className="max-w-[52rem]">
+          <AccountView justVerified={(Array.isArray(v) ? v[0] : v) === '1'} />
+        </div>
       </Container>
     </>
   );

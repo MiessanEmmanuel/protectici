@@ -114,7 +114,7 @@ function ReviewList({ slug }: { slug: string }) {
     <section aria-labelledby="reviews-title" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 id="reviews-title" className="text-xl font-bold">
+          <h2 id="reviews-title" className="text-xl heading-block">
             Avis de la fiche
           </h2>
           {counts.data ? (
@@ -185,13 +185,13 @@ function ReviewItem({
         <RatingStars value={review.rating} showValue={false} />
         <StatusPill kind="review" status={review.status} />
       </div>
-      {review.title ? <h3 className="text-lg font-bold">{review.title}</h3> : null}
+      {review.title ? <h3 className="text-lg heading-block">{review.title}</h3> : null}
       <p className="whitespace-pre-line">{review.body}</p>
       <p className="text-sm text-muted">
         Par {review.author} · {formatDate(review.created_at)}
       </p>
       {review.provider_reply ? (
-        <div className="ml-4 rounded-md border-l-4 border-primary bg-surface-alt p-3">
+        <div className="ml-4 border-l-4 border-primary bg-c4 p-3">
           <p className="text-sm font-semibold">
             Votre réponse
             {review.provider_replied_at ? ` · ${formatDate(review.provider_replied_at)}` : ''}
@@ -280,7 +280,7 @@ function ReplyForm({
         onConfirm={send}
       >
         <p>Une seule réponse est possible et elle ne pourra plus être modifiée.</p>
-        <p className="mt-2 whitespace-pre-line rounded-md bg-surface-alt p-3">{confirm}</p>
+        <p className="mt-2 whitespace-pre-line bg-c4 p-3">{confirm}</p>
       </ConfirmDialog>
     </form>
   );

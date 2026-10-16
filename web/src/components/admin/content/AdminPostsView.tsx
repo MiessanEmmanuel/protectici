@@ -16,6 +16,7 @@ import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { Badge } from '../../ui/Tag';
 import { useToast } from '../../ui/Toast';
 import { POST_STATUS_LABELS } from './labels';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 /** Liste des articles (tous statuts) du back-office de contenu. */
 export function AdminPostsView() {
@@ -30,10 +31,11 @@ export function AdminPostsView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold sm:text-3xl">Articles du blog</h1>
-        <ButtonLink href="/admin/blog/nouveau">Nouvel article</ButtonLink>
-      </div>
+      <AdminPageHeader
+        section="Contenu"
+        title="Articles du blog"
+        actions={<ButtonLink href="/admin/blog/nouveau">Nouvel article</ButtonLink>}
+      />
       <Select
         label="Filtrer par statut"
         value={status}

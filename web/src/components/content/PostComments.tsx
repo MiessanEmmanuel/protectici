@@ -35,7 +35,9 @@ export function PostComments({ slug }: { slug: string }) {
         {(res) => (
           <>
             {res.data.length === 0 ? (
-              <p className="text-muted">Aucun commentaire pour le moment. Soyez le premier à réagir.</p>
+              <p className="text-muted">
+                Aucun commentaire pour le moment. Soyez le premier à réagir.
+              </p>
             ) : (
               <ul className="flex flex-col gap-4">
                 {res.data.map((c) => (
@@ -54,12 +56,12 @@ export function PostComments({ slug }: { slug: string }) {
 
 function CommentItem({ comment }: { comment: BlogComment }) {
   return (
-    <li className="rounded-lg border border-line bg-surface p-4">
+    <li className="border-2 border-ink bg-white p-4">
       <p className="text-sm text-muted">
         <strong className="text-ink">{comment.author_name}</strong> ·{' '}
         <time dateTime={comment.created_at}>{formatDate(comment.created_at)}</time>
       </p>
-      <p className="mt-1 whitespace-pre-line break-words">{comment.body}</p>
+      <p className="mt-1 break-words whitespace-pre-line">{comment.body}</p>
       {comment.replies.length > 0 ? (
         <ul className="mt-3 flex flex-col gap-3 border-l-2 border-primary-soft-2 pl-4">
           {comment.replies.map((r) => (
@@ -68,7 +70,7 @@ function CommentItem({ comment }: { comment: BlogComment }) {
                 <strong className="text-ink">{r.author_name}</strong> ·{' '}
                 <time dateTime={r.created_at}>{formatDate(r.created_at)}</time>
               </p>
-              <p className="mt-1 whitespace-pre-line break-words">{r.body}</p>
+              <p className="mt-1 break-words whitespace-pre-line">{r.body}</p>
             </li>
           ))}
         </ul>
@@ -90,10 +92,16 @@ function CommentForm({ slug }: { slug: string }) {
   if (status === 'loading') return null;
   if (status !== 'authenticated' || !user) {
     return (
-      <div className="rounded-lg border border-line bg-surface-alt p-4">
-        <p>Connectez-vous pour laisser un commentaire. Les commentaires sont publiés après modération.</p>
+      <div className="border-2 border-ink bg-c4 p-4">
+        <p>
+          Connectez-vous pour laisser un commentaire. Les commentaires sont publiés après
+          modération.
+        </p>
         <div className="mt-3">
-          <ButtonLink href={buildHref('/connexion', { redirect: `/blog/${slug}` })} variant="secondary">
+          <ButtonLink
+            href={buildHref('/connexion', { redirect: `/blog/${slug}` })}
+            variant="secondary"
+          >
             Se connecter
           </ButtonLink>{' '}
           <Link href="/inscription" className="ml-2">
@@ -105,7 +113,7 @@ function CommentForm({ slug }: { slug: string }) {
   }
   if (!user.email_verified) {
     return (
-      <p role="status" className="rounded-lg border border-line bg-surface-alt p-4">
+      <p role="status" className="border-2 border-ink bg-c4 p-4">
         Vérifiez votre adresse e-mail (lien reçu à l’inscription) pour pouvoir commenter.
       </p>
     );
@@ -137,8 +145,13 @@ function CommentForm({ slug }: { slug: string }) {
   }
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-3">
-      <h3 className="text-lg font-bold">Laisser un commentaire</h3>
+    <form
+      method="post"
+      onSubmit={(e) => void onSubmit(e)}
+      noValidate
+      className="flex flex-col gap-3"
+    >
+      <h3 className="text-xl heading-block">Laisser un commentaire</h3>
       {sent ? (
         <FormSuccess message="Merci ! Votre commentaire a bien été reçu : il sera publié après modération." />
       ) : null}

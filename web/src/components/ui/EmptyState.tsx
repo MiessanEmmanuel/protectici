@@ -13,14 +13,9 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        'rounded-lg border border-dashed border-line bg-surface-alt p-8 text-center',
-        className,
-      )}
-    >
-      <h2 className="text-lg font-semibold">{title}</h2>
-      {children ? <div className="mx-auto mt-2 max-w-prose text-muted">{children}</div> : null}
+    <div className={cn('border-2 border-ink bg-c4 p-8 text-center text-on-c4', className)}>
+      <h2 className="text-xl heading-block">{title}</h2>
+      {children ? <div className="mx-auto mt-2 max-w-prose text-ink-2">{children}</div> : null}
       {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
     </div>
   );
@@ -36,8 +31,8 @@ export function ErrorState({
   action?: ReactNode;
 }) {
   return (
-    <div role="alert" className="rounded-lg border border-danger bg-danger-soft p-6 text-center">
-      <h2 className="text-lg font-semibold text-danger">{title}</h2>
+    <div role="alert" className="border-2 border-danger bg-danger-soft p-6 text-center">
+      <h2 className="text-xl heading-block text-danger">{title}</h2>
       {children ? <div className="mx-auto mt-2 max-w-prose">{children}</div> : null}
       {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
     </div>

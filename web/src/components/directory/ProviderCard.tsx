@@ -1,61 +1,73 @@
 import Link from 'next/link';
+import { Phone } from 'lucide-react';
 import type { ProviderSummary } from '@/lib/api/types';
-import { formatDistance, formatFcfa, formatPhone, telHref } from '@/lib/format';
-import { Avatar } from '../ui/Avatar';
-import { Card } from '../ui/Card';
-import { RatingStars } from '../ui/RatingStars';
-import { Badge, Tag } from '../ui/Tag';
+import { buildHref } from '@/lib/search-params';
+import { formatDistance, formatFcfa, formatPhone, formatRating, telHref } from '@/lib/format';
+import { FicheCard, ficheActionClasses } from '../ui/FicheCard';
+import { Badge } from '../ui/Tag';
 
+/** Fiche de résultat d'annuaire (système v9 : FicheCard + actions directes). */
 export function ProviderCard({ provider }: { provider: ProviderSummary }) {
   const distance = formatDistance(provider.distance_m);
   const place = [provider.district?.name, provider.city.name].filter(Boolean).join(', ');
+  const services = provider.services.slice(0, 3).map((s) => s.name);
+  const more = provider.services.length - services.length;
   return (
-    <Card as="article" className="flex h-full flex-col gap-3">
-      <div className="flex items-start gap-3">
-        <Avatar name={provider.name} src={provider.logo_url} />
-        <div className="min-w-0">
-          <h3 className="text-lg font-bold">
-            <Link href={`/annuaire/${provider.slug}`} className="text-ink hover:text-primary">
-              {provider.name}
-            </Link>
-          </h3>
-          <p className="text-sm text-muted">
-            {place}
-            {distance ? <span> · à {distance}</span> : null}
-          </p>
-        </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <RatingStars value={provider.rating_avg} count={provider.rating_count} />
-        {provider.is_verified ? <Badge tone="success">✓ Vérifié</Badge> : null}
-        {provider.is_featured ? <Badge tone="accent">À la une</Badge> : null}
-      </div>
-      <ul className="flex flex-wrap gap-1.5" aria-label="Services proposés">
-        {provider.services.slice(0, 3).map((s) => (
-          <li key={s.slug}>
-            <Tag>{s.name}</Tag>
-          </li>
-        ))}
-        {provider.services.length > 3 ? (
-          <li>
-            <Tag className="bg-surface-alt text-muted">+{provider.services.length - 3}</Tag>
-          </li>
-        ) : null}
-      </ul>
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2 text-sm">
-        <span className="text-muted">
-          {provider.price_from
-            ? `À partir de ${formatFcfa(provider.price_from)}`
-            : 'Tarif sur devis'}
-        </span>
-        <a
-          href={telHref(provider.phone)}
-          className="inline-flex min-h-tap items-center font-semibold"
-        >
-          <span className="sr-only">Appeler {provider.name} : </span>
-          {formatPhone(provider.phone)}
-        </a>
-      </div>
-    </Card>
+    <FicheCard
+      href={`/annuaire/${provider.slug}`}
+      className="h-full"
+      title={provider.name}
+      logoUrl={provider.logo_url}
+      meta={
+        <>
+          {place}
+          {services.length > 0 ? (
+            <>
+              {' · '}
+              <span className="sr-only">Services proposés : </span>
+              {services.join(', ')}
+              {more > 0 ? ` +${more}` : null}
+            </>
+          ) : null}
+        </>
+      }
+      verified={provider.is_verified ? 'Fiche vérifiée' : null}
+      rating={
+        provider.rating_count > 0
+          ? {
+              value: formatRating(provider.rating_avg),
+              count: `${provider.rating_count} avis`,
+            }
+          : null
+      }
+      distance={distance ? `à ${distance}` : null}
+      extra={
+        <p className="flex flex-wrap items-center gap-2 text-[0.85rem] font-bold">
+          {provider.is_featured ? <Badge tone="accent">À la une</Badge> : null}
+          <span>
+            {provider.price_from
+              ? `À partir de ${formatFcfa(provider.price_from)}`
+              : 'Tarif sur devis'}
+          </span>
+        </p>
+      }
+      actions={
+        <>
+          {provider.phone ? (
+            <a href={telHref(provider.phone)} className={ficheActionClasses}>
+              <Phone aria-hidden="true" />
+              <span className="sr-only">Appeler {provider.name} : </span>
+              {formatPhone(provider.phone)}
+            </a>
+          ) : null}
+          <Link
+            href={buildHref('/devis', { prestataire: provider.slug })}
+            className={ficheActionClasses}
+          >
+            Demander un devis<span className="sr-only"> à {provider.name}</span>
+          </Link>
+        </>
+      }
+    />
   );
 }

@@ -57,7 +57,8 @@ export function LocationFields({ values, onChange, errors, reference, disabled }
     try {
       const found = await clientApi.geocode(q);
       setResults(found);
-      if (found.length === 0) setGeoError('Aucun résultat. Pointez la position directement sur la carte.');
+      if (found.length === 0)
+        setGeoError('Aucun résultat. Pointez la position directement sur la carte.');
     } catch (e) {
       setResults(null);
       setGeoError(errorMessage(e));
@@ -133,7 +134,7 @@ export function LocationFields({ values, onChange, errors, reference, disabled }
         disabled={disabled}
       />
 
-      <fieldset className="flex flex-col gap-3 rounded-lg border border-line p-4" disabled={disabled}>
+      <fieldset className="flex flex-col gap-3 border-2 border-ink p-4" disabled={disabled}>
         <legend className="px-1 font-semibold">Position sur la carte</legend>
         <p className="text-sm text-muted">
           Recherchez une adresse puis choisissez un résultat, cliquez sur la carte, ou saisissez

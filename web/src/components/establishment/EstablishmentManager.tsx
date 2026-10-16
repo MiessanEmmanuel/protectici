@@ -32,23 +32,13 @@ export function EstablishmentManager({
   return (
     <QueryBoundary state={state} loadingLabel="Chargement de votre fiche…">
       {(est) => (
-        <Manager
-          est={est}
-          reference={reference}
-          onSaved={state.setData}
-          reload={state.reload}
-        />
+        <Manager est={est} reference={reference} onSaved={state.setData} reload={state.reload} />
       )}
     </QueryBoundary>
   );
 }
 
-function Manager({
-  est,
-  reference,
-  onSaved,
-  reload,
-}: Omit<TabProps, 'readOnly'>) {
+function Manager({ est, reference, onSaved, reload }: Omit<TabProps, 'readOnly'>) {
   const readOnly = est.status === 'suspended';
   const props: TabProps = { est, reference, readOnly, onSaved, reload };
   const tabs: TabDef[] = [
@@ -67,7 +57,7 @@ function Manager({
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold">{est.name}</h2>
+        <h2 className="text-2xl heading-block">{est.name}</h2>
         <p className="flex flex-wrap items-center gap-2 text-muted">
           <span>{TYPE_LABELS[est.type]}</span>
           <StatusBadge status={est.status} />
@@ -84,19 +74,21 @@ function StatusBanner({ est, reload }: { est: MyEstablishment; reload: () => voi
   const toast = useToast();
   if (est.status === 'pending') {
     return (
-      <div role="status" className="rounded-lg border border-line bg-surface-alt p-4">
+      <div role="status" className="border-2 border-ink bg-c4 p-4">
         <p className="font-semibold">Fiche en attente de validation</p>
         <p>
-          Notre équipe examine votre demande{est.submitted_at ? ` envoyée le ${formatDate(est.submitted_at)}` : ''}.
-          Vous pouvez compléter la fiche en attendant. Elle sera visible publiquement après validation.
+          Notre équipe examine votre demande
+          {est.submitted_at ? ` envoyée le ${formatDate(est.submitted_at)}` : ''}. Vous pouvez
+          compléter la fiche en attendant. Elle sera visible publiquement après validation.
         </p>
       </div>
     );
   }
   if (est.status === 'approved') {
-    const href = est.type === 'provider' ? `/annuaire/${est.slug}` : `/forces-etatiques/${est.slug}`;
+    const href =
+      est.type === 'provider' ? `/annuaire/${est.slug}` : `/forces-etatiques/${est.slug}`;
     return (
-      <div role="status" className="rounded-lg border border-success bg-success-soft p-4">
+      <div role="status" className="border-2 border-success bg-success-soft p-4">
         <p className="font-semibold">Fiche validée</p>
         <p>
           Votre fiche est publiée.{' '}
@@ -111,7 +103,7 @@ function StatusBanner({ est, reload }: { est: MyEstablishment; reload: () => voi
   }
   if (est.status === 'rejected') {
     return (
-      <div className="rounded-lg border border-danger bg-danger-soft p-4">
+      <div className="border-2 border-danger bg-danger-soft p-4">
         <p className="font-semibold text-danger">Fiche rejetée</p>
         <p>
           <span className="font-semibold">Motif : </span>
@@ -141,7 +133,7 @@ function StatusBanner({ est, reload }: { est: MyEstablishment; reload: () => voi
   }
   if (est.status === 'suspended') {
     return (
-      <div role="alert" className="rounded-lg border border-danger bg-danger-soft p-4">
+      <div role="alert" className="border-2 border-danger bg-danger-soft p-4">
         <p className="font-semibold text-danger">Fiche suspendue : lecture seule</p>
         <p>
           Cette fiche n’est plus visible publiquement et ne peut plus être modifiée. Contactez

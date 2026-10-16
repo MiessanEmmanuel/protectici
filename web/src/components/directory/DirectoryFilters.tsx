@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState, type FormEvent } from 'react';
 import type { ReferenceData } from '@/lib/api/types';
 import { buildHref } from '@/lib/search-params';
+import { Search } from 'lucide-react';
 import { Button, ButtonLink } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
@@ -95,7 +96,7 @@ export function DirectoryFilters({ kind, reference, basePath, view, initial }: P
       aria-label={
         kind === 'providers' ? 'Filtrer les prestataires' : 'Filtrer les forces étatiques'
       }
-      className="grid gap-4 rounded-lg border border-line bg-surface-alt p-4 sm:grid-cols-2 lg:grid-cols-3"
+      className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
     >
       <Input
         label={kind === 'providers' ? 'Nom du prestataire' : 'Nom de la structure'}
@@ -177,8 +178,15 @@ export function DirectoryFilters({ kind, reference, basePath, view, initial }: P
       </div>
 
       <div className="flex flex-wrap gap-3 sm:col-span-2 lg:col-span-3">
-        <Button type="submit">Rechercher</Button>
-        <ButtonLink href={view === 'map' ? `${basePath}?view=map` : basePath} variant="ghost">
+        <Button type="submit" variant="solid" size="lg">
+          <Search aria-hidden="true" />
+          Rechercher
+        </Button>
+        <ButtonLink
+          href={view === 'map' ? `${basePath}?view=map` : basePath}
+          variant="outline"
+          size="lg"
+        >
           Réinitialiser
         </ButtonLink>
       </div>

@@ -7,23 +7,23 @@ import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ShareLinks } from '@/components/directory/ShareLinks';
 import { ViewTracker } from '@/components/directory/ViewTracker';
 import { MiniMap } from '@/components/map/MiniMap';
-import { Avatar } from '@/components/ui/Avatar';
+import { BadgeCheck, Mail, MapPin, Phone, Share2, Siren, Star } from 'lucide-react';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
-import { ButtonLink } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { ButtonLink, buttonClasses } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
 import { ErrorState } from '@/components/ui/EmptyState';
 import { ExternalLink } from '@/components/ui/ExternalLink';
 import { JsonLd } from '@/components/ui/JsonLd';
 import { Pagination } from '@/components/ui/Pagination';
 import { RatingStars } from '@/components/ui/RatingStars';
-import { Badge, Tag } from '@/components/ui/Tag';
+import { Badge } from '@/components/ui/Tag';
 import { serverApi } from '@/lib/api/server';
 import { SITE_URL } from '@/lib/env';
-import { formatFcfa, formatPhone, telHref } from '@/lib/format';
+import { formatFcfa, formatPhone, formatRating, pluralize, telHref } from '@/lib/format';
 import { legalFormLabel, positionLabel } from '@/lib/labels';
 import { safe } from '@/lib/safe';
 import { buildHref } from '@/lib/search-params';
+import { serviceIcon } from '@/lib/service-icons';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -70,7 +70,7 @@ export default async function ProviderPage({ params, searchParams }: Props) {
         <ErrorState
           title="Cette fiche n’a pas pu être chargée"
           action={
-            <ButtonLink href="/annuaire" variant="secondary">
+            <ButtonLink href="/annuaire" variant="solid">
               Retour à l’annuaire
             </ButtonLink>
           }
@@ -133,90 +133,158 @@ export default async function ProviderPage({ params, searchParams }: Props) {
   ];
 
   return (
-    <Container className="py-6">
+    <>
       <JsonLd data={jsonLd} />
       <ViewTracker slug={provider.slug} />
-      <Breadcrumb
-        items={[
-          { label: 'Accueil', href: '/' },
-          { label: 'Prestataires', href: '/annuaire' },
-          { label: provider.name },
-        ]}
-      />
 
-      <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
-        <Avatar name={provider.name} src={provider.logo_url} className="size-20 text-2xl" />
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold sm:text-3xl">{provider.name}</h1>
-          <p className="text-muted">{place}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <RatingStars value={provider.rating_avg} count={provider.rating_count} />
-            {provider.is_verified ? <Badge tone="success">✓ Vérifié</Badge> : null}
-            {provider.is_featured ? <Badge tone="accent">À la une</Badge> : null}
-          </div>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <ButtonLink href={telHref(provider.phone)} variant="primary">
-              Appeler {formatPhone(provider.phone)}
-            </ButtonLink>
-            <ButtonLink
-              href={`/devis?prestataire=${encodeURIComponent(provider.slug)}`}
-              variant="accent"
-            >
-              Demander un devis
-            </ButtonLink>
-            <FavoriteButton
-              slug={provider.slug}
-              name={provider.name}
-              initial={provider.is_favorite}
-            />
+      {/* ---------- En-tête en aplat bleu ---------- */}
+      <header className="bg-c1 text-on-c1">
+        <div className="wrap py-8 md:py-12 [&_a]:text-inherit">
+          <Breadcrumb
+            items={[
+              { label: 'Accueil', href: '/' },
+              { label: 'Prestataires', href: '/annuaire' },
+              { label: provider.name },
+            ]}
+          />
+          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
+            {provider.logo_url ? (
+              // <img> et non next/image : next/image injecte un style en ligne bloqué par la CSP.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={provider.logo_url}
+                alt=""
+                width={120}
+                height={120}
+                className="size-24 border-2 border-white bg-white object-contain md:size-[120px]"
+              />
+            ) : (
+              <span
+                aria-hidden="true"
+                className="grid size-24 place-items-center bg-c2 text-[2.6rem] font-black text-on-c2 md:size-[120px]"
+              >
+                {provider.name.trim().charAt(0).toUpperCase()}
+              </span>
+            )}
+            <div className="min-w-0">
+              <div className="mb-3 flex flex-wrap gap-2">
+                {provider.is_verified ? (
+                  <Badge tone="accent">
+                    <BadgeCheck aria-hidden="true" />
+                    Fiche vérifiée
+                  </Badge>
+                ) : null}
+                {provider.is_featured ? <Badge tone="night">À la une</Badge> : null}
+              </div>
+              <h1 className="text-section heading-block break-words">{provider.name}</h1>
+              <p className="mt-3 flex items-center gap-2 text-lg opacity-90 [&_svg]:size-[1.1em]">
+                <MapPin aria-hidden="true" />
+                {place}
+              </p>
+            </div>
+            {provider.rating_count > 0 ? (
+              <p className="md:text-right">
+                <span className="flex items-center gap-2 text-[3rem] leading-none font-black md:justify-end">
+                  <Star aria-hidden="true" className="size-[0.6em] fill-c2 stroke-c2" />
+                  {formatRating(provider.rating_avg)}
+                  <span className="sr-only"> sur 5</span>
+                </span>
+                <span className="text-sm opacity-85">
+                  {pluralize(provider.rating_count, 'avis', 'avis')}
+                </span>
+              </p>
+            ) : (
+              <p className="text-sm font-semibold opacity-85">Pas encore d’avis</p>
+            )}
           </div>
         </div>
       </header>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_20rem]">
-        <div className="flex min-w-0 flex-col gap-8">
+      {/* ---------- Actions directes ---------- */}
+      <div className="border-b-2 border-ink bg-c4 text-on-c4">
+        <div className="wrap flex flex-wrap gap-3 py-4">
+          <ButtonLink href={telHref(provider.phone)} variant="solid" size="lg">
+            <Phone aria-hidden="true" />
+            Appeler {formatPhone(provider.phone)}
+          </ButtonLink>
+          <ButtonLink
+            href={`/devis?prestataire=${encodeURIComponent(provider.slug)}`}
+            variant="accent"
+            size="lg"
+          >
+            Demander un devis
+          </ButtonLink>
+          <FavoriteButton
+            slug={provider.slug}
+            name={provider.name}
+            initial={provider.is_favorite}
+          />
+          <a href="#partager" className={buttonClasses('outline', 'lg')}>
+            <Share2 aria-hidden="true" />
+            Partager
+          </a>
+        </div>
+      </div>
+
+      <Container className="grid gap-10 py-12 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="flex min-w-0 flex-col gap-12">
           <section aria-labelledby="presentation">
-            <h2 id="presentation" className="text-xl font-bold">
+            <h2 id="presentation" className="text-[2rem] heading-block">
               Présentation
             </h2>
             {/* Description saisie par le prestataire : traitée comme texte brut (échappé par React). */}
-            <p className="mt-2 whitespace-pre-line">{provider.description}</p>
+            <p className="mt-4 max-w-[70ch] text-lg whitespace-pre-line">{provider.description}</p>
             {provider.price_from ? (
-              <p className="mt-3 font-semibold">À partir de {formatFcfa(provider.price_from)}</p>
+              <p className="mt-5 inline-block bg-c2 px-3 py-2 font-extrabold text-on-c2">
+                À partir de {formatFcfa(provider.price_from)}
+              </p>
             ) : (
-              <p className="mt-3 text-muted">Tarif communiqué sur devis.</p>
+              <p className="mt-5 inline-block border-2 border-ink px-3 py-2 font-bold">
+                Tarif communiqué sur devis.
+              </p>
             )}
           </section>
 
           <section aria-labelledby="services">
-            <h2 id="services" className="text-xl font-bold">
+            <h2 id="services" className="text-[2rem] heading-block">
               Services proposés
             </h2>
-            <ul className="mt-2 flex flex-wrap gap-2">
-              {provider.services.map((s) => (
-                <li key={s.slug}>
-                  <Tag>{s.name}</Tag>
-                </li>
-              ))}
+            <ul className="mt-5 grid grid-cols-1 grid-ruled sm:grid-cols-2">
+              {provider.services.map((s) => {
+                const Icon = serviceIcon(s.slug);
+                return (
+                  <li
+                    key={s.slug}
+                    className="flex min-h-14 items-center gap-3 px-4 py-3 font-extrabold [&_svg]:size-6 [&_svg]:shrink-0 [&_svg]:text-c1"
+                  >
+                    <Icon aria-hidden="true" />
+                    {s.name}
+                  </li>
+                );
+              })}
             </ul>
             {provider.company_types.length > 0 ? (
-              <p className="mt-3 text-sm text-muted">
-                Type d’entreprise : {provider.company_types.map((t) => t.name).join(', ')}
+              <p className="mt-4 text-ink-2">
+                <span className="eyebrow text-ink">Type d’entreprise</span>{' '}
+                {provider.company_types.map((t) => t.name).join(', ')}
               </p>
             ) : null}
           </section>
 
           <section aria-labelledby="legal">
-            <h2 id="legal" className="text-xl font-bold">
+            <h2 id="legal" className="text-[2rem] heading-block">
               Informations légales
             </h2>
-            <dl className="mt-2 grid gap-x-6 gap-y-2 sm:grid-cols-[12rem_1fr]">
+            <dl className="mt-5 border-t-2 border-ink">
               {legalRows
                 .filter(([, v]) => v)
                 .map(([k, v]) => (
-                  <div key={k} className="contents">
-                    <dt className="font-semibold">{k}</dt>
-                    <dd>{v}</dd>
+                  <div
+                    key={k}
+                    className="grid gap-1 border-b-2 border-ink py-3 sm:grid-cols-[13rem_1fr] sm:gap-6"
+                  >
+                    <dt className="pt-1 eyebrow">{k}</dt>
+                    <dd className="font-semibold break-words">{v}</dd>
                   </div>
                 ))}
             </dl>
@@ -224,29 +292,30 @@ export default async function ProviderPage({ params, searchParams }: Props) {
 
           {provider.executives.length > 0 ? (
             <section aria-labelledby="dirigeants">
-              <h2 id="dirigeants" className="text-xl font-bold">
+              <h2 id="dirigeants" className="text-[2rem] heading-block">
                 Dirigeants
               </h2>
-              <ul className="mt-2 space-y-1">
+              <ul className="mt-5 grid grid-cols-1 grid-ruled sm:grid-cols-2">
                 {provider.executives.map((e) => (
-                  <li key={`${e.full_name}-${e.position}`}>
-                    <strong>{e.full_name}</strong> — {positionLabel(e)}
+                  <li key={`${e.full_name}-${e.position}`} className="p-4">
+                    <strong className="block text-lg font-extrabold">{e.full_name}</strong>
+                    <span className="text-ink-2">{positionLabel(e)}</span>
                   </li>
                 ))}
               </ul>
             </section>
           ) : null}
 
-          <section aria-labelledby="avis">
-            <h2 id="avis" className="text-xl font-bold">
-              Avis des clients
-            </h2>
-            {provider.rating_count > 0 ? (
-              <div className="mt-1">
+          <section aria-labelledby="avis" className="scroll-mt-header">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 id="avis" className="text-[2rem] heading-block">
+                Avis des clients
+              </h2>
+              {provider.rating_count > 0 ? (
                 <RatingStars value={provider.rating_avg} count={provider.rating_count} />
-              </div>
-            ) : null}
-            <div className="mt-3">
+              ) : null}
+            </div>
+            <div className="mt-5">
               {reviews && reviews.data.length > 0 ? (
                 <>
                   <ReviewsList reviews={reviews.data} redirectTo={`/annuaire/${provider.slug}`} />
@@ -260,55 +329,81 @@ export default async function ProviderPage({ params, searchParams }: Props) {
                   />
                 </>
               ) : (
-                <p className="text-muted">Aucun avis publié pour le moment.</p>
+                <p className="border-2 border-ink bg-c4 p-5 font-semibold">
+                  Aucun avis publié pour le moment.
+                </p>
               )}
             </div>
-            <ReviewForm slug={provider.slug} providerName={provider.name} />
+            <div className="mt-8">
+              <ReviewForm slug={provider.slug} providerName={provider.name} />
+            </div>
           </section>
         </div>
 
-        <aside className="flex flex-col gap-4" aria-label="Coordonnées et partage">
-          <Card>
-            <h2 className="text-lg font-bold">Coordonnées</h2>
-            <ul className="mt-2 space-y-2 text-sm">
-              <li>
-                <a href={telHref(provider.phone)} className="font-semibold">
+        <aside className="flex flex-col gap-6" aria-label="Coordonnées et partage">
+          <section
+            aria-labelledby="coordonnees"
+            className="bg-c3 p-6 text-on-c3 [&_a]:text-inherit"
+          >
+            <h2 id="coordonnees" className="text-2xl heading-block">
+              Coordonnées
+            </h2>
+            <ul className="mt-4">
+              <li className="border-t-2 border-current">
+                <a
+                  href={telHref(provider.phone)}
+                  className="flex min-h-14 items-center gap-2.5 font-extrabold no-underline hover:underline [&_svg]:size-[1.15em]"
+                >
+                  <Phone aria-hidden="true" />
                   {formatPhone(provider.phone)}
                 </a>
               </li>
               {provider.emergency_phone ? (
-                <li>
-                  Urgence :{' '}
-                  <a href={telHref(provider.emergency_phone)} className="font-semibold">
-                    {formatPhone(provider.emergency_phone)}
+                <li className="border-t-2 border-current">
+                  <a
+                    href={telHref(provider.emergency_phone)}
+                    className="flex min-h-14 items-center gap-2.5 font-extrabold no-underline hover:underline [&_svg]:size-[1.15em]"
+                  >
+                    <Siren aria-hidden="true" />
+                    Urgence : {formatPhone(provider.emergency_phone)}
                   </a>
                 </li>
               ) : null}
               {provider.email ? (
-                <li>
-                  <a href={`mailto:${provider.email}`}>{provider.email}</a>
+                <li className="border-t-2 border-current">
+                  <a
+                    href={`mailto:${provider.email}`}
+                    className="flex min-h-14 items-center gap-2.5 font-bold break-all no-underline hover:underline [&_svg]:size-[1.15em] [&_svg]:shrink-0"
+                  >
+                    <Mail aria-hidden="true" />
+                    {provider.email}
+                  </a>
                 </li>
               ) : null}
               {provider.website_url ? (
-                <li>
+                <li className="flex min-h-14 items-center border-t-2 border-current font-bold">
                   <ExternalLink href={provider.website_url}>Site web</ExternalLink>
                 </li>
               ) : null}
-              {provider.address ? <li>{provider.address}</li> : null}
-              {provider.geo_description ? (
-                <li className="text-muted">{provider.geo_description}</li>
+              {provider.address || provider.geo_description ? (
+                <li className="border-t-2 border-current py-3">
+                  {provider.address ? <p>{provider.address}</p> : null}
+                  {provider.geo_description ? (
+                    <p className="text-sm opacity-80">{provider.geo_description}</p>
+                  ) : null}
+                </li>
               ) : null}
             </ul>
             {socials.length > 0 ? (
-              <ul className="mt-3 flex flex-wrap gap-3 text-sm">
+              <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t-2 border-current pt-3 text-sm font-bold">
                 {socials.map(([key, url]) => (
-                  <li key={key}>
+                  <li key={key} className="flex min-h-tap items-center">
                     <ExternalLink href={url}>{socialLabels[key] ?? key}</ExternalLink>
                   </li>
                 ))}
               </ul>
             ) : null}
-          </Card>
+          </section>
           {provider.lat !== null && provider.lng !== null ? (
             <MiniMap
               name={provider.name}
@@ -317,21 +412,22 @@ export default async function ProviderPage({ params, searchParams }: Props) {
               address={provider.address}
             />
           ) : null}
-          <Card>
+          <div id="partager" className="scroll-mt-header border-2 border-ink p-5">
             <ShareLinks url={pageUrl} title={provider.name} />
-          </Card>
-          <Card>
-            <p className="font-semibold">Une remarque sur ce prestataire ?</p>
+          </div>
+          <div className="flex flex-col gap-3 bg-c2 p-6 text-on-c2">
+            <p className="eyebrow">Dis-moi tout</p>
+            <p className="text-xl heading-block">Une remarque sur ce prestataire&nbsp;?</p>
             <ButtonLink
               href={buildHref('/dis-moi-tout', { prestataire: provider.slug })}
-              variant="secondary"
-              className="mt-2"
+              variant="solid"
+              className="self-start"
             >
-              Dis-moi tout
+              Envoyer un message
             </ButtonLink>
-          </Card>
+          </div>
         </aside>
-      </div>
-    </Container>
+      </Container>
+    </>
   );
 }

@@ -32,12 +32,12 @@ import {
 } from './feedback-draft';
 import { RadioGroup } from './RadioGroup';
 
-const ACTION_OPTIONS = (Object.keys(FEEDBACK_ACTION_LABELS) as (keyof typeof FEEDBACK_ACTION_LABELS)[]).map(
-  (value) => ({ value, label: FEEDBACK_ACTION_LABELS[value] }),
-);
-const TARGET_OPTIONS = (Object.keys(FEEDBACK_TARGET_LABELS) as (keyof typeof FEEDBACK_TARGET_LABELS)[]).map(
-  (value) => ({ value, label: FEEDBACK_TARGET_LABELS[value] }),
-);
+const ACTION_OPTIONS = (
+  Object.keys(FEEDBACK_ACTION_LABELS) as (keyof typeof FEEDBACK_ACTION_LABELS)[]
+).map((value) => ({ value, label: FEEDBACK_ACTION_LABELS[value] }));
+const TARGET_OPTIONS = (
+  Object.keys(FEEDBACK_TARGET_LABELS) as (keyof typeof FEEDBACK_TARGET_LABELS)[]
+).map((value) => ({ value, label: FEEDBACK_TARGET_LABELS[value] }));
 
 /** Annonce le compteur de caractères seulement quand la saisie s'arrête (pas à chaque frappe). */
 function useDebounced<T>(value: T, delay: number): T {
@@ -149,7 +149,9 @@ export function FeedbackForm({
       const keys = Object.keys(fields);
       if (keys.length) {
         const at = Math.min(...keys.map(stepIndexOfField));
-        const onStep = Object.fromEntries(keys.filter((k) => stepIndexOfField(k) === at).map((k) => [k, fields[k]!]));
+        const onStep = Object.fromEntries(
+          keys.filter((k) => stepIndexOfField(k) === at).map((k) => [k, fields[k]!]),
+        );
         return fail(onStep, at);
       }
       setFormError(form);
@@ -177,9 +179,15 @@ export function FeedbackForm({
 
   if (receipt) {
     return (
-      <div className="flex max-w-prose flex-col gap-5">
-        <ReferenceCard title="Votre message a bien été envoyé" reference={receipt.reference} message={receipt.message} />
-        <p className="font-semibold">Conservez ce numéro, il vous permettra de suivre votre dossier.</p>
+      <div className="flex flex-col gap-5">
+        <ReferenceCard
+          title="Votre message a bien été envoyé"
+          reference={receipt.reference}
+          message={receipt.message}
+        />
+        <p className="font-semibold">
+          Conservez ce numéro, il vous permettra de suivre votre dossier.
+        </p>
         <p className="text-sm text-muted">
           Un accusé de réception vous a été envoyé par e-mail avec cette référence.
         </p>
@@ -193,13 +201,21 @@ export function FeedbackForm({
     );
   }
 
-  const serviceName = reference.service_types.find((s) => String(s.id) === draft.service_type_id)?.name;
+  const serviceName = reference.service_types.find(
+    (s) => String(s.id) === draft.service_type_id,
+  )?.name;
   const topicName = topics.find((t) => String(t.id) === draft.topic_id)?.name;
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex max-w-prose flex-col gap-5">
+    <form
+      method="post"
+      action="/dis-moi-tout"
+      onSubmit={onSubmit}
+      noValidate
+      className="flex flex-col gap-5"
+    >
       <Stepper steps={[...FEEDBACK_STEPS]} current={index} />
-      <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold outline-none">
+      <h2 ref={headingRef} tabIndex={-1} className="text-[2rem] heading-block outline-none">
         {step.label}
       </h2>
       <ErrorSummary errors={errors} focusSignal={summarySignal} />
@@ -265,7 +281,8 @@ export function FeedbackForm({
       {step.id === 'provider' ? (
         <div className="flex flex-col gap-3">
           <p className="text-muted">
-            Votre message concerne un prestataire de l’annuaire ? Recherchez-le ici. Cette étape est facultative.
+            Votre message concerne un prestataire de l’annuaire ? Recherchez-le ici. Cette étape est
+            facultative.
           </p>
           <ProviderPicker
             selected={draft.provider ? [draft.provider] : []}
@@ -378,8 +395,10 @@ export function FeedbackForm({
 
       {step.id === 'review' ? (
         <div className="flex flex-col gap-5">
-          <p className="text-muted">Relisez vos réponses avant l’envoi. Vous pouvez revenir en arrière pour les modifier.</p>
-          <dl className="grid gap-3 rounded-md border border-line p-4 sm:grid-cols-[12rem_1fr]">
+          <p className="text-muted">
+            Relisez vos réponses avant l’envoi. Vous pouvez revenir en arrière pour les modifier.
+          </p>
+          <dl className="grid gap-3 border-2 border-ink p-4 sm:grid-cols-[12rem_1fr]">
             <Row label="Civilité" value={draft.civility || 'Non précisée'} />
             <Row label="Nom" value={draft.last_name} />
             <Row label="Prénoms" value={draft.first_name} />
@@ -388,13 +407,21 @@ export function FeedbackForm({
             <Row label="Prestataire" value={draft.provider?.name ?? 'Aucun'} />
             <Row
               label="Votre demande"
-              value={FEEDBACK_ACTION_LABELS[draft.action_type as keyof typeof FEEDBACK_ACTION_LABELS] ?? ''}
+              value={
+                FEEDBACK_ACTION_LABELS[draft.action_type as keyof typeof FEEDBACK_ACTION_LABELS] ??
+                ''
+              }
             />
             <Row
               label="Concerne"
-              value={FEEDBACK_TARGET_LABELS[draft.target_type as keyof typeof FEEDBACK_TARGET_LABELS] ?? ''}
+              value={
+                FEEDBACK_TARGET_LABELS[draft.target_type as keyof typeof FEEDBACK_TARGET_LABELS] ??
+                ''
+              }
             />
-            {draft.target_type === 'service' ? <Row label="Type de prestation" value={serviceName ?? ''} /> : null}
+            {draft.target_type === 'service' ? (
+              <Row label="Type de prestation" value={serviceName ?? ''} />
+            ) : null}
             {draft.target_type === 'product' ? (
               <Row label="Produit" value={draft.product_type || 'Non précisé'} />
             ) : (
@@ -410,9 +437,9 @@ export function FeedbackForm({
             error={errors.consent}
             label={
               <>
-                J’accepte que ProtectIci enregistre les informations saisies pour traiter mon message et y répondre,
-                et les transmette au prestataire concerné le cas échéant. Elles sont conservées 36 mois après la
-                clôture du dossier, puis anonymisées.{' '}
+                J’accepte que ProtectIci enregistre les informations saisies pour traiter mon
+                message et y répondre, et les transmette au prestataire concerné le cas échéant.
+                Elles sont conservées 36 mois après la clôture du dossier, puis anonymisées.{' '}
                 <Link href="/confidentialite" className="underline">
                   Politique de confidentialité
                 </Link>
@@ -425,15 +452,15 @@ export function FeedbackForm({
 
       <FormError message={formError} />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink pt-5">
         {index > 0 ? (
-          <Button variant="secondary" onClick={previous} disabled={busy}>
+          <Button variant="outline" size="lg" onClick={previous} disabled={busy}>
             Précédent
           </Button>
         ) : (
           <span />
         )}
-        <Button type="submit" loading={busy}>
+        <Button type="submit" variant="solid" size="lg" loading={busy}>
           {last ? 'Envoyer mon message' : 'Suivant'}
         </Button>
       </div>
@@ -453,8 +480,8 @@ export function FeedbackForm({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <>
-      <dt className="font-semibold text-muted">{label}</dt>
-      <dd className="whitespace-pre-line break-words">{value}</dd>
+      <dt className="eyebrow text-ink-2">{label}</dt>
+      <dd className="break-words whitespace-pre-line">{value}</dd>
     </>
   );
 }

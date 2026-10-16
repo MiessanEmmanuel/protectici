@@ -20,6 +20,7 @@ import { Select } from '../../ui/Select';
 import { StatusBadge } from '../../ui/StatusBadge';
 import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { Badge } from '../../ui/Tag';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 type Sort = '-submitted_at' | 'name';
 
@@ -53,13 +54,13 @@ export function AdminEstablishmentsList({
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Établissements</h1>
+      <AdminPageHeader section="Annuaire" title="Établissements" />
 
       <form
         role="search"
         aria-label="Filtrer les établissements"
         onSubmit={submit}
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 border-2 border-ink bg-c4 p-3 sm:p-4"
       >
         <Select
           label="Type"

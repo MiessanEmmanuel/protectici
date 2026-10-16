@@ -1,5 +1,6 @@
 'use client';
 
+import { Bell } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { errorMessage } from '@/lib/api/errors';
@@ -61,12 +62,13 @@ export function NotificationBell() {
   return (
     <div className="relative">
       <Button
-        variant="secondary"
+        variant="outline"
+        size="sm"
         aria-expanded={open}
         aria-controls="panneau-notifications"
         onClick={() => setOpen((o) => !o)}
       >
-        <span aria-hidden="true">🔔</span>
+        <Bell aria-hidden="true" />
         <span className="sr-only">Notifications, </span>
         <span>
           {unread > 0 ? `${unread} non lue${unread > 1 ? 's' : ''}` : 'Aucune nouveauté'}
@@ -76,10 +78,10 @@ export function NotificationBell() {
         <section
           id="panneau-notifications"
           aria-label="Notifications internes"
-          className="absolute right-0 z-30 mt-2 w-[min(92vw,26rem)] rounded-lg border border-line bg-surface p-4 shadow-overlay"
+          className="absolute right-0 z-30 mt-2 w-[min(92vw,26rem)] border-2 border-ink bg-white p-4"
         >
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-bold">Notifications</h2>
+            <h2 className="text-lg heading-block">Notifications</h2>
             <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
               Fermer
             </Button>
@@ -88,7 +90,7 @@ export function NotificationBell() {
           {items.length === 0 ? (
             <p className="mt-2 text-muted">Aucune notification pour le moment.</p>
           ) : (
-            <ul className="mt-2 flex max-h-80 flex-col divide-y divide-line overflow-y-auto">
+            <ul className="mt-2 flex max-h-80 flex-col divide-y divide-line-soft overflow-y-auto">
               {items.map((n) => (
                 <li key={n.id} className="flex items-start justify-between gap-3 py-2">
                   <div>
@@ -98,7 +100,7 @@ export function NotificationBell() {
                     <p className="text-xs text-muted">{formatDateTime(n.created_at)}</p>
                   </div>
                   {n.read_at ? (
-                    <span className="text-xs text-muted">Lue</span>
+                    <span className="eyebrow bg-c4 px-2 py-1 text-on-c4">Lue</span>
                   ) : (
                     <Button
                       size="sm"

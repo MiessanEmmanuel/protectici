@@ -23,6 +23,7 @@ import { Textarea } from '../../ui/Textarea';
 import { useToast } from '../../ui/Toast';
 import { POST_STATUS_LABELS } from './labels';
 import { RichTextEditor } from './RichTextEditor';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 type Cover = { id: number; url: string; alt: string | null } | null;
 
@@ -118,7 +119,7 @@ function PostForm({ post, categories }: { post?: ContentPost; categories: (PostC
 
   return (
     <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-5">
-      <h1 className="text-2xl font-bold sm:text-3xl">{post ? 'Modifier l’article' : 'Nouvel article'}</h1>
+      <AdminPageHeader section="Contenu" title={post ? 'Modifier l’article' : 'Nouvel article'} />
       <FormError message={formError} />
       <Input label="Titre" name="title" defaultValue={post?.title} maxLength={160} required error={errors.title} />
       <div className="grid gap-4 sm:grid-cols-2">
@@ -148,11 +149,11 @@ function PostForm({ post, categories }: { post?: ContentPost; categories: (PostC
       )}
       <Textarea label="Résumé" name="excerpt" defaultValue={post?.excerpt ?? ''} maxLength={300} rows={3} error={errors.excerpt} />
       <RichTextEditor label="Contenu" value={post?.body ?? ''} onChange={setBody} error={errors.body} />
-      <fieldset className="flex flex-col gap-3 rounded-lg border border-line p-4">
+      <fieldset className="flex flex-col gap-3 border-2 border-ink p-4">
         <legend className="px-1 font-semibold">Image de couverture</legend>
         {cover ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover.url} alt={cover.alt ?? ''} width={320} height={180} className="aspect-video w-80 max-w-full rounded-md object-cover" />
+          <img src={cover.url} alt={cover.alt ?? ''} width={320} height={180} className="aspect-video w-80 max-w-full object-cover" />
         ) : null}
         <FileInput
           label={cover ? 'Remplacer la couverture' : 'Ajouter une couverture'}
@@ -169,7 +170,7 @@ function PostForm({ post, categories }: { post?: ContentPost; categories: (PostC
         <Checkbox name="is_featured" label="Article à la une" defaultChecked={post?.is_featured} />
         <Checkbox name="is_flash" label="Afficher dans le bandeau Flash info" defaultChecked={post?.is_flash} />
       </div>
-      <fieldset className="grid gap-4 rounded-lg border border-line p-4 sm:grid-cols-2">
+      <fieldset className="grid gap-4 border-2 border-ink p-4 sm:grid-cols-2">
         <legend className="px-1 font-semibold">Référencement</legend>
         <Input label="Titre SEO" name="seo_title" defaultValue={post?.seo_title ?? ''} maxLength={70} error={errors.seo_title} />
         <Input label="Description SEO" name="seo_description" defaultValue={post?.seo_description ?? ''} maxLength={160} error={errors.seo_description} />

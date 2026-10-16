@@ -43,7 +43,13 @@ export function ProfileForm({ user }: { user: User }) {
   }
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-4">
+    <form
+      method="post"
+      action="/compte"
+      onSubmit={(e) => void onSubmit(e)}
+      noValidate
+      className="flex flex-col gap-4"
+    >
       <FormError message={formError} />
       <FormSuccess message={saved ? 'Vos informations ont été enregistrées.' : null} />
       <div className="grid gap-4 sm:grid-cols-2">

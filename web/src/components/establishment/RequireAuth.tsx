@@ -34,17 +34,17 @@ export function RequireAuth({
   if (status === 'anonymous' || !user) {
     return (
       <Card className="mx-auto max-w-xl text-center">
-        <h2 className="text-xl font-bold">Connexion requise</h2>
+        <h2 className="text-xl heading-block">Connexion requise</h2>
         <p className="mt-2 text-muted">{intro}</p>
         <div className="mt-4 flex flex-wrap justify-center gap-3">
-          <ButtonLink href={buildHref('/connexion', { redirect: redirectTo })}>Se connecter</ButtonLink>
+          <ButtonLink href={buildHref('/connexion', { redirect: redirectTo })}>
+            Se connecter
+          </ButtonLink>
           <ButtonLink href="/inscription" variant="secondary">
             Créer un compte
           </ButtonLink>
         </div>
-        <p className="mt-3 text-sm text-muted">
-          Après la connexion, vous reviendrez à cette page.
-        </p>
+        <p className="mt-3 text-sm text-muted">Après la connexion, vous reviendrez à cette page.</p>
       </Card>
     );
   }
@@ -52,10 +52,10 @@ export function RequireAuth({
   if (!user.email_verified) {
     return (
       <Card className="mx-auto max-w-xl border-accent-text bg-warning-soft">
-        <h2 className="text-xl font-bold">Adresse e-mail à vérifier</h2>
+        <h2 className="text-xl heading-block">Adresse e-mail à vérifier</h2>
         <p className="mt-2">
-          Pour des raisons de sécurité, vous devez confirmer votre adresse e-mail avant de continuer.
-          Un lien de confirmation vous a été envoyé lors de la création de votre compte.
+          Pour des raisons de sécurité, vous devez confirmer votre adresse e-mail avant de
+          continuer. Un lien de confirmation vous a été envoyé lors de la création de votre compte.
         </p>
         <div className="mt-3 flex flex-col gap-3">
           <FormError message={error} />

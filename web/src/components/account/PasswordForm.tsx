@@ -38,6 +38,8 @@ export function PasswordForm() {
 
   return (
     <form
+      method="post"
+      action="/compte"
       ref={formRef}
       onSubmit={(e) => void onSubmit(e)}
       noValidate

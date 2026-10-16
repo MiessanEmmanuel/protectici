@@ -20,17 +20,19 @@ export default async function EstablishmentRegistrationPage() {
         title="Inscrire mon établissement"
         intro="Renseignez votre entreprise de sécurité ou votre structure étatique. Chaque fiche est vérifiée par notre équipe avant d’être publiée."
       />
-      <Container className="py-8">
-        <RequireAuth
-          redirectTo="/inscription-etablissement"
-          intro="Connectez-vous (ou créez un compte) avec une adresse e-mail vérifiée pour inscrire votre établissement."
-        >
-          {reference ? (
-            <EstablishmentRegistration reference={reference} />
-          ) : (
-            <ErrorState>Les listes de choix sont indisponibles. Réessayez dans quelques instants.</ErrorState>
-          )}
-        </RequireAuth>
+      <Container className="py-section">
+          <RequireAuth
+            redirectTo="/inscription-etablissement"
+            intro="Connectez-vous (ou créez un compte) avec une adresse e-mail vérifiée pour inscrire votre établissement."
+          >
+            {reference ? (
+              <EstablishmentRegistration reference={reference} />
+            ) : (
+              <ErrorState>
+                Les listes de choix sont indisponibles. Réessayez dans quelques instants.
+              </ErrorState>
+            )}
+          </RequireAuth>
       </Container>
     </>
   );

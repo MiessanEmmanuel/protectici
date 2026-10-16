@@ -12,7 +12,7 @@ export function ResultsCount({
   nouns: string;
 }) {
   return (
-    <p aria-live="polite" className="font-semibold">
+    <p aria-live="polite" className="text-xl heading-block">
       {total === 0 ? 'Aucun résultat' : `${total} ${total > 1 ? nouns : noun}`}
     </p>
   );
@@ -23,7 +23,7 @@ export function NoResults({ resetHref }: { resetHref: string }) {
     <EmptyState
       title="Aucun résultat ne correspond à votre recherche"
       action={
-        <ButtonLink href={resetHref} variant="secondary">
+        <ButtonLink href={resetHref} variant="solid">
           Effacer les filtres
         </ButtonLink>
       }
@@ -33,6 +33,13 @@ export function NoResults({ resetHref }: { resetHref: string }) {
   );
 }
 
-export function CardGrid({ children }: { children: ReactNode }) {
-  return <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</ul>;
+/** Grille de résultats : fiches larges (prestataires) sur 2 colonnes, cartes (forces) sur 3. */
+export function CardGrid({ children, dense }: { children: ReactNode; dense?: boolean }) {
+  return (
+    <ul
+      className={dense ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'grid gap-4 lg:grid-cols-2'}
+    >
+      {children}
+    </ul>
+  );
 }

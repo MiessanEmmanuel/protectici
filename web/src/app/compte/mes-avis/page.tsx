@@ -16,13 +16,15 @@ export default function MyReviewsPage() {
         title="Mes avis"
         intro="Retrouvez les avis que vous avez donnés, leur statut de modération et les réponses des prestataires."
       />
-      <Container className="max-w-3xl py-8">
-        <RequireAuth
-          redirectTo="/compte/mes-avis"
-          intro="Connectez-vous pour consulter et gérer vos avis."
-        >
-          <MyReviewsView />
-        </RequireAuth>
+      <Container className="py-section">
+        <div className="max-w-[52rem]">
+          <RequireAuth
+            redirectTo="/compte/mes-avis"
+            intro="Connectez-vous pour consulter et gérer vos avis."
+          >
+            <MyReviewsView />
+          </RequireAuth>
+        </div>
       </Container>
     </>
   );

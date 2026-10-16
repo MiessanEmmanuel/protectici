@@ -44,7 +44,7 @@ export function NearbyForces({ initial }: { initial: StateForceSummary[] }) {
   return (
     <div className="flex flex-col gap-4">
       <ProximityControl value={geo} onChange={(g) => void onChange(g)} />
-      <h3 className="text-lg font-semibold">{geo ? 'Les plus proches de vous' : 'À découvrir'}</h3>
+      <h3 className="text-xl heading-block">{geo ? 'Les plus proches de vous' : 'À découvrir'}</h3>
       {loading ? <LoadingBlock label="Recherche des forces les plus proches…" /> : null}
       {error ? <ErrorState title="Recherche impossible">{error}</ErrorState> : null}
       {!loading && !error && forces.length === 0 ? (

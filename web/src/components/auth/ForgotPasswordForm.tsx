@@ -28,7 +28,10 @@ export function ForgotPasswordForm() {
     setBusy(true);
     try {
       const token = spam.payload().turnstile_token;
-      await clientApi.forgotPassword(parsed.data.email, token ? { turnstile_token: token } : undefined);
+      await clientApi.forgotPassword(
+        parsed.data.email,
+        token ? { turnstile_token: token } : undefined,
+      );
       setSent(true); // message identique que le compte existe ou non (pas d'énumération)
     } catch (err) {
       const d = describeError(err);
@@ -47,7 +50,13 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-4">
+    <form
+      method="post"
+      action="/mot-de-passe-oublie"
+      onSubmit={(e) => void onSubmit(e)}
+      noValidate
+      className="flex flex-col gap-4"
+    >
       <FormError message={formError} />
       <Input
         label="Adresse e-mail"

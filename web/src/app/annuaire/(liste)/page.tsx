@@ -62,34 +62,40 @@ export default async function AnnuairePage({ searchParams }: Props) {
       <PageHeader
         title="Annuaire des prestataires de sécurité"
         intro="Entreprises de gardiennage, vidéosurveillance, alarmes, escorte, formation… Filtrez par ville, service ou nom."
+        eyebrow="Annuaire vérifié"
       />
-      <Container className="flex flex-col gap-6 py-8">
-        {reference ? (
-          <DirectoryFilters
-            kind="providers"
-            reference={reference}
-            basePath="/annuaire"
-            view={view}
-            initial={{
-              q: query.q,
-              city: query.city,
-              district: query.district,
-              sort: query.sort,
-              lat: query.lat,
-              lng: query.lng,
-              first: query.service?.[0],
-              second: query.company_type?.[0],
-            }}
-          />
-        ) : (
-          <ErrorState title="Les filtres n’ont pas pu être chargés">{refError?.message}</ErrorState>
-        )}
-
+      <section aria-label="Filtres de recherche" className="bg-c4 text-on-c4">
+        <div className="wrap py-8">
+          {reference ? (
+            <DirectoryFilters
+              kind="providers"
+              reference={reference}
+              basePath="/annuaire"
+              view={view}
+              initial={{
+                q: query.q,
+                city: query.city,
+                district: query.district,
+                sort: query.sort,
+                lat: query.lat,
+                lng: query.lng,
+                first: query.service?.[0],
+                second: query.company_type?.[0],
+              }}
+            />
+          ) : (
+            <ErrorState title="Les filtres n’ont pas pu être chargés">
+              {refError?.message}
+            </ErrorState>
+          )}
+        </div>
+      </section>
+      <Container className="flex flex-col gap-6 py-10">
         {listError ? (
           <ErrorState
             title="La liste n’a pas pu être chargée"
             action={
-              <ButtonLink href={buildHref('/annuaire', urlParams)} variant="secondary">
+              <ButtonLink href={buildHref('/annuaire', urlParams)} variant="solid">
                 Réessayer
               </ButtonLink>
             }
@@ -98,7 +104,7 @@ export default async function AnnuairePage({ searchParams }: Props) {
           </ErrorState>
         ) : result ? (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-ink pb-4">
               <ResultsCount total={result.meta.total} noun="prestataire" nouns="prestataires" />
               <ViewToggle listHref={listHref} mapHref={mapHref} view={view} />
             </div>
@@ -114,7 +120,7 @@ export default async function AnnuairePage({ searchParams }: Props) {
             ) : (
               <>
                 {view === 'map' ? (
-                  <h2 className="text-lg font-semibold">Liste des résultats</h2>
+                  <h2 className="text-2xl heading-block">Liste des résultats</h2>
                 ) : null}
                 <CardGrid>
                   {result.data.map((p) => (

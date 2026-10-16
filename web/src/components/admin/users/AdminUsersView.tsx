@@ -17,6 +17,7 @@ import { QueryBoundary } from '../../ui/QueryBoundary';
 import { Select } from '../../ui/Select';
 import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { flattenError } from './flatten-error';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 const ROLES = Object.keys(ROLE_LABELS) as Role[];
 
@@ -116,13 +117,13 @@ export function AdminUsersView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Utilisateurs</h1>
+      <AdminPageHeader section="Système" title="Utilisateurs" />
 
       <form
         role="search"
         aria-label="Filtrer les utilisateurs"
         onSubmit={apply}
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end border-2 border-ink bg-c4 p-3 sm:p-4"
         noValidate
       >
         <Input

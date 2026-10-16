@@ -338,7 +338,7 @@ export function AdminEstablishmentEditForm({
             <legend className="font-semibold">Dirigeants</legend>
             <FieldError id="executives-error" message={err('executives')} />
             {draft.executives.map((x, i) => (
-              <div key={i} className="grid gap-3 rounded-md border border-line p-3 sm:grid-cols-2">
+              <div key={i} className="grid gap-3 border-2 border-ink p-3 sm:grid-cols-2">
                 <Input
                   label={`Nom du dirigeant ${i + 1}`}
                   required

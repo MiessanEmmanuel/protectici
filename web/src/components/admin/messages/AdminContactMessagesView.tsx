@@ -18,6 +18,7 @@ import { Select } from '../../ui/Select';
 import { StatusPill } from '../../ui/StatusPill';
 import { useToast } from '../../ui/Toast';
 import { moderate } from '../avis/moderation';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 export function AdminContactMessagesView() {
   const [status, setStatus] = useState<ContactStatus>('new');
@@ -74,9 +75,9 @@ export function AdminContactMessagesView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Messages de contact</h1>
+      <AdminPageHeader section="Demandes" title="Messages de contact" />
       <p className="text-muted">Messages reçus depuis le formulaire de contact du site.</p>
-      <form onSubmit={search} role="search" className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <form onSubmit={search} role="search" className="flex flex-col gap-3 sm:flex-row sm:items-end border-2 border-ink bg-c4 p-3 sm:p-4">
         <Select
           label="Statut des messages"
           value={status}
@@ -120,7 +121,7 @@ export function AdminContactMessagesView() {
                     <Card as="article" aria-labelledby={`msg-${m.id}`} className="flex flex-col gap-3">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <h2 id={`msg-${m.id}`} className="text-lg font-bold break-words">
+                          <h2 id={`msg-${m.id}`} className="text-lg heading-block break-words">
                             {m.subject}
                           </h2>
                           <p className="text-sm text-muted">

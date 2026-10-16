@@ -32,15 +32,19 @@ export default async function QuotePage({
         title="Demander un devis"
         intro="Décrivez votre besoin : votre demande est transmise aux prestataires que vous choisissez, ou examinée par notre équipe qui l’acheminera."
       />
-      <Container className="py-8">
-        {reference ? (
-          <QuoteForm
-            reference={reference}
-            initialProvider={provider ? { slug: provider.slug, name: provider.name } : null}
-          />
-        ) : (
-          <ErrorState>Les listes de choix sont indisponibles. Réessayez dans quelques instants.</ErrorState>
-        )}
+      <Container className="py-section">
+        <div className="max-w-[52rem] border-2 border-ink bg-white p-5 md:p-8">
+          {reference ? (
+            <QuoteForm
+              reference={reference}
+              initialProvider={provider ? { slug: provider.slug, name: provider.name } : null}
+            />
+          ) : (
+            <ErrorState>
+              Les listes de choix sont indisponibles. Réessayez dans quelques instants.
+            </ErrorState>
+          )}
+        </div>
       </Container>
     </>
   );

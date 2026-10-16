@@ -78,7 +78,7 @@ export function QuoteDetail({
         <>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold">Demande {q.reference}</h2>
+              <h2 className="text-xl heading-block">Demande {q.reference}</h2>
               <p className="text-sm text-muted">Reçue le {formatDateTime(q.created_at)}</p>
             </div>
             <div className="flex items-center gap-3">
@@ -131,7 +131,7 @@ export function QuoteDetail({
             ) : (
               <ul className="flex flex-col gap-3">
                 {q.recipients.map((r) => (
-                  <li key={r.id} className="rounded-md border border-line p-3">
+                  <li key={r.id} className="border-2 border-ink p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="font-semibold">{r.provider.name}</p>
                       <StatusPill kind="recipient" status={r.status} />

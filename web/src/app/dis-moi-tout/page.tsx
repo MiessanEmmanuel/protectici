@@ -33,12 +33,16 @@ export default async function FeedbackPage({
         title="Dis-moi tout"
         intro="Un encouragement, une question, une plainte ou une suggestion ? Racontez-nous votre expérience : votre message est suivi par notre équipe."
       />
-      <Container className="py-8">
-        {reference ? (
-          <FeedbackForm reference={reference} initialProvider={initialProvider} />
-        ) : (
-          <ErrorState>Le formulaire est momentanément indisponible. Réessayez dans quelques instants.</ErrorState>
-        )}
+      <Container className="py-section">
+        <div className="max-w-[52rem] border-2 border-ink bg-white p-5 md:p-8">
+          {reference ? (
+            <FeedbackForm reference={reference} initialProvider={initialProvider} />
+          ) : (
+            <ErrorState>
+              Le formulaire est momentanément indisponible. Réessayez dans quelques instants.
+            </ErrorState>
+          )}
+        </div>
       </Container>
     </>
   );

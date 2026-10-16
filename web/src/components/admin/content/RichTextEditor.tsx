@@ -89,7 +89,7 @@ export function RichTextEditor({
           e.preventDefault();
           document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
         }}
-        className="rich-text min-h-64 rounded-md border border-line bg-surface p-3"
+        className="rich-text min-h-64 border-2 border-ink bg-surface p-3"
       />
       {error ? <p id={`${id}-error`} className="text-sm text-danger">{error}</p> : null}
     </div>

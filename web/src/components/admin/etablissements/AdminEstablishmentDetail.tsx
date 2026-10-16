@@ -36,6 +36,7 @@ import { useToast } from '../../ui/Toast';
 import { formatChangeValue } from '../modifications/change-format';
 import { ChangeDiff } from '../modifications/ChangeDiff';
 import { AdminEstablishmentEditForm } from './AdminEstablishmentEditForm';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 type Dialog = 'approve' | 'reject' | 'suspend' | 'delete';
 
@@ -79,7 +80,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 function Section({ title, id, children }: { title: string; id: string; children: ReactNode }) {
   return (
     <Card as="section" aria-labelledby={id} className="flex flex-col gap-3">
-      <h2 id={id} className="text-lg font-bold">
+      <h2 id={id} className="text-lg heading-block">
         {title}
       </h2>
       {children}
@@ -210,23 +211,25 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
 
           return (
             <>
-              <header className="flex flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl font-bold sm:text-3xl">{e.name}</h1>
-                  <StatusBadge status={e.status} />
-                  {e.is_verified ? <Badge tone="success">Vérifié</Badge> : null}
-                  {e.is_featured ? <Badge tone="accent">À la une</Badge> : null}
-                  {!e.is_visible ? <Badge>Non publiée</Badge> : null}
-                </div>
-                <p className="text-muted">
-                  {TYPE_LABELS[e.type]} · fiche n° {e.id}
-                </p>
-                {e.rejection_reason ? (
-                  <p className="rounded-md border border-line bg-surface-alt p-3">
-                    <strong>Motif :</strong> {e.rejection_reason}
-                  </p>
-                ) : null}
-              </header>
+              <AdminPageHeader
+                section={`${TYPE_LABELS[e.type]} · fiche n° ${e.id}`}
+                title={e.name}
+                meta={
+                  <>
+                    <StatusBadge status={e.status} />
+                    {e.is_verified ? <Badge tone="success">Vérifié</Badge> : null}
+                    {e.is_featured ? <Badge tone="accent">À la une</Badge> : null}
+                    {!e.is_visible ? <Badge>Non publiée</Badge> : null}
+                  </>
+                }
+                description={
+                  e.rejection_reason ? (
+                    <p className="border-2 border-ink bg-c4 p-3 text-on-c4">
+                      <strong>Motif :</strong> {e.rejection_reason}
+                    </p>
+                  ) : null
+                }
+              />
 
               <section aria-label="Actions sur la fiche" className="flex flex-col gap-3">
                 <FormError message={pageError} />
@@ -472,7 +475,7 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                           src={m.url}
                           alt={m.alt}
                           loading="lazy"
-                          className="h-28 w-full rounded-md border border-line object-cover"
+                          className="h-28 w-full border-2 border-ink object-cover"
                         />
                         <span className="text-sm text-muted">
                           {COLLECTION_LABELS[m.collection]}
@@ -495,7 +498,7 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                     {e.documents.map((d) => (
                       <li
                         key={d.id}
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line p-3"
+                        className="flex flex-wrap items-center justify-between gap-3 border-2 border-ink p-3"
                       >
                         <div className="min-w-0">
                           <p className="font-semibold break-words">{d.original_name}</p>

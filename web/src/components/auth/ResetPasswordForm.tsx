@@ -61,7 +61,13 @@ export function ResetPasswordForm({ token, email }: { token?: string; email?: st
   }
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-4">
+    <form
+      method="post"
+      action="/reinitialiser-mot-de-passe"
+      onSubmit={(e) => void onSubmit(e)}
+      noValidate
+      className="flex flex-col gap-4"
+    >
       <FormError message={formError} />
       <p className="text-sm text-muted">
         Compte concerné : <strong>{email}</strong>

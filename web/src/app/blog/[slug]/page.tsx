@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { PostCardItem } from '@/components/content/PostCardItem';
+import { SectionHeader } from '@/components/ui/Section';
+import { toneAt, type Tone } from '@/components/ui/tone';
 import { PostComments } from '@/components/content/PostComments';
 import { SanitizedHtml } from '@/components/content/SanitizedHtml';
 import { ShareLinks } from '@/components/directory/ShareLinks';
@@ -13,6 +16,8 @@ import { serverApi } from '@/lib/api/server';
 import { SITE_URL } from '@/lib/env';
 import { formatDate, pluralize } from '@/lib/format';
 import { safe } from '@/lib/safe';
+
+const RELATED_TONES: Tone[] = ['t1', 't2', 't3'];
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -33,7 +38,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'article',
       url: `/blog/${post.slug}`,
       publishedTime: post.published_at,
-      ...(post.cover_url ? { images: [{ url: post.cover_url, alt: post.cover_alt ?? post.title }] } : {}),
+      ...(post.cover_url
+        ? { images: [{ url: post.cover_url, alt: post.cover_alt ?? post.title }] }
+        : {}),
     },
   };
 }
@@ -50,7 +57,7 @@ export default async function PostPage({ params }: Props) {
   }
   const url = `${SITE_URL}/blog/${post.slug}`;
   return (
-    <Container className="py-8">
+    <>
       <JsonLd
         data={{
           '@context': 'https://schema.org',
@@ -65,44 +72,85 @@ export default async function PostPage({ params }: Props) {
           publisher: { '@type': 'Organization', name: 'ProtectIci' },
         }}
       />
-      <article className="mx-auto flex max-w-3xl flex-col gap-6">
-        <Breadcrumb
-          items={[
-            { label: 'Accueil', href: '/' },
-            { label: 'Blog', href: '/blog' },
-            { label: post.category.name, href: `/blog/categorie/${post.category.slug}` },
-            { label: post.title },
-          ]}
-        />
-        <header className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold">{post.title}</h1>
-          <p className="text-sm text-muted">
-            <time dateTime={post.published_at}>{formatDate(post.published_at)}</time>
-            {post.author_name ? ` · ${post.author_name}` : ''}
-            {post.reading_minutes ? ` · ${post.reading_minutes} min de lecture` : ''}
-            {` · ${pluralize(post.views_count, 'vue', 'vues')}`}
-          </p>
+      <article>
+        <header className="bg-c1 text-on-c1">
+          <div className="wrap py-8 md:py-12 [&_a]:text-inherit">
+            <Breadcrumb
+              items={[
+                { label: 'Accueil', href: '/' },
+                { label: 'Blog', href: '/blog' },
+                { label: post.category.name, href: `/blog/categorie/${post.category.slug}` },
+                { label: post.title },
+              ]}
+            />
+            <p className="mt-6">
+              <Link
+                href={`/blog/categorie/${post.category.slug}`}
+                className="inline-flex min-h-tap items-center bg-c2 px-3 eyebrow text-on-c2! no-underline hover:underline"
+              >
+                {post.category.name}
+              </Link>
+            </p>
+            <h1 className="mt-4 max-w-[24ch] text-section heading-block break-words">
+              {post.title}
+            </h1>
+            <p className="mt-4 text-sm font-semibold opacity-90">
+              <time dateTime={post.published_at}>{formatDate(post.published_at)}</time>
+              {post.author_name ? ` · ${post.author_name}` : ''}
+              {post.reading_minutes ? ` · ${post.reading_minutes} min de lecture` : ''}
+              {` · ${pluralize(post.views_count, 'vue', 'vues')}`}
+            </p>
+          </div>
         </header>
-        {post.cover_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.cover_url} alt={post.cover_alt ?? ''} width={960} height={540} fetchPriority="high" decoding="async" className="aspect-video w-full rounded-lg object-cover" />
-        ) : null}
-        <SanitizedHtml html={post.body} />
-        <ShareLinks url={url} title={post.title} label="Partager cet article" />
+        <div className="wrap">
+          <figure className="max-w-[52rem] border-x-2 border-b-2 border-ink bg-c4">
+            {post.cover_url ? (
+              // <img> et non next/image : next/image injecte un style en ligne bloqué par la CSP.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={post.cover_url}
+                alt={post.cover_alt ?? ''}
+                width={1200}
+                height={675}
+                fetchPriority="high"
+                decoding="async"
+                className="block aspect-video w-full object-cover"
+              />
+            ) : (
+              <div aria-hidden="true" className="aspect-[16/6] placeholder-hatch" />
+            )}
+          </figure>
+          <div className="flex max-w-[52rem] flex-col gap-10 py-10">
+            <SanitizedHtml html={post.body} />
+            <div className="border-2 border-ink p-5">
+              <ShareLinks url={url} title={post.title} label="Partager cet article" />
+            </div>
+          </div>
+        </div>
       </article>
       {post.related.length > 0 ? (
-        <section aria-labelledby="lies" className="mx-auto mt-12 flex max-w-5xl flex-col gap-4">
-          <h2 id="lies" className="text-2xl font-bold">Articles liés</h2>
-          <ul className="grid gap-4 md:grid-cols-3">
-            {post.related.map((p) => (
-              <li key={p.slug}><PostCardItem post={p} /></li>
-            ))}
-          </ul>
+        <section aria-labelledby="lies" className="bg-c4 text-on-c4">
+          <div className="wrap py-section">
+            <SectionHeader
+              id="lies"
+              title="Articles liés"
+              more={{ href: '/blog', label: 'Tous les articles' }}
+            />
+            <ul className="grid gap-6 md:grid-cols-3">
+              {post.related.map((p, i) => (
+                <li key={p.slug} className="flex">
+                  <PostCardItem post={p} tone={toneAt(RELATED_TONES, i)} />
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
       ) : null}
-      <div className="mx-auto mt-12 max-w-3xl">
-        <PostComments slug={post.slug} />
+      <div className="wrap py-section">
+        <div className="max-w-[52rem]">
+          <PostComments slug={post.slug} />
+        </div>
       </div>
-    </Container>
+    </>
   );
 }

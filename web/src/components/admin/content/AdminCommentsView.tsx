@@ -14,6 +14,7 @@ import { QueryBoundary } from '../../ui/QueryBoundary';
 import { Select } from '../../ui/Select';
 import { useToast } from '../../ui/Toast';
 import { COMMENT_STATUS_LABELS } from './labels';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 /** Modération des commentaires du blog (texte brut affiché tel quel, jamais interprété comme HTML). */
 export function AdminCommentsView() {
@@ -33,7 +34,7 @@ export function AdminCommentsView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Commentaires du blog</h1>
+      <AdminPageHeader section="Contenu" title="Commentaires du blog" />
       <Select
         label="Statut"
         value={status}

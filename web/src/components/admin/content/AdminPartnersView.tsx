@@ -19,6 +19,7 @@ import { Select } from '../../ui/Select';
 import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { Textarea } from '../../ui/Textarea';
 import { useToast } from '../../ui/Toast';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 const TYPE_LABELS: Record<PartnerType, string> = { partner: 'Partenaire', client: 'Client' };
 
@@ -32,10 +33,11 @@ export function AdminPartnersView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold sm:text-3xl">Partenaires et clients</h1>
-        <Button onClick={() => setEditing('new')}>Ajouter</Button>
-      </div>
+      <AdminPageHeader
+        section="Site"
+        title="Partenaires et clients"
+        actions={<Button onClick={() => setEditing('new')}>Ajouter</Button>}
+      />
       <Select label="Type" value={type} wrapperClassName="sm:w-64" onChange={(e) => setType(e.target.value as PartnerType | '')}>
         <option value="">Tous</option>
         <option value="partner">Partenaires</option>

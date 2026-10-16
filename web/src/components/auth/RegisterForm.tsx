@@ -85,7 +85,10 @@ export function RegisterForm() {
       } else {
         const token = spam.payload().turnstile_token;
         setResendNotice(
-          await clientApi.resendVerificationPublic(sentTo, token ? { turnstile_token: token } : undefined),
+          await clientApi.resendVerificationPublic(
+            sentTo,
+            token ? { turnstile_token: token } : undefined,
+          ),
         );
       }
       setResendIn(RESEND_DELAY_S);
@@ -142,7 +145,13 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-4">
+    <form
+      method="post"
+      action="/inscription"
+      onSubmit={(e) => void onSubmit(e)}
+      noValidate
+      className="flex flex-col gap-4"
+    >
       <FormError message={formError} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Input

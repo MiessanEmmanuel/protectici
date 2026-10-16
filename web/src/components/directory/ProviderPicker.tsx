@@ -99,7 +99,9 @@ export function ProviderPicker({
 
       <div aria-live="polite" role="status" className="text-sm text-muted">
         {error ? <span className="text-danger">{error}</span> : null}
-        {!error && results && results.length === 0 ? 'Aucun prestataire ne correspond à cette recherche.' : null}
+        {!error && results && results.length === 0
+          ? 'Aucun prestataire ne correspond à cette recherche.'
+          : null}
         {!error && results && results.length > 0
           ? `${results.length} résultat${results.length > 1 ? 's' : ''}.`
           : null}
@@ -112,7 +114,7 @@ export function ProviderPicker({
             return (
               <li
                 key={p.slug}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line p-3"
+                className="flex flex-wrap items-center justify-between gap-2 border-2 border-ink p-3"
               >
                 <span>
                   <span className="font-semibold">{p.name}</span>
@@ -146,7 +148,7 @@ export function ProviderPicker({
             {selected.map((p) => (
               <li
                 key={p.slug}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-primary-soft p-3"
+                className="flex flex-wrap items-center justify-between gap-2 border-l-4 border-c1 bg-c4 p-3"
               >
                 <span className="font-semibold">{p.name}</span>
                 <Button

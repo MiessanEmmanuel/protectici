@@ -22,9 +22,10 @@ export function MediaTab(props: TabProps) {
   return (
     <div className="flex max-w-3xl flex-col gap-8">
       <p className="text-muted">
-        Formats acceptés : {IMAGE_RULES.typesLabel}, {formatBytes(IMAGE_RULES.maxBytes)} maximum. Les
-        images sont recompressées et les données de localisation (EXIF) sont supprimées. Le texte
-        alternatif décrit l’image pour les personnes qui ne la voient pas : il est obligatoire.
+        Formats acceptés : {IMAGE_RULES.typesLabel}, {formatBytes(IMAGE_RULES.maxBytes)} maximum.
+        Les images sont recompressées et les données de localisation (EXIF) sont supprimées. Le
+        texte alternatif décrit l’image pour les personnes qui ne la voient pas : il est
+        obligatoire.
       </p>
       {ORDER.map((c) => (
         <MediaSection key={c} collection={c} {...props} />
@@ -33,7 +34,12 @@ export function MediaTab(props: TabProps) {
   );
 }
 
-function MediaSection({ collection, est, readOnly, reload }: TabProps & { collection: MediaCollection }) {
+function MediaSection({
+  collection,
+  est,
+  readOnly,
+  reload,
+}: TabProps & { collection: MediaCollection }) {
   const items = est.media.filter((m) => m.collection === collection);
   const limit = LIMITS[collection];
   const full = items.length >= limit;
@@ -69,7 +75,11 @@ function MediaSection({ collection, est, readOnly, reload }: TabProps & { collec
     let caught: unknown = null;
     const result = await run(async () => {
       try {
-        return await clientApi.uploadMedia(est.type, est.slug, { file, collection, alt: alt.trim() });
+        return await clientApi.uploadMedia(est.type, est.slug, {
+          file,
+          collection,
+          alt: alt.trim(),
+        });
       } catch (e) {
         caught = e;
         throw e;
@@ -94,14 +104,17 @@ function MediaSection({ collection, est, readOnly, reload }: TabProps & { collec
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-4">
       <h3 id={headingId} className="text-lg font-semibold">
-        {label} <span className="text-sm font-normal text-muted">({items.length}/{limit})</span>
+        {label}{' '}
+        <span className="text-sm font-normal text-muted">
+          ({items.length}/{limit})
+        </span>
       </h3>
       {items.length === 0 ? <p className="text-muted">Aucune image.</p> : null}
       <ul className="grid gap-4 sm:grid-cols-2" aria-label={label}>
         {items.map((m) => (
-          <li key={m.id} className="rounded-lg border border-line p-3">
+          <li key={m.id} className="border-2 border-ink p-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={m.url} alt={m.alt} className="max-h-48 w-full rounded-md object-contain" />
+            <img src={m.url} alt={m.alt} className="max-h-48 w-full object-contain" />
             <p className="mt-2 text-sm text-muted">Texte alternatif : {m.alt}</p>
             {readOnly ? null : (
               <Button
@@ -124,7 +137,7 @@ function MediaSection({ collection, est, readOnly, reload }: TabProps & { collec
       ) : (
         <form
           noValidate
-          className="flex flex-col gap-3 rounded-lg border border-line p-4"
+          className="flex flex-col gap-3 border-2 border-ink p-4"
           onSubmit={(e) => {
             e.preventDefault();
             void submit();

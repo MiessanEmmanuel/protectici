@@ -37,13 +37,32 @@ export default async function BlogCategoryPage({ params, searchParams }: Props) 
   const [posts, error] = await safe(serverApi.listPosts({ ...query, category: slug }));
   return (
     <>
-      <PageHeader title={cat?.name ?? 'Catégorie'} intro={cat?.description ?? undefined}>
-        <Breadcrumb items={[{ label: 'Accueil', href: '/' }, { label: 'Blog', href: '/blog' }, { label: cat?.name ?? 'Catégorie' }]} />
+      <PageHeader
+        eyebrow="Catégorie du blog"
+        title={cat?.name ?? 'Catégorie'}
+        intro={cat?.description ?? undefined}
+      >
+        <Breadcrumb
+          items={[
+            { label: 'Accueil', href: '/' },
+            { label: 'Blog', href: '/blog' },
+            { label: cat?.name ?? 'Catégorie' },
+          ]}
+        />
       </PageHeader>
-      <Container className="flex flex-col gap-8 py-8">
-        <BlogHeader categories={cats ?? []} currentCategory={slug} q={q} />
+      <div className="border-b-2 border-ink bg-c4 text-on-c4">
+        <div className="wrap py-8">
+          <BlogHeader categories={cats ?? []} currentCategory={slug} q={q} />
+        </div>
+      </div>
+      <Container className="flex flex-col gap-8 py-section">
         {posts ? (
-          <PostList result={posts} basePath={`/blog/categorie/${slug}`} q={q} emptyTitle="Aucun article dans cette catégorie" />
+          <PostList
+            result={posts}
+            basePath={`/blog/categorie/${slug}`}
+            q={q}
+            emptyTitle="Aucun article dans cette catégorie"
+          />
         ) : (
           <ErrorState title="Articles indisponibles">{error?.message}</ErrorState>
         )}

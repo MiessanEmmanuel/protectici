@@ -66,7 +66,7 @@ export function DocumentsTab({ est, readOnly, reload }: TabProps) {
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      <p className="rounded-md bg-surface-alt p-3 text-sm text-muted">
+      <p className="bg-c4 p-3 text-sm text-muted">
         Vos justificatifs sont stockés de façon privée. Seule notre équipe de vérification peut les
         consulter ; ils ne sont jamais publiés et ne peuvent pas être téléchargés depuis cette page.
       </p>
@@ -82,7 +82,7 @@ export function DocumentsTab({ est, readOnly, reload }: TabProps) {
         ) : (
           <ul className="mt-3 flex flex-col gap-3" aria-label="Justificatifs envoyés">
             {docs.map((d) => (
-              <li key={d.id} className="rounded-lg border border-line p-3">
+              <li key={d.id} className="border-2 border-ink p-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="font-medium break-all">{d.original_name}</p>
@@ -116,13 +116,13 @@ export function DocumentsTab({ est, readOnly, reload }: TabProps) {
 
       {readOnly ? null : full ? (
         <p className="text-muted">
-          Vous avez atteint la limite de {MAX_DOCUMENTS} justificatifs. Supprimez-en un pour en ajouter
-          un autre.
+          Vous avez atteint la limite de {MAX_DOCUMENTS} justificatifs. Supprimez-en un pour en
+          ajouter un autre.
         </p>
       ) : (
         <form
           noValidate
-          className="flex flex-col gap-3 rounded-lg border border-line p-4"
+          className="flex flex-col gap-3 border-2 border-ink p-4"
           onSubmit={(e) => {
             e.preventDefault();
             void submit();

@@ -25,6 +25,7 @@ import { Select } from '../../ui/Select';
 import { StatusPill } from '../../ui/StatusPill';
 import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { FeedbackDetail } from './FeedbackDetail';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 type Sort = '-created_at' | 'status';
 
@@ -59,13 +60,13 @@ export function AdminFeedbackView({ initialStatus = '' }: { initialStatus?: Feed
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Dis-moi tout</h1>
+      <AdminPageHeader section="Demandes" title="Dis-moi tout" />
       <p className="text-muted">
         Retours des internautes sur les prestataires : encouragements, questions, plaintes et
         suggestions. Ouvrez un dossier pour changer son statut, l’affecter et répondre.
       </p>
 
-      <form onSubmit={search} role="search" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <form onSubmit={search} role="search" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 border-2 border-ink bg-c4 p-3 sm:p-4">
         <Select
           label="Statut du dossier"
           value={status}

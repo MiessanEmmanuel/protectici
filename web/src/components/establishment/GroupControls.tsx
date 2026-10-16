@@ -55,7 +55,7 @@ export function CheckboxGroup({
 }) {
   return (
     <fieldset
-      className={cn('rounded-lg border border-line p-3', className)}
+      className={cn('border-2 border-ink p-4', className)}
       disabled={disabled}
       aria-describedby={error ? `${id}-group-error` : undefined}
     >
@@ -102,17 +102,20 @@ export function RadioGroup<V extends string>({
 }) {
   return (
     <fieldset
-      className={cn('rounded-lg border border-line p-3', className)}
+      className={cn('border-2 border-ink p-4', className)}
       disabled={disabled}
       aria-describedby={error ? `${id}-group-error` : undefined}
     >
       <Legend legend={legend} required={required} />
       {hint ? <p className="mb-1 text-sm text-muted">{hint}</p> : null}
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-2">
         {options.map((o, i) => {
           const oid = i === 0 ? id : `${id}-${o.value}`;
           return (
-            <div key={o.value} className="flex min-h-tap items-start gap-3">
+            <div
+              key={o.value}
+              className="flex min-h-btn items-start gap-3 border-2 border-ink px-3 has-checked:bg-c4"
+            >
               <input
                 id={oid}
                 type="radio"
@@ -121,10 +124,10 @@ export function RadioGroup<V extends string>({
                 checked={value === o.value}
                 onChange={() => onChange(o.value)}
                 aria-describedby={o.hint ? `${oid}-hint` : undefined}
-                className="mt-1.5 size-5 shrink-0 accent-primary"
+                className="mt-3 size-5 shrink-0 accent-ink"
               />
-              <label htmlFor={oid} className="py-1.5">
-                <span className="font-medium">{o.label}</span>
+              <label htmlFor={oid} className="flex-1 py-2.5">
+                <span className="font-bold">{o.label}</span>
                 {o.hint ? (
                   <span id={`${oid}-hint`} className="block text-sm text-muted">
                     {o.hint}

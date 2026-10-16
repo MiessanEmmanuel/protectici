@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { X } from 'lucide-react';
 import { Button } from './Button';
 
 interface ModalProps {
@@ -30,19 +31,23 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
-      className="m-auto w-[min(92vw,32rem)] rounded-lg border border-line bg-surface p-0 text-ink shadow-overlay backdrop:bg-night/60"
+      className="m-auto w-[min(92vw,32rem)] border-2 border-ink bg-white p-0 text-ink backdrop:bg-c3/70"
     >
-      <div className="p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-4">
-          <h2 id={titleId} className="text-xl font-bold">
-            {title}
-          </h2>
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Fermer la fenêtre">
-            <span aria-hidden="true">✕</span>
-          </Button>
-        </div>
-        <div className="mt-4">{children}</div>
+      <div className="flex items-center justify-between gap-4 border-b-2 border-ink bg-c1 py-2 pr-2 pl-5 text-on-c1">
+        <h2 id={titleId} className="text-xl heading-block">
+          {title}
+        </h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onClose}
+          aria-label="Fermer la fenêtre"
+          className="min-w-tap border-transparent px-0 hover:border-white hover:bg-transparent"
+        >
+          <X aria-hidden="true" />
+        </Button>
       </div>
+      <div className="p-5 sm:p-6">{children}</div>
     </dialog>
   );
 }

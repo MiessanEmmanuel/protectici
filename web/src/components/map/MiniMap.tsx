@@ -21,14 +21,14 @@ export function MiniMap({
   address?: string | null;
 }) {
   return (
-    <figure>
+    <figure className="border-2 border-ink bg-white">
       <LeafletMap
         points={[{ slug: 'self', name, lat, lng }]}
         hrefBase=""
         label={`Carte : emplacement de ${name}`}
         mini
       />
-      <figcaption className="mt-2 text-sm text-muted">
+      <figcaption className="border-t-2 border-ink p-3 text-sm text-ink-2">
         {address ? `${address}. ` : ''}Position approximative sur la carte (© OpenStreetMap).
       </figcaption>
     </figure>

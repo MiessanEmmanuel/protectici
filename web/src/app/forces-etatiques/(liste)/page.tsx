@@ -62,34 +62,40 @@ export default async function ForcesPage({ searchParams }: Props) {
       <PageHeader
         title="Forces étatiques"
         intro="Police, gendarmerie, sapeurs-pompiers, douanes : trouvez la structure la plus proche et la démarche à suivre."
+        eyebrow="Services de l’État"
       />
-      <Container className="flex flex-col gap-6 py-8">
-        {reference ? (
-          <DirectoryFilters
-            kind="forces"
-            reference={reference}
-            basePath="/forces-etatiques"
-            view={view}
-            initial={{
-              q: query.q,
-              city: query.city,
-              district: query.district,
-              sort: query.sort,
-              lat: query.lat,
-              lng: query.lng,
-              first: query.type?.[0],
-              second: query.procedure?.[0],
-            }}
-          />
-        ) : (
-          <ErrorState title="Les filtres n’ont pas pu être chargés">{refError?.message}</ErrorState>
-        )}
-
+      <section aria-label="Filtres de recherche" className="bg-c4 text-on-c4">
+        <div className="wrap py-8">
+          {reference ? (
+            <DirectoryFilters
+              kind="forces"
+              reference={reference}
+              basePath="/forces-etatiques"
+              view={view}
+              initial={{
+                q: query.q,
+                city: query.city,
+                district: query.district,
+                sort: query.sort,
+                lat: query.lat,
+                lng: query.lng,
+                first: query.type?.[0],
+                second: query.procedure?.[0],
+              }}
+            />
+          ) : (
+            <ErrorState title="Les filtres n’ont pas pu être chargés">
+              {refError?.message}
+            </ErrorState>
+          )}
+        </div>
+      </section>
+      <Container className="flex flex-col gap-6 py-10">
         {listError ? (
           <ErrorState
             title="La liste n’a pas pu être chargée"
             action={
-              <ButtonLink href={buildHref('/forces-etatiques', urlParams)} variant="secondary">
+              <ButtonLink href={buildHref('/forces-etatiques', urlParams)} variant="solid">
                 Réessayer
               </ButtonLink>
             }
@@ -98,7 +104,7 @@ export default async function ForcesPage({ searchParams }: Props) {
           </ErrorState>
         ) : result ? (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-ink pb-4">
               <ResultsCount total={result.meta.total} noun="structure" nouns="structures" />
               <ViewToggle listHref={listHref} mapHref={mapHref} view={view} />
             </div>
@@ -114,9 +120,9 @@ export default async function ForcesPage({ searchParams }: Props) {
             ) : (
               <>
                 {view === 'map' ? (
-                  <h2 className="text-lg font-semibold">Liste des résultats</h2>
+                  <h2 className="text-2xl heading-block">Liste des résultats</h2>
                 ) : null}
-                <CardGrid>
+                <CardGrid dense>
                   {result.data.map((f) => (
                     <li key={f.slug}>
                       <ForceCard force={f} />

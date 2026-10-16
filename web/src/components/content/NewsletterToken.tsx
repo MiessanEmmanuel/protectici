@@ -7,14 +7,17 @@ import { ErrorState } from '../ui/EmptyState';
 import { FormSuccess } from '../ui/Field';
 import { LoadingBlock } from '../ui/Spinner';
 
-const INVALID = 'Ce lien est invalide ou a expiré. Vous pouvez vous réabonner depuis le pied de page du site.';
+const INVALID =
+  'Ce lien est invalide ou a expiré. Vous pouvez vous réabonner depuis le pied de page du site.';
 const TOKEN_MAX = 2048;
 
 const valid = (t: string | undefined): t is string => !!t && t.length <= TOKEN_MAX;
 
 /** Confirmation d'abonnement : le jeton signé de l'e-mail est transmis à l'API (aucun état local conservé). */
 export function NewsletterConfirm({ token }: { token?: string }) {
-  const [state, setState] = useState<'loading' | 'ok' | 'error'>(valid(token) ? 'loading' : 'error');
+  const [state, setState] = useState<'loading' | 'ok' | 'error'>(
+    valid(token) ? 'loading' : 'error',
+  );
   const started = useRef(false);
 
   useEffect(() => {
@@ -29,7 +32,14 @@ export function NewsletterConfirm({ token }: { token?: string }) {
   if (state === 'loading') return <LoadingBlock label="Confirmation de votre abonnement…" />;
   if (state === 'error') {
     return (
-      <ErrorState title="Lien invalide" action={<ButtonLink href="/blog" variant="secondary">Lire le blog</ButtonLink>}>
+      <ErrorState
+        title="Lien invalide"
+        action={
+          <ButtonLink href="/blog" variant="secondary">
+            Lire le blog
+          </ButtonLink>
+        }
+      >
         {INVALID}
       </ErrorState>
     );
@@ -37,14 +47,18 @@ export function NewsletterConfirm({ token }: { token?: string }) {
   return (
     <div className="flex flex-col gap-4">
       <FormSuccess message="Votre abonnement est confirmé. Merci et à bientôt dans votre boîte de réception." />
-      <div><ButtonLink href="/blog">Lire les derniers articles</ButtonLink></div>
+      <div>
+        <ButtonLink href="/blog">Lire les derniers articles</ButtonLink>
+      </div>
     </div>
   );
 }
 
 /** Désinscription : action explicite (POST) pour éviter qu'un aperçu de lien ne désabonne à l'insu de l'utilisateur. */
 export function NewsletterUnsubscribe({ token }: { token?: string }) {
-  const [state, setState] = useState<'idle' | 'busy' | 'ok' | 'error'>(valid(token) ? 'idle' : 'error');
+  const [state, setState] = useState<'idle' | 'busy' | 'ok' | 'error'>(
+    valid(token) ? 'idle' : 'error',
+  );
   const running = useRef(false);
 
   async function submit() {
@@ -68,7 +82,11 @@ export function NewsletterUnsubscribe({ token }: { token?: string }) {
     return (
       <div className="flex flex-col gap-4">
         <FormSuccess message="Vous êtes désinscrit de la lettre d’information. Vous ne recevrez plus nos e-mails." />
-        <div><ButtonLink href="/" variant="secondary">Retour à l’accueil</ButtonLink></div>
+        <div>
+          <ButtonLink href="/" variant="secondary">
+            Retour à l’accueil
+          </ButtonLink>
+        </div>
       </div>
     );
   }

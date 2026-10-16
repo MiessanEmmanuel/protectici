@@ -86,7 +86,7 @@ export function InfoTab({ est, reference, readOnly, onSaved }: TabProps) {
         void submit();
       }}
     >
-      <p className="rounded-md bg-surface-alt p-3 text-sm text-muted">
+      <p className="bg-c4 p-3 text-sm text-muted">
         {force
           ? 'Le nom et le type de structure ne se modifient pas ici : utilisez l’onglet « Modifications sensibles ».'
           : 'La raison sociale et les informations légales ne se modifient pas ici : utilisez l’onglet « Modifications sensibles ».'}
@@ -138,7 +138,7 @@ export function InfoTab({ est, reference, readOnly, onSaved }: TabProps) {
         </>
       )}
 
-      <fieldset className="flex flex-col gap-4 rounded-lg border border-line p-4" disabled={readOnly || busy}>
+      <fieldset className="flex flex-col gap-4 border-2 border-ink p-4" disabled={readOnly || busy}>
         <legend className="px-1 text-lg font-semibold">Contacts</legend>
         <div className="grid gap-4 sm:grid-cols-2">
           <Input label="Téléphone" type="tel" required={!force} {...text('phone')} />
@@ -170,7 +170,7 @@ export function InfoTab({ est, reference, readOnly, onSaved }: TabProps) {
         )}
       </fieldset>
 
-      <fieldset className="flex flex-col gap-4 rounded-lg border border-line p-4" disabled={readOnly || busy}>
+      <fieldset className="flex flex-col gap-4 border-2 border-ink p-4" disabled={readOnly || busy}>
         <legend className="px-1 text-lg font-semibold">Adresse et position</legend>
         <LocationFields
           values={draft}

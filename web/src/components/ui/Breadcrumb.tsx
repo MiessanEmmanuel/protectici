@@ -5,27 +5,35 @@ export interface Crumb {
   href?: string;
 }
 
+/** Fil d'Ariane v9 : petites capitales, couleur héritée du fond (aplat bleu ou blanc). */
 export function Breadcrumb({ items }: { items: Crumb[] }) {
   return (
-    <nav aria-label="Fil d’Ariane" className="text-sm text-muted">
+    <nav aria-label="Fil d’Ariane" className="eyebrow tracking-[0.08em]">
       <ol className="flex flex-wrap items-center gap-x-2">
         {items.map((item, i) => {
           const last = i === items.length - 1;
           return (
-            <li key={`${item.label}-${i}`} className="flex items-center gap-2">
+            <li key={`${item.label}-${i}`} className="flex min-w-0 items-center gap-2">
               {item.href && !last ? (
-                <Link href={item.href} className="inline-flex min-h-6 items-center">
+                <Link
+                  href={item.href}
+                  className="inline-flex min-h-tap items-center text-inherit underline-offset-4 hover:underline"
+                >
                   {item.label}
                 </Link>
               ) : (
                 <span
                   aria-current={last ? 'page' : undefined}
-                  className={last ? 'text-ink' : undefined}
+                  className={last ? 'truncate opacity-80' : undefined}
                 >
                   {item.label}
                 </span>
               )}
-              {!last ? <span aria-hidden="true">/</span> : null}
+              {!last ? (
+                <span aria-hidden="true" className="opacity-60">
+                  /
+                </span>
+              ) : null}
             </li>
           );
         })}

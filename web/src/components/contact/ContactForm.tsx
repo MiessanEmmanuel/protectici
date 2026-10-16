@@ -48,7 +48,7 @@ function Confirmation({ message, onAnother }: { message: string; onAnother: () =
         ref={ref}
         tabIndex={-1}
         role="status"
-        className="rounded-md border border-success bg-success-soft p-4 font-semibold text-success outline-none"
+        className="border-2 border-success bg-success-soft p-4 font-semibold text-success outline-none"
       >
         <p className="whitespace-pre-line">{message}</p>
       </div>
@@ -113,7 +113,13 @@ function ContactFields({ onSent }: { onSent: (message: string) => void }) {
   }
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-4">
+    <form
+      method="post"
+      action="/contact"
+      onSubmit={(e) => void onSubmit(e)}
+      noValidate
+      className="flex flex-col gap-4"
+    >
       <ErrorSummary errors={errors} focusSignal={signal} />
       <FormError message={formError} />
       <Input label="Nom" name="name" autoComplete="name" error={errors.name} required />
@@ -141,8 +147,8 @@ function ContactFields({ onSent }: { onSent: (message: string) => void }) {
         error={errors.consent}
         label={
           <>
-            J’accepte que mes informations soient traitées pour répondre à mon message, conformément à la{' '}
-            <Link href="/confidentialite">politique de confidentialité</Link>.
+            J’accepte que mes informations soient traitées pour répondre à mon message, conformément
+            à la <Link href="/confidentialite">politique de confidentialité</Link>.
           </>
         }
       />

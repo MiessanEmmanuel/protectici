@@ -92,10 +92,7 @@ export function TwoFactorSection({ user }: { user: User }) {
         </p>
         <ul className="grid grid-cols-2 gap-2 font-mono sm:grid-cols-4">
           {codes.map((c) => (
-            <li
-              key={c}
-              className="rounded-md border border-line bg-surface-alt px-2 py-1 text-center"
-            >
+            <li key={c} className="bg-white-alt border-2 border-ink px-2 py-1 text-center">
               {c}
             </li>
           ))}
@@ -111,7 +108,13 @@ export function TwoFactorSection({ user }: { user: User }) {
 
   if (phase === 'setup' && setup) {
     return (
-      <form onSubmit={(e) => void confirm(e)} noValidate className="flex flex-col gap-4">
+      <form
+        method="post"
+        action="/compte"
+        onSubmit={(e) => void confirm(e)}
+        noValidate
+        className="flex flex-col gap-4"
+      >
         <FormError message={formError} />
         <ol className="list-decimal space-y-2 pl-5">
           <li>
@@ -127,7 +130,7 @@ export function TwoFactorSection({ user }: { user: User }) {
           alt="QR code à scanner avec votre application d’authentification"
           width={200}
           height={200}
-          className="rounded-md border border-line bg-surface p-2"
+          className="border-2 border-ink bg-white p-2"
         />
         <p className="text-sm">
           Impossible de scanner ? Saisissez cette clé manuellement :{' '}
@@ -172,7 +175,13 @@ export function TwoFactorSection({ user }: { user: User }) {
             La vérification en deux étapes est obligatoire pour votre rôle.
           </p>
         ) : (
-          <form onSubmit={(e) => void disable(e)} noValidate className="flex flex-col gap-3">
+          <form
+            method="post"
+            action="/compte"
+            onSubmit={(e) => void disable(e)}
+            noValidate
+            className="flex flex-col gap-3"
+          >
             <FormError message={formError} />
             <Input
               label="Mot de passe (pour désactiver)"

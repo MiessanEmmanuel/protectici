@@ -13,6 +13,7 @@ import { QueryBoundary } from '../../ui/QueryBoundary';
 import { Select } from '../../ui/Select';
 import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { SUBSCRIBER_STATUS_LABELS } from './labels';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 /** Abonnés à la lettre d'information (lecture seule ; données personnelles : écran réservé aux administrateurs). */
 export function AdminNewsletterView() {
@@ -33,8 +34,8 @@ export function AdminNewsletterView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Newsletter</h1>
-      <form onSubmit={search} role="search" className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <AdminPageHeader section="Site" title="Newsletter" />
+      <form onSubmit={search} role="search" className="flex flex-col gap-3 sm:flex-row sm:items-end border-2 border-ink bg-c4 p-3 sm:p-4">
         <Select label="Statut" value={status} wrapperClassName="sm:w-64" onChange={(e) => { setStatus(e.target.value as NewsletterStatus | ''); setPage(1); }}>
           <option value="">Tous</option>
           {(Object.keys(SUBSCRIBER_STATUS_LABELS) as NewsletterStatus[]).map((s) => (

@@ -9,7 +9,11 @@ export interface TabDef {
   content: ReactNode;
 }
 
-/** Onglets accessibles (motif WAI-ARIA : flèches, Début/Fin, rôle tablist/tab/tabpanel). */
+/**
+ * Onglets accessibles (motif WAI-ARIA : flèches, Début/Fin, rôle tablist/tab/tabpanel).
+ * Style v9 : barre posée sur un filet 2 px encre, onglet actif en aplat encre (forme + couleur,
+ * pas la couleur seule), onglets inactifs soulignés au survol.
+ */
 export function Tabs({ tabs, label, initial }: { tabs: TabDef[]; label: string; initial?: string }) {
   const uid = useId();
   const [active, setActive] = useState(initial ?? tabs[0]?.id ?? '');
@@ -30,7 +34,11 @@ export function Tabs({ tabs, label, initial }: { tabs: TabDef[]; label: string; 
 
   return (
     <div>
-      <div role="tablist" aria-label={label} className="flex gap-1 overflow-x-auto border-b border-line">
+      <div
+        role="tablist"
+        aria-label={label}
+        className="flex overflow-x-auto overscroll-x-contain border-b-2 border-ink"
+      >
         {tabs.map((t, i) => {
           const selected = t.id === active;
           return (
@@ -48,10 +56,10 @@ export function Tabs({ tabs, label, initial }: { tabs: TabDef[]; label: string; 
               onClick={() => setActive(t.id)}
               onKeyDown={(e) => onKeyDown(e, i)}
               className={cn(
-                'min-h-tap shrink-0 border-b-2 px-4 font-semibold whitespace-nowrap',
+                'min-h-tap shrink-0 px-4 text-sm font-extrabold whitespace-nowrap',
                 selected
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted hover:text-ink',
+                  ? 'bg-ink text-white'
+                  : 'text-ink-2 underline-offset-4 hover:text-ink hover:underline',
               )}
             >
               {t.label}

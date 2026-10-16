@@ -16,6 +16,7 @@ import { Select } from '../../ui/Select';
 import { StatusPill } from '../../ui/StatusPill';
 import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { QuoteDetail } from './QuoteDetail';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 export function AdminQuotesView({ initialStatus = '' }: { initialStatus?: QuoteStatus | '' }) {
   const [status, setStatus] = useState<QuoteStatus | ''>(initialStatus);
@@ -45,11 +46,11 @@ export function AdminQuotesView({ initialStatus = '' }: { initialStatus?: QuoteS
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Demandes de devis</h1>
+      <AdminPageHeader section="Demandes" title="Demandes de devis" />
       <p className="text-muted">
         Les demandes sans prestataire choisi sont à acheminer vers un à cinq prestataires publiés.
       </p>
-      <form onSubmit={search} role="search" className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <form onSubmit={search} role="search" className="flex flex-col gap-3 sm:flex-row sm:items-end border-2 border-ink bg-c4 p-3 sm:p-4">
         <Select
           label="Statut de la demande"
           value={status}

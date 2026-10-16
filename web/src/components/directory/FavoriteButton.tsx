@@ -6,7 +6,9 @@ import { clientApi } from '@/lib/api/client';
 import { ApiError, errorMessage } from '@/lib/api/errors';
 import { buildHref } from '@/lib/search-params';
 import { useSession } from '../layout/SessionProvider';
-import { Button } from '../ui/Button';
+import { Star } from 'lucide-react';
+import { Button, type ButtonVariant } from '../ui/Button';
+import { cn } from '../ui/cn';
 import { useToast } from '../ui/Toast';
 
 /** Favori : réservé aux comptes connectés (et e-mail vérifié, contrôlé par l'API). */
@@ -14,10 +16,14 @@ export function FavoriteButton({
   slug,
   name,
   initial,
+  variant = 'outline',
+  className,
 }: {
   slug: string;
   name: string;
   initial: boolean | null;
+  variant?: ButtonVariant;
+  className?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -66,12 +72,14 @@ export function FavoriteButton({
 
   return (
     <Button
-      variant="secondary"
+      variant={variant}
+      size="lg"
       onClick={() => void toggle()}
       loading={busy}
       aria-pressed={favorite}
+      className={className}
     >
-      <span aria-hidden="true">{favorite ? '★' : '☆'}</span>
+      <Star aria-hidden="true" className={cn(favorite && 'fill-current')} />
       {favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
     </Button>
   );

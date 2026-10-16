@@ -22,9 +22,12 @@ export function MyEstablishmentsList() {
         res.data.length === 0 ? (
           <EmptyState
             title="Vous n’avez encore inscrit aucun établissement"
-            action={<ButtonLink href="/inscription-etablissement">Inscrire mon établissement</ButtonLink>}
+            action={
+              <ButtonLink href="/inscription-etablissement">Inscrire mon établissement</ButtonLink>
+            }
           >
-            Inscrivez votre entreprise de sécurité ou votre structure pour apparaître dans l’annuaire.
+            Inscrivez votre entreprise de sécurité ou votre structure pour apparaître dans
+            l’annuaire.
           </EmptyState>
         ) : (
           <div>
@@ -34,7 +37,7 @@ export function MyEstablishmentsList() {
                   <Card as="article" className="flex flex-col gap-2">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <h2 className="text-lg font-bold">{e.name}</h2>
+                        <h2 className="text-lg heading-block">{e.name}</h2>
                         <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
                           <span>{TYPE_LABELS[e.type]}</span>
                           <StatusBadge status={e.status} />
@@ -50,14 +53,15 @@ export function MyEstablishmentsList() {
                       </ButtonLink>
                     </div>
                     {e.rejection_reason ? (
-                      <p className="rounded-md border border-danger bg-danger-soft p-3 text-danger">
+                      <p className="border-2 border-danger bg-danger-soft p-3 text-danger">
                         <span className="font-semibold">Motif du rejet : </span>
                         {e.rejection_reason}
                       </p>
                     ) : null}
                     {e.pending_change_requests > 0 ? (
                       <p className="text-sm">
-                        Demandes de modification en attente : <strong>{e.pending_change_requests}</strong>{' '}
+                        Demandes de modification en attente :{' '}
+                        <strong>{e.pending_change_requests}</strong>{' '}
                         {pluralize(e.pending_change_requests, 'demande', 'demandes')}
                       </p>
                     ) : null}

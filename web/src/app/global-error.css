@@ -1,22 +1,44 @@
+/* Page d'erreur globale autonome, style v9 : aplat nuit, angles droits, aucune ombre. */
 .ge-body {
-  font-family: system-ui, sans-serif;
-  color: #001029;
+  font-family: Arial, sans-serif;
+  background: #0d1b2a;
+  color: #fff;
   margin: 0;
+  min-height: 100dvh;
 }
 .ge-main {
-  max-width: 32rem;
-  margin: 4rem auto;
-  padding: 0 1rem;
-  text-align: center;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 5rem 1rem;
+}
+.ge-main h1 {
+  font-size: clamp(2.1rem, 4vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
+}
+.ge-main p {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin: 0 0 1.75rem;
 }
 .ge-main button {
-  min-height: 44px;
-  padding: 0 1.25rem;
-  border: 0;
-  border-radius: 0.5rem;
-  background: #0343a4;
-  color: #fff;
+  min-height: 50px;
+  padding: 0 1.4rem;
+  border: 2px solid #eaab13;
+  border-radius: 0;
+  background: #eaab13;
+  color: #0d1b2a;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
+}
+.ge-main button:hover {
+  background: #fff;
+  border-color: #fff;
+}
+.ge-main button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
 }

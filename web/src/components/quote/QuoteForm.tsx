@@ -39,7 +39,9 @@ export function QuoteForm({
   reference: ReferenceData;
   initialProvider?: PickedProvider | null;
 }) {
-  const [receipt, setReceipt] = useState<{ data: QuoteReceipt; withProviders: boolean } | null>(null);
+  const [receipt, setReceipt] = useState<{ data: QuoteReceipt; withProviders: boolean } | null>(
+    null,
+  );
   const [formKey, setFormKey] = useState(0);
 
   if (receipt) {
@@ -98,7 +100,9 @@ function QuoteFields({
   const running = useRef(false);
   const [cityId, setCityId] = useState('');
   const [description, setDescription] = useState('');
-  const [providers, setProviders] = useState<PickedProvider[]>(initialProvider ? [initialProvider] : []);
+  const [providers, setProviders] = useState<PickedProvider[]>(
+    initialProvider ? [initialProvider] : [],
+  );
   const spam = useAntiSpam();
   const idem = useIdempotencyKey();
 
@@ -160,17 +164,38 @@ function QuoteFields({
   }
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex max-w-3xl flex-col gap-8">
+    <form
+      method="post"
+      action="/devis"
+      onSubmit={(e) => void onSubmit(e)}
+      noValidate
+      className="flex max-w-3xl flex-col gap-8"
+    >
       <ErrorSummary errors={errors} focusSignal={signal} />
       <FormError message={formError} />
 
-      <section aria-labelledby="quote-contact" className="flex flex-col gap-4">
-        <h2 id="quote-contact" className="text-xl font-bold">
+      <section
+        aria-labelledby="quote-contact"
+        className="flex flex-col gap-4 border-t-2 border-ink pt-6"
+      >
+        <h2 id="quote-contact" className="text-2xl heading-block">
           Vos coordonnées
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input label="Prénom" name="first_name" autoComplete="given-name" error={errors.first_name} required />
-          <Input label="Nom" name="last_name" autoComplete="family-name" error={errors.last_name} required />
+          <Input
+            label="Prénom"
+            name="first_name"
+            autoComplete="given-name"
+            error={errors.first_name}
+            required
+          />
+          <Input
+            label="Nom"
+            name="last_name"
+            autoComplete="family-name"
+            error={errors.last_name}
+            required
+          />
         </div>
         <Input
           label="Adresse e-mail"
@@ -197,11 +222,20 @@ function QuoteFields({
         />
       </section>
 
-      <section aria-labelledby="quote-need" className="flex flex-col gap-4">
-        <h2 id="quote-need" className="text-xl font-bold">
+      <section
+        aria-labelledby="quote-need"
+        className="flex flex-col gap-4 border-t-2 border-ink pt-6"
+      >
+        <h2 id="quote-need" className="text-2xl heading-block">
           Votre besoin
         </h2>
-        <Select label="Service recherché" name="service_type_id" defaultValue="" error={errors.service_type_id} required>
+        <Select
+          label="Service recherché"
+          name="service_type_id"
+          defaultValue=""
+          error={errors.service_type_id}
+          required
+        >
           <option value="">Choisir un service</option>
           {reference.service_types.map((s) => (
             <option key={s.id} value={s.id}>
@@ -268,8 +302,11 @@ function QuoteFields({
         />
       </section>
 
-      <section aria-labelledby="quote-providers" className="flex flex-col gap-3">
-        <h2 id="quote-providers" className="text-xl font-bold">
+      <section
+        aria-labelledby="quote-providers"
+        className="flex flex-col gap-3 border-t-2 border-ink pt-6"
+      >
+        <h2 id="quote-providers" className="text-2xl heading-block">
           Prestataires souhaités
         </h2>
         <ProviderPicker
@@ -281,8 +318,11 @@ function QuoteFields({
         <FieldError id="quote-providers-error" message={errors.provider_slugs} />
       </section>
 
-      <section aria-labelledby="quote-consent" className="flex flex-col gap-4">
-        <h2 id="quote-consent" className="text-xl font-bold">
+      <section
+        aria-labelledby="quote-consent"
+        className="flex flex-col gap-4 border-t-2 border-ink pt-6"
+      >
+        <h2 id="quote-consent" className="text-2xl heading-block">
           Consentement
         </h2>
         <Checkbox
@@ -290,8 +330,8 @@ function QuoteFields({
           error={errors.consent}
           label={
             <>
-              J’accepte que mes informations soient transmises aux prestataires concernés et traitées pour
-              répondre à ma demande, conformément à la{' '}
+              J’accepte que mes informations soient transmises aux prestataires concernés et
+              traitées pour répondre à ma demande, conformément à la{' '}
               <Link href="/confidentialite">politique de confidentialité</Link>.
             </>
           }

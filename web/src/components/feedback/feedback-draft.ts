@@ -61,7 +61,9 @@ export function stepIndexOfField(field: string): number {
   if (root === 'provider_slug') return 1;
   if (root === 'action_type') return 2;
   if (
-    ['target_type', 'service_type_id', 'topic_id', 'product_type', 'location', 'comment'].includes(root)
+    ['target_type', 'service_type_id', 'topic_id', 'product_type', 'location', 'comment'].includes(
+      root,
+    )
   )
     return 3;
   return 4;
@@ -116,7 +118,9 @@ export function validateFeedbackStep(
 }
 
 /** Corps de la requête : uniquement les champs pertinents (contrat §8.2). */
-export function buildFeedbackBody(d: FeedbackDraft): Omit<FeedbackInput, 'turnstile_token' | 'company_website'> {
+export function buildFeedbackBody(
+  d: FeedbackDraft,
+): Omit<FeedbackInput, 'turnstile_token' | 'company_website'> {
   const body: Omit<FeedbackInput, 'turnstile_token' | 'company_website'> = {
     last_name: d.last_name.trim(),
     first_name: d.first_name.trim(),
@@ -129,9 +133,11 @@ export function buildFeedbackBody(d: FeedbackDraft): Omit<FeedbackInput, 'turnst
   if (d.civility) body.civility = d.civility as FeedbackInput['civility'];
   if (d.phone.trim()) body.phone = d.phone.trim();
   if (d.provider) body.provider_slug = d.provider.slug;
-  if (d.target_type === 'service' && d.service_type_id) body.service_type_id = Number(d.service_type_id);
+  if (d.target_type === 'service' && d.service_type_id)
+    body.service_type_id = Number(d.service_type_id);
   if (d.target_type !== 'product' && d.topic_id) body.topic_id = Number(d.topic_id);
-  if (d.target_type === 'product' && d.product_type.trim()) body.product_type = d.product_type.trim();
+  if (d.target_type === 'product' && d.product_type.trim())
+    body.product_type = d.product_type.trim();
   if (d.location.trim()) body.location = d.location.trim();
   return body;
 }

@@ -74,7 +74,7 @@ export function AccountView({ justVerified }: { justVerified: boolean }) {
 
       <Card as="section" aria-labelledby="profil">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id="profil" className="text-xl font-bold">
+          <h2 id="profil" className="text-2xl heading-block">
             Mon profil
           </h2>
           <Badge tone="neutral">Rôle : {roleLabel(user.role)}</Badge>
@@ -86,7 +86,7 @@ export function AccountView({ justVerified }: { justVerified: boolean }) {
       </Card>
 
       <Card as="section" aria-labelledby="mdp">
-        <h2 id="mdp" className="text-xl font-bold">
+        <h2 id="mdp" className="text-2xl heading-block">
           Changer mon mot de passe
         </h2>
         <div className="mt-4">
@@ -95,7 +95,7 @@ export function AccountView({ justVerified }: { justVerified: boolean }) {
       </Card>
 
       <Card as="section" aria-labelledby="deux-facteurs">
-        <h2 id="deux-facteurs" className="text-xl font-bold">
+        <h2 id="deux-facteurs" className="text-2xl heading-block">
           Vérification en deux étapes (2FA)
         </h2>
         <div className="mt-4">
@@ -104,7 +104,7 @@ export function AccountView({ justVerified }: { justVerified: boolean }) {
       </Card>
 
       <Card as="section" aria-labelledby="etablissements">
-        <h2 id="etablissements" className="text-xl font-bold">
+        <h2 id="etablissements" className="text-2xl heading-block">
           Mes établissements
         </h2>
         <p className="mt-1 text-muted">
@@ -120,7 +120,7 @@ export function AccountView({ justVerified }: { justVerified: boolean }) {
       </Card>
 
       <Card as="section" aria-labelledby="mes-avis">
-        <h2 id="mes-avis" className="text-xl font-bold">
+        <h2 id="mes-avis" className="text-2xl heading-block">
           Mes avis
         </h2>
         <p className="mt-1 text-muted">
@@ -134,7 +134,7 @@ export function AccountView({ justVerified }: { justVerified: boolean }) {
       </Card>
 
       <Card as="section" aria-labelledby="favoris">
-        <h2 id="favoris" className="text-xl font-bold">
+        <h2 id="favoris" className="text-2xl heading-block">
           Mes favoris
         </h2>
         <div className="mt-4">

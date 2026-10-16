@@ -16,6 +16,8 @@ export interface FicheCardProps {
   rating?: { value: string; count: ReactNode } | null;
   /** Distance formatée (« 1,4 km »). */
   distance?: string | null;
+  /** Compléments sous les métadonnées (pastilles, tarif) ; facultatif. */
+  extra?: ReactNode;
   /** Actions directes (Appeler, Demander un devis) : liens au-dessus du lien étiré. */
   actions?: ReactNode;
   headingLevel?: 'h2' | 'h3';
@@ -35,6 +37,7 @@ export function FicheCard({
   verified,
   rating,
   distance,
+  extra,
   actions,
   headingLevel: H = 'h3',
   className,
@@ -82,6 +85,7 @@ export function FicheCard({
           </p>
         ) : null}
         {distance ? <p className="mt-1.5 text-[0.78rem] font-extrabold">{distance}</p> : null}
+        {extra ? <div className="mt-2">{extra}</div> : null}
       </div>
       {rating ? (
         <div className="col-start-2 sm:col-start-auto sm:text-right">

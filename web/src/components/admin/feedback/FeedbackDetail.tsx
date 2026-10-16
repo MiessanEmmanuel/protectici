@@ -63,7 +63,7 @@ export function FeedbackDetail({
         <>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold">Dossier {f.reference}</h2>
+              <h2 className="text-xl heading-block">Dossier {f.reference}</h2>
               <p className="text-sm text-muted">Reçu le {formatDateTime(f.created_at)}</p>
             </div>
             <div className="flex items-center gap-3">

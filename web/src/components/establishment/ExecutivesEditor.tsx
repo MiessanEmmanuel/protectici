@@ -28,8 +28,13 @@ interface Props {
  * Liste dynamique de dirigeants. Par défaut un dirigeant n'est PAS visible publiquement :
  * l'utilisateur doit cocher explicitement la case (security.md §12).
  */
-export function ExecutivesEditor({ value, onChange, errors, disabled, idPrefix = 'f-executives' }: Props) {
-
+export function ExecutivesEditor({
+  value,
+  onChange,
+  errors,
+  disabled,
+  idPrefix = 'f-executives',
+}: Props) {
   function update(i: number, patch: Partial<ExecutiveDraft>) {
     onChange(value.map((e, k) => (k === i ? { ...e, ...patch } : e)));
   }
@@ -46,7 +51,7 @@ export function ExecutivesEditor({ value, onChange, errors, disabled, idPrefix =
       ) : null}
       <ul className="flex flex-col gap-4" aria-label="Dirigeants">
         {value.map((e, i) => (
-          <li key={i} className="rounded-lg border border-line p-4">
+          <li key={i} className="border-2 border-ink p-4">
             <fieldset className="flex flex-col gap-3" disabled={disabled}>
               <legend className="px-1 font-semibold">Dirigeant {i + 1}</legend>
               <Input

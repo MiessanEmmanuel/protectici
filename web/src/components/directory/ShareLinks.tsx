@@ -13,10 +13,10 @@ export function ShareLinks({
   const u = encodeURIComponent(url);
   const t = encodeURIComponent(title);
   const cls =
-    'inline-flex min-h-tap items-center rounded-md border border-line px-3 text-sm no-underline hover:bg-primary-soft';
+    'inline-flex min-h-tap items-center border-2 border-current px-3 text-sm font-extrabold text-inherit no-underline hover:bg-c2 hover:text-on-c2 hover:border-c2';
   return (
     <div>
-      <p className="font-semibold">{label}</p>
+      <p className="eyebrow">{label}</p>
       <ul className="mt-2 flex flex-wrap gap-2">
         <li>
           <ExternalLink className={cls} href={`https://www.facebook.com/sharer/sharer.php?u=${u}`}>

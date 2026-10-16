@@ -70,6 +70,7 @@ export function NewsletterForm({ source = 'footer' }: { source?: string }) {
 
   return (
     <form
+      method="post"
       onSubmit={(e) => void onSubmit(e)}
       onFocusCapture={() => setEngaged(true)}
       noValidate

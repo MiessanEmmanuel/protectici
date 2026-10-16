@@ -14,6 +14,7 @@ import { QueryBoundary } from '../../ui/QueryBoundary';
 import { Select } from '../../ui/Select';
 import { Table, Td, Th, THead, Tr } from '../../ui/Table';
 import { auditJson } from './redact';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 /** Clés du morph map de l'API (liste blanche côté serveur). */
 const TYPE_LABELS: Record<string, string> = {
@@ -107,14 +108,14 @@ export function AdminAuditView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Journal d’audit</h1>
+      <AdminPageHeader section="Système" title="Journal d’audit" />
 
       <form
         role="search"
         aria-label="Filtrer le journal"
         onSubmit={apply}
         noValidate
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 border-2 border-ink bg-c4 p-3 sm:p-4"
       >
         <Input
           label="Événement"
@@ -225,7 +226,7 @@ function LogRow({ log }: { log: AdminAuditLog }) {
               {log.old_values !== null ? (
                 <div>
                   <p className="font-semibold">Avant</p>
-                  <pre className="max-w-md overflow-x-auto rounded-md bg-surface-alt p-2 text-xs">
+                  <pre className="max-w-md overflow-x-auto bg-c4 p-2 text-xs">
                     {auditJson(log.old_values)}
                   </pre>
                 </div>
@@ -233,7 +234,7 @@ function LogRow({ log }: { log: AdminAuditLog }) {
               {log.new_values !== null ? (
                 <div>
                   <p className="font-semibold">Après</p>
-                  <pre className="max-w-md overflow-x-auto rounded-md bg-surface-alt p-2 text-xs">
+                  <pre className="max-w-md overflow-x-auto bg-c4 p-2 text-xs">
                     {auditJson(log.new_values)}
                   </pre>
                 </div>

@@ -23,12 +23,14 @@ export function ErrorSummary({
       ref={ref}
       tabIndex={-1}
       role={keys.length ? 'alert' : undefined}
-      className={keys.length ? 'rounded-md border border-danger bg-danger-soft p-3 text-danger' : 'sr-only'}
+      className={keys.length ? 'border-2 border-danger bg-danger-soft p-3 text-danger' : 'sr-only'}
     >
       {keys.length ? (
         <>
           <p className="font-semibold">
-            {keys.length === 1 ? 'Un champ est à corriger :' : `${keys.length} champs sont à corriger :`}
+            {keys.length === 1
+              ? 'Un champ est à corriger :'
+              : `${keys.length} champs sont à corriger :`}
           </p>
           <ul className="list-disc pl-5">
             {keys.map((k) => (

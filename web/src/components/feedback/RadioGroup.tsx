@@ -29,25 +29,27 @@ export function RadioGroup<V extends string>({
   optional?: boolean;
 }) {
   const id = useId();
-  const described = [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(' ');
+  const described = [hint ? `${id}-hint` : null, error ? `${id}-error` : null]
+    .filter(Boolean)
+    .join(' ');
   return (
     <fieldset className="flex flex-col gap-2" aria-describedby={described || undefined}>
-      <legend className="font-semibold text-ink">
+      <legend className="mb-1 font-bold text-ink">
         {legend}
-        {optional ? <span className="font-normal text-muted"> (facultatif)</span> : null}
+        {optional ? <span className="font-normal text-ink-2"> (facultatif)</span> : null}
       </legend>
       {hint ? (
         <p id={`${id}-hint`} className="text-sm text-muted">
           {hint}
         </p>
       ) : null}
-      <div className="flex flex-col gap-2">
+      <div className="grid gap-2 sm:grid-cols-2">
         {options.map((o) => {
           const inputId = `${id}-${o.value}`;
           return (
             <div
               key={o.value}
-              className="flex min-h-tap items-center gap-3 rounded-md border border-line px-3"
+              className="flex min-h-btn items-center gap-3 border-2 border-ink bg-white px-3 font-semibold has-checked:bg-c4 has-checked:font-extrabold has-focus-visible:outline-3 has-focus-visible:outline-ink"
             >
               <input
                 id={inputId}
@@ -56,7 +58,7 @@ export function RadioGroup<V extends string>({
                 value={o.value}
                 checked={value === o.value}
                 onChange={() => onChange(o.value)}
-                className="size-5 shrink-0 accent-primary"
+                className="size-5 shrink-0 accent-ink"
               />
               <label htmlFor={inputId} className="flex-1 py-2">
                 {o.label}

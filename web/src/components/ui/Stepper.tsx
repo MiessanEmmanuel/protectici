@@ -5,21 +5,27 @@ export interface StepDef {
   label: string;
 }
 
-/** Indicateur d'étapes : liste ordonnée, étape courante annoncée (aria-current="step"). */
+/**
+ * Indicateur d'étapes v9 : barre de cases à filets 2 px (faites = bleu, en cours = or),
+ * le titre de l'étape est affiché par le formulaire (libellé repris ici pour les lecteurs d'écran) ; étape courante annoncée (aria-current="step").
+ */
 export function Stepper({ steps, current }: { steps: StepDef[]; current: number }) {
   return (
     <nav aria-label="Progression du formulaire">
-      <p className="text-sm font-semibold text-muted">
-        Étape {current + 1} sur {steps.length} : <span className="text-ink">{steps[current]?.label}</span>
+      <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="eyebrow">
+          Étape {current + 1} sur {steps.length}
+        </span>
+        <span className="sr-only">: {steps[current]?.label}</span>
       </p>
-      <ol className="mt-2 flex gap-1.5" role="list">
+      <ol className="mt-3 flex border-2 border-ink" role="list">
         {steps.map((s, i) => (
           <li
             key={s.id}
             aria-current={i === current ? 'step' : undefined}
             className={cn(
-              'h-2 flex-1 rounded-pill',
-              i < current ? 'bg-primary' : i === current ? 'bg-accent' : 'bg-line',
+              'h-3 flex-1 border-ink not-last:border-r-2',
+              i < current ? 'bg-c1' : i === current ? 'bg-c2' : 'bg-white',
             )}
           >
             <span className="sr-only">

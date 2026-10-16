@@ -33,16 +33,16 @@ export function ReferenceCard({
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-success bg-success-soft p-5">
-      <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold text-success outline-none">
+    <div className="flex flex-col gap-4 border-2 border-ink bg-c4 p-5 text-on-c4 md:p-8">
+      <h2 ref={headingRef} tabIndex={-1} className="text-[2rem] heading-block outline-none">
         {title}
       </h2>
       {message ? <p>{message}</p> : null}
       <div>
-        <p className="text-sm font-semibold text-muted">Votre numéro de référence</p>
+        <p className="eyebrow">Votre numéro de référence</p>
         <p
           data-testid="reference"
-          className="mt-1 break-all rounded-md border border-line bg-surface px-4 py-3 font-mono text-2xl font-bold tracking-wide"
+          className="mt-2 break-all bg-c2 px-4 py-3 font-mono text-2xl font-black tracking-wide text-on-c2"
         >
           {reference}
         </p>

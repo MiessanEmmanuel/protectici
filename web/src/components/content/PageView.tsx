@@ -33,12 +33,13 @@ export async function PageView({ slug, fallbackTitle }: { slug: string; fallback
   }
   return (
     <>
-      <PageHeader title={page.title} />
-      <Container className="py-8">
-        <div className="mx-auto max-w-3xl">
+      <PageHeader eyebrow="ProtectIci" title={page.title} />
+      <Container className="py-section">
+        <div className="max-w-[52rem]">
           <SanitizedHtml html={page.body} />
-          <p className="mt-8 text-sm text-muted">
-            Dernière mise à jour : <time dateTime={page.updated_at}>{formatDate(page.updated_at)}</time>
+          <p className="mt-10 border-t-2 border-ink pt-4 text-sm text-ink-2">
+            Dernière mise à jour :{' '}
+            <time dateTime={page.updated_at}>{formatDate(page.updated_at)}</time>
           </p>
         </div>
       </Container>

@@ -79,7 +79,13 @@ export function FeedbackTracker() {
 
   return (
     <div className="flex max-w-prose flex-col gap-8">
-      <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-4">
+      <form
+        method="post"
+        action="/dis-moi-tout/suivi"
+        onSubmit={(e) => void onSubmit(e)}
+        noValidate
+        className="flex flex-col gap-4"
+      >
         <Input
           label="Référence du dossier"
           name="reference"
@@ -115,20 +121,28 @@ export function FeedbackTracker() {
       </form>
 
       {result ? (
-        <section aria-labelledby="track-title" className="flex flex-col gap-4 rounded-lg border border-line p-5">
-          <h2 id="track-title" ref={resultRef} tabIndex={-1} className="text-xl font-bold outline-none">
+        <section
+          aria-labelledby="track-title"
+          className="flex flex-col gap-4 border-2 border-ink p-5"
+        >
+          <h2
+            id="track-title"
+            ref={resultRef}
+            tabIndex={-1}
+            className="text-2xl heading-block outline-none"
+          >
             Dossier {result.reference}
           </h2>
           <dl className="grid gap-2 sm:grid-cols-[10rem_1fr]">
-            <dt className="font-semibold text-muted">Statut</dt>
+            <dt className="eyebrow text-ink-2">Statut</dt>
             <dd>
               <StatusPill kind="feedback" status={result.status} />
             </dd>
-            <dt className="font-semibold text-muted">Envoyé le</dt>
+            <dt className="eyebrow text-ink-2">Envoyé le</dt>
             <dd>{formatDateTime(result.created_at)}</dd>
             {result.provider_name ? (
               <>
-                <dt className="font-semibold text-muted">Prestataire</dt>
+                <dt className="eyebrow text-ink-2">Prestataire</dt>
                 <dd>{result.provider_name}</dd>
               </>
             ) : null}
@@ -136,13 +150,15 @@ export function FeedbackTracker() {
           <div>
             <h3 className="font-semibold">Réponses</h3>
             {result.replies.length === 0 ? (
-              <p className="mt-2 text-muted">Aucune réponse pour le moment. Nous vous écrirons dès qu’il y en aura une.</p>
+              <p className="mt-2 text-muted">
+                Aucune réponse pour le moment. Nous vous écrirons dès qu’il y en aura une.
+              </p>
             ) : (
               <ol className="mt-2 flex flex-col gap-3">
                 {result.replies.map((r, i) => (
-                  <li key={`${r.created_at}-${i}`} className="rounded-md bg-surface-alt p-3">
+                  <li key={`${r.created_at}-${i}`} className="bg-c4 p-3">
                     <p className="text-sm text-muted">{formatDateTime(r.created_at)}</p>
-                    <p className="mt-1 whitespace-pre-line break-words">{r.body}</p>
+                    <p className="mt-1 break-words whitespace-pre-line">{r.body}</p>
                   </li>
                 ))}
               </ol>

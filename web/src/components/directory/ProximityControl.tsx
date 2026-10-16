@@ -4,7 +4,9 @@ import { useId, useRef, useState } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { errorMessage } from '@/lib/api/errors';
 import type { GeocodeResult } from '@/lib/api/types';
+import { LocateFixed } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { controlClasses } from '../ui/Field';
 
 export interface Geo {
   lat: number;
@@ -87,24 +89,31 @@ export function ProximityControl({ value, onChange }: ProximityControlProps) {
   }
 
   return (
-    <fieldset className="flex flex-col gap-2 rounded-md border border-line p-3">
-      <legend className="px-1 font-semibold">Près de chez moi</legend>
+    <fieldset className="flex flex-col gap-2 border-2 border-ink bg-white p-4">
+      <legend className="bg-ink px-2 py-0.5 eyebrow text-white">Près de chez moi</legend>
       {value ? (
         <p className="flex flex-wrap items-center gap-2" role="status">
-          <span>
+          <span className="bg-c2 px-2 py-1 text-on-c2">
             Autour de : <strong>{value.label ?? 'position choisie'}</strong>
           </span>
-          <Button variant="ghost" size="sm" onClick={() => onChange(null)}>
+          <Button variant="outline" size="sm" onClick={() => onChange(null)}>
             Retirer
           </Button>
         </p>
       ) : null}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-        <Button variant="secondary" onClick={locate} loading={locating} className="sm:shrink-0">
+        <Button
+          variant="solid"
+          size="lg"
+          onClick={locate}
+          loading={locating}
+          className="sm:shrink-0"
+        >
+          <LocateFixed aria-hidden="true" />
           Utiliser ma position
         </Button>
         <div className="flex flex-1 flex-col gap-1">
-          <label htmlFor={inputId} className="text-sm font-medium">
+          <label htmlFor={inputId} className="text-sm font-bold">
             ou saisir une ville / un quartier
           </label>
           <div className="flex gap-2">
@@ -122,27 +131,24 @@ export function ProximityControl({ value, onChange }: ProximityControlProps) {
                   void search();
                 }
               }}
-              className="min-h-tap min-w-0 flex-1 rounded-md border border-line bg-surface px-3"
+              className={`${controlClasses} min-w-0 flex-1`}
             />
-            <Button variant="secondary" onClick={() => void search()} loading={searching}>
+            <Button variant="outline" size="lg" onClick={() => void search()} loading={searching}>
               Chercher
             </Button>
           </div>
         </div>
       </div>
-      <p aria-live="polite" className="min-h-5 text-sm text-muted">
+      <p aria-live="polite" className="min-h-5 text-sm font-semibold text-ink-2">
         {message}
       </p>
       {results && results.length > 0 ? (
-        <ul
-          className="divide-y divide-line rounded-md border border-line"
-          aria-label="Lieux trouvés"
-        >
+        <ul className="divide-y-2 divide-ink border-2 border-ink" aria-label="Lieux trouvés">
           {results.map((r) => (
             <li key={`${r.label}-${r.lat}-${r.lng}`}>
               <button
                 type="button"
-                className="min-h-tap w-full px-3 text-left hover:bg-primary-soft"
+                className="min-h-tap w-full px-3 text-left font-bold hover:bg-c2 hover:text-on-c2"
                 onClick={() => {
                   setResults(null);
                   setQuery('');

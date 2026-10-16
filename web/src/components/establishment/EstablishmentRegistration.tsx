@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { ApiError, describeError, errorMessage } from '@/lib/api/errors';
@@ -27,17 +28,32 @@ function stepOfField(field: string): StepId {
   if (root === 'type') return 'type';
   if (['submitter_role', 'is_in_service'].includes(root)) return 'declarant';
   if (
-    ['name', 'description', 'company_type_ids', 'service_type_ids', 'force_type_id', 'procedure_type_ids'].includes(
+    [
+      'name',
+      'description',
+      'company_type_ids',
+      'service_type_ids',
+      'force_type_id',
+      'procedure_type_ids',
+    ].includes(root)
+  )
+    return 'identity';
+  if (
+    ['city_id', 'district_id', 'address', 'geo_description', 'plus_code', 'lat', 'lng'].includes(
       root,
     )
   )
-    return 'identity';
-  if (['city_id', 'district_id', 'address', 'geo_description', 'plus_code', 'lat', 'lng'].includes(root))
     return 'location';
   if (
-    ['rccm', 'legal_form', 'share_capital', 'corporate_purpose', 'approval_number', 'approval_expires_at', 'executives'].includes(
-      root,
-    )
+    [
+      'rccm',
+      'legal_form',
+      'share_capital',
+      'corporate_purpose',
+      'approval_number',
+      'approval_expires_at',
+      'executives',
+    ].includes(root)
   )
     return 'legal';
   if (root === 'consent') return 'review';
@@ -165,9 +181,11 @@ export function EstablishmentRegistration({ reference }: { reference: ReferenceD
   }
 
   return (
-    <Card className="mx-auto max-w-3xl">
+    <Card className="max-w-[52rem] p-5 sm:p-8">
       <Stepper steps={steps} current={safeIndex} />
       <form
+        method="post"
+        action="/inscription-etablissement"
         className="mt-5 flex flex-col gap-5"
         noValidate
         onSubmit={(e) => {
@@ -179,7 +197,7 @@ export function EstablishmentRegistration({ reference }: { reference: ReferenceD
         <h2
           ref={headingRef}
           tabIndex={-1}
-          className="text-xl font-bold focus:outline-none focus-visible:outline-2"
+          className="text-[2rem] heading-block focus:outline-none focus-visible:outline-2"
         >
           {step.label}
         </h2>
@@ -189,9 +207,7 @@ export function EstablishmentRegistration({ reference }: { reference: ReferenceD
           tabIndex={-1}
           role={errorKeys.length ? 'alert' : undefined}
           className={
-            errorKeys.length
-              ? 'rounded-md border border-danger bg-danger-soft p-3 text-danger'
-              : 'sr-only'
+            errorKeys.length ? 'border-2 border-danger bg-danger-soft p-3 text-danger' : 'sr-only'
           }
         >
           {errorKeys.length ? (
@@ -235,17 +251,19 @@ export function EstablishmentRegistration({ reference }: { reference: ReferenceD
           disabled={busy}
         />
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-          <Button variant="secondary" onClick={previous} disabled={busy || safeIndex === 0}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink pt-5">
+          <Button variant="outline" size="lg" onClick={previous} disabled={busy || safeIndex === 0}>
+            <ArrowLeft aria-hidden="true" />
             Précédent
           </Button>
           {last ? (
-            <Button type="submit" loading={busy}>
+            <Button type="submit" variant="solid" size="lg" loading={busy}>
               {busy ? 'Envoi en cours…' : 'Envoyer ma demande'}
             </Button>
           ) : (
-            <Button type="submit" disabled={busy}>
+            <Button type="submit" variant="solid" size="lg" disabled={busy}>
               Suivant
+              <ArrowRight aria-hidden="true" />
             </Button>
           )}
         </div>
@@ -266,8 +284,8 @@ function Confirmation({
   }, [headingRef]);
   const { created, failures } = outcome;
   return (
-    <Card className="mx-auto max-w-2xl">
-      <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold focus:outline-none">
+    <Card className="max-w-[52rem] bg-c4 p-5 sm:p-8">
+      <h2 ref={headingRef} tabIndex={-1} className="text-[2rem] heading-block focus:outline-none">
         Demande reçue : en attente de validation
       </h2>
       <p className="mt-2">
@@ -275,7 +293,7 @@ function Confirmation({
         publier. Vous serez prévenu par e-mail de la décision.
       </p>
       {failures.length > 0 ? (
-        <div role="alert" className="mt-4 rounded-md border border-danger bg-danger-soft p-3 text-danger">
+        <div role="alert" className="mt-4 border-2 border-danger bg-danger-soft p-3 text-danger">
           <p className="font-semibold">
             {failures.length === 1
               ? 'Un justificatif n’a pas pu être envoyé :'
@@ -289,8 +307,8 @@ function Confirmation({
             ))}
           </ul>
           <p className="mt-2">
-            La fiche est bien créée. Vous pouvez renvoyer ces fichiers depuis l’onglet
-            « Justificatifs » de votre espace prestataire.
+            La fiche est bien créée. Vous pouvez renvoyer ces fichiers depuis l’onglet «
+            Justificatifs » de votre espace prestataire.
           </p>
         </div>
       ) : null}

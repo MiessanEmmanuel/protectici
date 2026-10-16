@@ -19,7 +19,7 @@ export function ProviderSpaceNav() {
       : pathname === href;
   return (
     <nav aria-label="Espace prestataire">
-      <ul className="flex flex-wrap gap-2">
+      <ul className="flex overflow-x-auto overscroll-x-contain border-b-2 border-ink">
         {LINKS.map((l) => {
           const current = isCurrent(l.href);
           return (
@@ -28,10 +28,10 @@ export function ProviderSpaceNav() {
                 href={l.href}
                 aria-current={current ? 'page' : undefined}
                 className={cn(
-                  'inline-flex min-h-tap items-center rounded-md border px-4 no-underline',
+                  'inline-flex min-h-tap shrink-0 items-center px-4 text-sm font-extrabold whitespace-nowrap no-underline',
                   current
-                    ? 'border-primary bg-primary font-bold text-on-primary'
-                    : 'border-line bg-surface font-semibold text-primary hover:bg-primary-soft',
+                    ? 'bg-ink text-white'
+                    : 'text-ink-2 underline-offset-4 hover:text-ink hover:underline',
                 )}
               >
                 {l.label}

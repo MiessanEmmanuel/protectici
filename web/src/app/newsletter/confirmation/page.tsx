@@ -19,8 +19,10 @@ export default async function Page({
   return (
     <>
       <PageHeader title="Confirmation de l’abonnement" />
-      <Container className="max-w-2xl py-8">
-        <NewsletterConfirm token={token} />
+      <Container className="py-section">
+        <div className="max-w-[42rem] border-2 border-ink p-5 md:p-8">
+          <NewsletterConfirm token={token} />
+        </div>
       </Container>
     </>
   );

@@ -89,10 +89,7 @@ export function StarRatingInput({
                 d={STAR}
                 strokeWidth="1.5"
                 strokeLinejoin="round"
-                className={cn(
-                  'stroke-accent-text',
-                  n <= value ? 'fill-accent' : 'fill-surface',
-                )}
+                className={cn('stroke-accent-text', n <= value ? 'fill-accent' : 'fill-surface')}
               />
             </svg>
           </button>

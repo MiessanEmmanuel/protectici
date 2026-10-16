@@ -18,6 +18,7 @@ import { Select } from '../../ui/Select';
 import { Badge } from '../../ui/Tag';
 import { useToast } from '../../ui/Toast';
 import { ChangeDiff } from './ChangeDiff';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 type Status = 'pending' | 'approved' | 'rejected';
 
@@ -77,7 +78,7 @@ export function AdminChangeRequestsView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Demandes de modification</h1>
+      <AdminPageHeader section="Annuaire" title="Demandes de modification" />
       <p className="text-muted">
         Les champs sensibles d’une fiche (raison sociale, RCCM, agrément…) ne sont modifiés qu’après
         votre validation.
@@ -115,7 +116,7 @@ export function AdminChangeRequestsView() {
                     <Card as="article" aria-labelledby={`cr-${row.id}`} className="flex flex-col gap-3">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <h2 id={`cr-${row.id}`} className="text-lg font-bold">
+                          <h2 id={`cr-${row.id}`} className="text-lg heading-block">
                             <Link href={`/admin/etablissements/${row.type}/${row.establishment.id}`}>
                               {row.establishment.name}
                             </Link>

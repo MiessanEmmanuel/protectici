@@ -3,6 +3,9 @@ import { buildHref } from '@/lib/search-params';
 import { EmptyState } from '../ui/EmptyState';
 import { Pagination } from '../ui/Pagination';
 import { PostCardItem } from './PostCardItem';
+import { toneAt, type Tone } from '../ui/tone';
+
+const TONES: Tone[] = ['t1', 't2', 't3'];
 
 /** Grille d'articles paginée (navigation par liens : fonctionne sans JavaScript). */
 export function PostList({
@@ -25,10 +28,10 @@ export function PostList({
   }
   return (
     <>
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {result.data.map((p) => (
-          <li key={p.slug}>
-            <PostCardItem post={p} />
+      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {result.data.map((p, i) => (
+          <li key={p.slug} className="flex">
+            <PostCardItem post={p} tone={toneAt(TONES, i)} />
           </li>
         ))}
       </ul>

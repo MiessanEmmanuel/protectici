@@ -15,13 +15,14 @@ import { Input } from '../../ui/Input';
 import { QueryBoundary } from '../../ui/QueryBoundary';
 import { Textarea } from '../../ui/Textarea';
 import { useToast } from '../../ui/Toast';
+import { AdminPageHeader } from '../AdminPageHeader';
 
 /** Catégories du blog : renommage, description, ordre et visibilité (pas de création : référentiel fixe de 7). */
 export function AdminCategoriesView() {
   const list = useResource(() => clientApi.contentListCategories(), []);
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Catégories du blog</h1>
+      <AdminPageHeader section="Contenu" title="Catégories du blog" />
       <QueryBoundary state={list} loadingLabel="Chargement des catégories…">
         {(cats) => (
           <ul className="flex flex-col gap-4">

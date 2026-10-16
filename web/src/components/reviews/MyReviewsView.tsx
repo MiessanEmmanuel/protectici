@@ -61,7 +61,7 @@ export function MyReviewsView() {
                     </div>
                     {editingId === r.id ? (
                       <div className="mt-4">
-                        <p className="mb-3 rounded-md border border-accent-text bg-warning-soft p-3 text-sm">
+                        <p className="border-c2-text mb-3 border-2 bg-warning-soft p-3 text-sm">
                           La modification remet l’avis en modération et le masque jusqu’à
                           validation.
                         </p>
@@ -103,13 +103,13 @@ export function MyReviewsView() {
                         {r.title ? <h3 className="mt-2 font-semibold">{r.title}</h3> : null}
                         <p className="mt-1 whitespace-pre-line">{r.body}</p>
                         {r.status === 'rejected' && r.rejection_reason ? (
-                          <p className="mt-3 rounded-md border border-danger bg-danger-soft p-3 text-sm">
+                          <p className="mt-3 border-2 border-danger bg-danger-soft p-3 text-sm">
                             <strong>Motif du rejet :</strong>{' '}
                             <span className="whitespace-pre-line">{r.rejection_reason}</span>
                           </p>
                         ) : null}
                         {r.provider_reply ? (
-                          <div className="mt-3 rounded-md bg-surface-alt p-3 text-sm">
+                          <div className="mt-3 bg-c4 p-3 text-sm">
                             <p className="font-semibold">Réponse du prestataire</p>
                             <p className="mt-1 whitespace-pre-line">{r.provider_reply}</p>
                           </div>
