@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProtectIci — Maquette administration v1 (sombre)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Administration : thème sombre inspiré de la référence fournie (cartes arrondies, pilules),
+   couleurs ProtectIci : or #EAAB13 en accent, bleu #0343A4 pour la carte d'accueil. */
+:root{
+  --bg:#121212; --panel:#191919; --card:#222222; --card-2:#2a2a2a; --line:#2e2e2e;
+  --text:#f2f2f2; --muted:#a3a3a3; --dim:#7a7a7a;
+  --gold:#EAAB13; --gold-ink:#111; --blue:#0343A4; --blue-deep:#062a63;
+  --ok:#3ecf8e; --warn:#EAAB13; --danger:#ff6b5e; --info:#6ea8ff;
+  --r-lg:22px; --r-md:16px; --r-sm:12px; --pill:999px;
+  --font:"Archivo",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#0b0b0b;color:var(--text);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+svg.li{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.app{display:grid;grid-template-columns:288px 1fr;min-height:100vh;background:var(--bg)}
+@media (min-width:1500px){.app{max-width:1500px;margin:24px auto;min-height:calc(100vh - 48px);border-radius:28px;overflow:hidden;border:1px solid var(--line)}}
+
+/* Barre latérale */
+.side{background:var(--panel);border-right:1px solid var(--line);padding:22px 16px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh}
+@media (min-width:1500px){.side{height:auto}}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px;font-weight:800;font-size:1.25rem;letter-spacing:.02em}
+.brand img{width:34px;height:34px;border-radius:10px;background:#fff;padding:3px}
+.brand b{color:var(--gold)}
+.brand small{display:block;font-size:.68rem;font-weight:600;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+.group{display:flex;flex-direction:column;gap:2px}
+.group h6{margin:0 0 6px;padding:0 12px;font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--pill);color:var(--muted);font-weight:500;transition:background .15s,color .15s}
+.nav a:hover{background:var(--card);color:var(--text)}
+.nav a[aria-current]{background:var(--card-2);color:var(--text);font-weight:600}
+.nav a[aria-current] svg{color:var(--gold)}
+.nav .count{margin-left:auto;background:var(--gold);color:var(--gold-ink);font-size:.72rem;font-weight:800;padding:1px 8px;border-radius:var(--pill)}
+.side .scroll{overflow-y:auto;display:flex;flex-direction:column;gap:20px;flex:1;margin:0 -4px;padding:0 4px}
+.promo{background:var(--gold);color:var(--gold-ink);border-radius:var(--r-lg);padding:18px;position:relative;overflow:hidden}
+.promo::after{content:"";position:absolute;right:-30px;bottom:-30px;width:120px;height:120px;border-radius:50%;border:18px solid rgba(0,0,0,.08)}
+.promo b{display:block;font-size:1.15rem;font-weight:800;line-height:1.15;margin-bottom:6px}
+.promo p{margin:0 0 12px;font-size:.82rem}
+.promo a{display:inline-flex;align-items:center;gap:8px;background:#111;color:#fff;border-radius:var(--pill);padding:8px 14px;font-size:.8rem;font-weight:600;position:relative;z-index:1}
+
+/* Contenu */
+.main{display:flex;flex-direction:column;min-width:0}
+.top{display:flex;align-items:center;gap:16px;padding:18px 28px;border-bottom:1px solid var(--line)}
+.search{flex:1;max-width:520px;display:flex;align-items:center;gap:10px;color:var(--dim);background:transparent;border-radius:var(--pill);padding:10px 14px;border:1px solid transparent}
+.search:focus-within{border-color:var(--line);background:var(--panel)}
+.search input{flex:1;background:transparent;border:0;color:var(--text);font:inherit;outline:none}
+.chips{margin-left:auto;display:flex;gap:6px;background:var(--card);border-radius:var(--pill);padding:5px}
+.chip{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:var(--pill);font-size:.82rem;font-weight:600}
+.chip .dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:var(--gold-ink)}
+.chip .dot svg{width:13px;height:13px}
+.chip + .chip{background:var(--card-2)}
+.bell{position:relative;width:42px;height:42px;border-radius:50%;background:var(--card);border:0;display:grid;place-items:center}
+.bell i{position:absolute;top:8px;right:9px;width:9px;height:9px;border-radius:50%;background:var(--danger);border:2px solid var(--card)}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--blue);display:grid;place-items:center;font-weight:800}
+
+.page{padding:24px 28px 32px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-content:start}
+@media (max-width:1180px){.page{grid-template-columns:1fr}}
+
+/* Carte d'accueil */
+.hero{grid-column:1 / -1;background:var(--blue-deep);border-radius:var(--r-lg);padding:28px;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr);gap:24px;align-items:center;overflow:hidden}
+.hero .hi{color:#cfe0ff;font-size:.95rem}
+.hero h1{margin:10px 0 22px;font-size:clamp(1.8rem,3vw,2.6rem);font-weight:800;line-height:1.05;letter-spacing:-.02em}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:var(--pill);padding:10px 18px;font-weight:600;font-size:.88rem;border:0}
+.btn.gold{background:var(--gold);color:var(--gold-ink)}
+.btn.gold:hover{filter:brightness(1.06)}
+.btn.ghost{background:rgba(255,255,255,.08);color:#fff}
+.hero .acts{display:flex;gap:10px;flex-wrap:wrap}
+.prio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.pcard{border-radius:var(--r-md);padding:16px;min-height:210px;display:flex;flex-direction:column;justify-content:space-between;color:#111;background:#fff;transition:transform .2s}
+.pcard:hover{transform:translateY(-3px)}
+.pcard.gold{background:var(--gold)}
+.pcard .n{font-size:.78rem;font-weight:700;color:var(--blue)}
+.pcard.gold .n{color:#111}
+.pcard h3{margin:4px 0 0;font-size:1.1rem;font-weight:700;line-height:1.15}
+.pcard .big{font-size:3.2rem;font-weight:800;line-height:1;letter-spacing:-.03em}
+.pcard .foot{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;font-weight:600}
+.pcard .go{width:34px;height:34px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center}
+@media (max-width:900px){.hero{grid-template-columns:1fr}.prio{grid-template-columns:1fr 1fr 1fr}}
+@media (max-width:620px){.prio{grid-template-columns:1fr}.pcard{min-height:0;gap:14px}}
+
+/* Blocs */
+.block{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px}
+.bh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
+.bh h2{margin:0;font-size:1.15rem;font-weight:700}
+.bh a{font-size:.82rem;color:var(--muted)}.bh a:hover{color:var(--text)}
+.bh small{color:var(--dim);font-size:.78rem;display:block;margin-top:2px}
+
+/* Statistiques */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:var(--card);border-radius:var(--r-md);padding:16px}
+.stat span{color:var(--muted);font-size:.8rem}
+.stat b{display:block;font-size:1.8rem;font-weight:800;margin-top:6px;letter-spacing:-.02em}
+.stat em{font-style:normal;font-size:.75rem;color:var(--ok);font-weight:600}
+@media (max-width:760px){.stats{grid-template-columns:1fr 1fr}}
+
+/* File de modération */
+.queue{list-style:none;margin:0;padding:0}
+.queue li{display:grid;grid-template-columns:44px minmax(0,1.2fr) minmax(0,1fr) auto;gap:16px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.queue li:first-child{border-top:0}
+.qi{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);position:relative}
+.qi.hot{border-color:var(--gold);color:var(--gold)}
+.qi.hot::after{content:"";position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:50%;background:var(--gold);border:2px solid var(--panel)}
+.queue strong{font-weight:600}
+.queue .desc{color:var(--muted);font-size:.84rem}
+.tagx{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:600;padding:4px 10px;border-radius:var(--pill);background:var(--card);white-space:nowrap}
+.tagx i{width:7px;height:7px;border-radius:50%}
+.queue .act{display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;color:var(--gold)}
+@media (max-width:760px){.queue li{grid-template-columns:44px 1fr}.queue .desc,.queue .act{grid-column:2}}
+
+/* Progression */
+.bar{height:8px;border-radius:var(--pill);background:var(--card-2);overflow:hidden;width:180px}
+.bar i{display:block;height:100%;background:var(--gold);border-radius:var(--pill)}
+
+/* Tableau */
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.tbl th{text-align:left;font-weight:600;color:var(--dim);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;padding:0 12px 10px}
+.tbl td{padding:12px;border-top:1px solid var(--line)}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.tbl a{font-weight:600}.tbl a:hover{color:var(--gold)}
+.tbl .sub{display:block;color:var(--dim);font-size:.78rem}
+.tblwrap{overflow-x:auto;margin:0 -12px}
+
+/* Colonne droite */
+.rail{display:flex;flex-direction:column;gap:24px}
+.day{color:var(--dim);font-size:.78rem;margin:14px 0 8px}
+.ev{background:var(--card);border-radius:var(--r-md);padding:14px;margin-bottom:10px}
+.ev strong{display:block;font-weight:600}
+.ev .t{color:var(--muted);font-size:.8rem;margin-top:2px}
+.ev .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.ini{display:flex}.ini span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:.7rem;font-weight:700;border:2px solid var(--card);margin-left:-8px}
+.ini span:first-child{margin-left:0}
+.mini{list-style:none;margin:0;padding:0}
+.mini li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);font-size:.86rem}
+.mini li:first-child{border-top:0}
+.mini svg{margin-top:2px;color:var(--muted)}
+.mini small{display:block;color:var(--dim);font-size:.76rem}
+
+/* Bandeau maquette */
+.proto{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;background:var(--gold);color:#111;font-size:.78rem;font-weight:700;padding:6px 14px;border-radius:var(--pill);z-index:9}
+
+/* Mobile : barre latérale repliée */
+@media (max-width:980px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:14px 16px;gap:12px}
+  .side .scroll,.promo{display:none}
+  .side .burger{margin-left:auto;display:inline-flex}
+  .top{padding:14px 16px;flex-wrap:wrap}
+  .chips{display:none}
+  .page{padding:16px}
+}
+.burger{display:none;align-items:center;gap:8px;background:var(--card);border:0;border-radius:var(--pill);padding:10px 14px;font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="l-layout-dashboard" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol>
+<symbol id="l-building-2" viewBox="0 0 24 24"><path d="M10 12h4"/><path d="M10 8h4"/><path d="M14 21v-3a2 2 0 0 0-4 0v3"/><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/></symbol>
+<symbol id="l-file-pen-line" viewBox="0 0 24 24"><path d="M14.364 13.634a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506l4.013-4.009a1 1 0 0 0-3.004-3.004z"/><path d="M14.487 7.858A1 1 0 0 1 14 7V2"/><path d="M20 19.645V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l2.516 2.516"/><path d="M8 18h1"/></symbol>
+<symbol id="l-star" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></symbol>
+<symbol id="l-message-square-warning" viewBox="0 0 24 24"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M12 15h.01"/><path d="M12 7v4"/></symbol>
+<symbol id="l-file-text" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+<symbol id="l-mail" viewBox="0 0 24 24"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></symbol>
+<symbol id="l-newspaper" viewBox="0 0 24 24"><path d="M15 18h-5"/><path d="M18 14h-8"/><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-4 0v-9a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="10" y="6" rx="1"/></symbol>
+<symbol id="l-messages-square" viewBox="0 0 24 24"><path d="M16 10a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 14.286V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M20 9a2 2 0 0 1 2 2v10.286a.71.71 0 0 1-1.212.502l-2.202-2.202A2 2 0 0 0 17.172 19H10a2 2 0 0 1-2-2v-1"/></symbol>
+<symbol id="l-folder-tree" viewBox="0 0 24 24"><path d="M20 10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2.5a1 1 0 0 1-.8-.4l-.9-1.2A1 1 0 0 0 15 3h-2a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z"/><path d="M20 21a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1h-2.9a1 1 0 0 1-.88-.55l-.42-.85a1 1 0 0 0-.92-.6H13a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z"/><path d="M3 5a2 2 0 0 0 2 2h3"/><path d="M3 3v13a2 2 0 0 0 2 2h3"/></symbol>
+<symbol id="l-file-stack" viewBox="0 0 24 24"><path d="M11 21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1"/><path d="M16 16a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1"/><path d="M21 6a2 2 0 0 0-.586-1.414l-2-2A2 2 0 0 0 17 2h-3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1z"/></symbol>
+<symbol id="l-handshake" viewBox="0 0 24 24"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></symbol>
+<symbol id="l-settings" viewBox="0 0 24 24"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="l-send" viewBox="0 0 24 24"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></symbol>
+<symbol id="l-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></symbol>
+<symbol id="l-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></symbol>
+<symbol id="l-scroll-text" viewBox="0 0 24 24"><path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/></symbol>
+<symbol id="l-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
+<symbol id="l-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></symbol>
+<symbol id="l-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="l-arrow-up-right" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></symbol>
+<symbol id="l-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="l-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="l-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="l-triangle-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+<symbol id="l-flame" viewBox="0 0 24 24"><path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/></symbol>
+<symbol id="l-circle-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+<symbol id="l-thumbs-up" viewBox="0 0 24 24"><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/><path d="M7 10v12"/></symbol>
+<symbol id="l-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
+<symbol id="l-log-in" viewBox="0 0 24 24"><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></symbol>
+<symbol id="l-user-plus" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></symbol>
+<symbol id="l-badge-check" viewBox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m16 9-5.5 5.5L8 12"/></symbol>
+<symbol id="l-eye" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="l-lock-keyhole" viewBox="0 0 24 24"><circle cx="12" cy="16" r="1"/><rect x="3" y="10" width="18" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></symbol></svg>
+<div class="app">
+  <aside class="side" aria-label="Navigation de l’administration">
+    <a class="brand" href="#"><img src="../assets/elephant-icon-192.png" alt=""><span><span>PROTECT</span><b>ICI</b><small>Administration</small></span></a>
+    <button class="burger" type="button" aria-expanded="false"><svg class="li"><use href="#l-layout-dashboard"/></svg>Menu</button>
+    <div class="scroll nav">
+      <div class="group"><h6>Pilotage</h6>
+        <a href="#" aria-current="page"><svg class="li"><use href="#l-layout-dashboard"/></svg>Tableau de bord</a>
+      </div>
+      <div class="group"><h6>Annuaire</h6>
+        <a href="#"><svg class="li"><use href="#l-building-2"/></svg>Établissements<span class="count">5</span></a>
+        <a href="#"><svg class="li"><use href="#l-file-pen-line"/></svg>Demandes de modification<span class="count">1</span></a>
+        <a href="#"><svg class="li"><use href="#l-star"/></svg>Avis et signalements<span class="count">14</span></a>
+      </div>
+      <div class="group"><h6>Demandes</h6>
+        <a href="#"><svg class="li"><use href="#l-message-square-warning"/></svg>Dis-moi tout<span class="count">2</span></a>
+        <a href="#"><svg class="li"><use href="#l-file-text"/></svg>Devis</a>
+        <a href="#"><svg class="li"><use href="#l-mail"/></svg>Messages de contact</a>
+      </div>
+      <div class="group"><h6>Contenu</h6>
+        <a href="#"><svg class="li"><use href="#l-newspaper"/></svg>Blog</a>
+        <a href="#"><svg class="li"><use href="#l-messages-square"/></svg>Commentaires<span class="count">3</span></a>
+        <a href="#"><svg class="li"><use href="#l-folder-tree"/></svg>Catégories</a>
+        <a href="#"><svg class="li"><use href="#l-file-stack"/></svg>Pages institutionnelles</a>
+      </div>
+      <div class="group"><h6>Site</h6>
+        <a href="#"><svg class="li"><use href="#l-handshake"/></svg>Partenaires et clients</a>
+        <a href="#"><svg class="li"><use href="#l-send"/></svg>Newsletter</a>
+        <a href="#"><svg class="li"><use href="#l-settings"/></svg>Paramètres du site</a>
+      </div>
+      <div class="group"><h6>Système</h6>
+        <a href="#"><svg class="li"><use href="#l-users"/></svg>Utilisateurs</a>
+        <a href="#"><svg class="li"><use href="#l-database"/></svg>Référentiels</a>
+        <a href="#"><svg class="li"><use href="#l-scroll-text"/></svg>Journal d’audit</a>
+      </div>
+    </div>
+    <div class="promo">
+      <b>Double authentification active</b>
+      <p>Votre session expire après 30 minutes d’inactivité.</p>
+      <a href="#"><svg class="li"><use href="#l-lock-keyhole"/></svg>Sécurité du compte</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <label class="search"><svg class="li"><use href="#l-search"/></svg><input type="search" placeholder="Rechercher un établissement, un avis, une référence…" aria-label="Recherche globale"></label>
+      <div class="chips" aria-label="Indicateurs">
+        <span class="chip"><span class="dot"><svg class="li"><use href="#l-triangle-alert"/></svg></span>27 à traiter</span>
+        <span class="chip"><span class="dot" style="background:var(--ok)"><svg class="li"><use href="#l-check"/></svg></span>38 fiches publiées</span>
+      </div>
+      <button class="bell" type="button" aria-label="Notifications, 4 non lues"><svg class="li"><use href="#l-bell"/></svg><i></i></button>
+      <span class="avatar" aria-label="Awa Administratrice">AA</span>
+    </header>
+
+    <main class="page">
+      <section class="hero" aria-labelledby="h1">
+        <div>
+          <span class="hi">Bonjour, Awa</span>
+          <h1 id="h1">27 éléments<br>attendent votre <em>décision</em></h1>
+          <div class="acts">
+            <a class="btn gold" href="#">Commencer la modération<svg class="li"><use href="#l-arrow-up-right"/></svg></a>
+            <a class="btn ghost" href="#">Voir le journal</a>
+          </div>
+        </div>
+        <div class="prio">
+          <a class="pcard" href="#"><div><span class="n">01</span><h3>Avis à modérer</h3></div><span class="big">12</span><span class="foot">Le plus ancien : 3 j<span class="go"><svg class="li"><use href="#l-arrow-up-right"/></svg></span></span></a>
+          <a class="pcard gold" href="#"><div><span class="n">02</span><h3>Fiches en attente</h3></div><span class="big">5</span><span class="foot">3 prestataires · 2 forces<span class="go"><svg class="li"><use href="#l-arrow-up-right"/></svg></span></span></a>
+          <a class="pcard" href="#"><div><span class="n">03</span><h3>Dis-moi tout</h3></div><span class="big">2</span><span class="foot">1 plainte urgente<span class="go"><svg class="li"><use href="#l-arrow-up-right"/></svg></span></span></a>
+        </div>
+      </section>
+
+      <div style="display:flex;flex-direction:column;gap:24px;min-width:0">
+        <section class="block" aria-labelledby="t-stats">
+          <div class="bh"><h2 id="t-stats">En chiffres</h2><a href="#">30 derniers jours</a></div>
+          <div class="stats">
+            <div class="stat"><span>Prestataires validés</span><b>38</b><em>+4 ce mois</em></div>
+            <div class="stat"><span>Forces étatiques</span><b>30</b><em>+1 ce mois</em></div>
+            <div class="stat"><span>Utilisateurs</span><b>34</b><em>+9 ce mois</em></div>
+            <div class="stat"><span>Abonnés newsletter</span><b>7</b><em>+2 ce mois</em></div>
+          </div>
+        </section>
+
+        <section class="block" aria-labelledby="t-q">
+          <div class="bh"><div><h2 id="t-q">File de modération</h2><small>Les éléments les plus anciens d’abord</small></div><div style="display:flex;align-items:center;gap:12px"><div class="bar" aria-label="Avancement de la semaine : 62 %"><i style="width:62%"></i></div><b>62 %</b></div></div>
+          <ul class="queue">
+            <li><span class="qi hot"><svg class="li"><use href="#l-star"/></svg></span><div><strong>Avis sur Dauphin Sécurité</strong><div class="desc" style="margin-top:2px">Aminata U. · 4/5</div></div><span class="desc">« Intervention rapide et agents ponctuels… »</span><a class="act" href="#">Modérer<svg class="li"><use href="#l-chevron-right"/></svg></a></li>
+            <li><span class="qi hot"><svg class="li"><use href="#l-building-2"/></svg></span><div><strong>Vigie Test Sécurité</strong><div class="desc" style="margin-top:2px">Inscription · Abidjan</div></div><span class="desc">RCCM et agrément à vérifier</span><a class="act" href="#">Examiner<svg class="li"><use href="#l-chevron-right"/></svg></a></li>
+            <li><span class="qi hot"><svg class="li"><use href="#l-message-square-warning"/></svg></span><div><strong>DMT-2026-000016</strong><div class="desc" style="margin-top:2px">Plainte · Aigle Sécurité</div></div><span class="desc">Retard de deux heures des agents</span><a class="act" href="#">Traiter<svg class="li"><use href="#l-chevron-right"/></svg></a></li>
+            <li><span class="qi"><svg class="li"><use href="#l-file-pen-line"/></svg></span><div><strong>Modification de fiche</strong><div class="desc" style="margin-top:2px">Sentinelle Démo Sécurité</div></div><span class="desc">Changement de forme juridique</span><a class="act" href="#">Examiner<svg class="li"><use href="#l-chevron-right"/></svg></a></li>
+            <li><span class="qi"><svg class="li"><use href="#l-messages-square"/></svg></span><div><strong>Commentaire du blog</strong><div class="desc" style="margin-top:2px">« Comment choisir une société… »</div></div><span class="desc">Très bon article, merci pour ces conseils.</span><a class="act" href="#">Modérer<svg class="li"><use href="#l-chevron-right"/></svg></a></li>
+          </ul>
+        </section>
+
+        <section class="block" aria-labelledby="t-tbl">
+          <div class="bh"><h2 id="t-tbl">Dernières inscriptions</h2><a href="#">Tous les établissements</a></div>
+          <div class="tblwrap"><table class="tbl">
+            <thead><tr><th>Nom</th><th>Type</th><th>Ville</th><th>Statut</th><th>Soumise le</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#">Vigie Test Sécurité</a><span class="sub">utilisateur@demo.protectici.test</span></td><td>Prestataire privé</td><td>Abidjan</td><td><span class="tagx"><i style="background:var(--ok)"></i>Validé</span></td><td>12 oct. 2026</td></tr>
+              <tr><td><a href="#">Rempart Démo Protection</a><span class="sub">prestataire@demo.protectici.test</span></td><td>Prestataire privé</td><td>Abidjan</td><td><span class="tagx"><i style="background:var(--warn)"></i>En attente de validation</span></td><td>12 oct. 2026</td></tr>
+              <tr><td><a href="#">Commissariat en cours de validation</a><span class="sub">Aucun propriétaire</span></td><td>Administration étatique</td><td>Abidjan</td><td><span class="tagx"><i style="background:var(--warn)"></i>En attente de validation</span></td><td>11 oct. 2026</td></tr>
+              <tr><td><a href="#">Poste de police masqué</a><span class="sub">Aucun propriétaire</span></td><td>Administration étatique</td><td>Abidjan</td><td><span class="tagx"><i style="background:var(--danger)"></i>Suspendu</span></td><td>10 oct. 2026</td></tr>
+            </tbody>
+          </table></div>
+        </section>
+      </div>
+
+      <aside class="rail" aria-label="Activité">
+        <section class="block">
+          <div class="bh"><h2>À suivre</h2><a href="#">Tout voir</a></div>
+          <div class="day">Aujourd’hui</div>
+          <div class="ev"><strong>Devis DEV-2026-000010</strong><div class="t">Réponse attendue de 1 prestataire</div><div class="row"><span class="ini"><span style="background:#0343A4">DS</span><span style="background:#3a3a3a">SG</span></span><span class="tagx"><i style="background:var(--info)"></i>Devis</span></div></div>
+          <div class="ev"><strong>Signalement d’avis</strong><div class="t">Propos injurieux signalés · avis n° 2</div><div class="row"><span class="ini"><span style="background:#7a3b2e">AU</span></span><span class="tagx"><i style="background:var(--danger)"></i>Signalement</span></div></div>
+          <div class="day">Demain</div>
+          <div class="ev"><strong>Article planifié</strong><div class="t">« Alarme ou télésurveillance » · 09h00</div><div class="row"><span class="ini"><span style="background:#2e5a3d">KE</span></span><span class="tagx"><i style="background:var(--gold)"></i>Blog</span></div></div>
+        </section>
+        <section class="block">
+          <div class="bh"><h2>Derniers événements</h2><a href="#">Journal</a></div>
+          <ul class="mini">
+            <li><svg class="li"><use href="#l-log-in"/></svg><div>Connexion réussie<small>Awa Administratrice · 13:24</small></div></li>
+            <li><svg class="li"><use href="#l-badge-check"/></svg><div>Établissement validé<small>Vigie Test Sécurité · 12:51</small></div></li>
+            <li><svg class="li"><use href="#l-user-plus"/></svg><div>Compte créé<small>lecteur.test@example.test · 11:02</small></div></li>
+            <li><svg class="li"><use href="#l-eye"/></svg><div>Justificatif téléchargé<small>Awa Administratrice · 10:40</small></div></li>
+          </ul>
+        </section>
+      </aside>
+    </main>
+  </div>
+</div>
+<div class="proto">Maquette administration v1 · à valider · données fictives</div>
+</body>
+</html>
