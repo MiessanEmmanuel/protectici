@@ -120,7 +120,7 @@ export function DocumentsTab({ est, readOnly, reload }: TabProps) {
           ajouter un autre.
         </p>
       ) : (
-        <form
+        <form method="post"
           noValidate
           className="flex flex-col gap-3 border-2 border-ink p-4"
           onSubmit={(e) => {

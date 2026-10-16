@@ -106,7 +106,7 @@ export function ReferenceForm({ resource, item, cities, parents, onSubmit, onCan
   const err = (k: string) => errors[k] ?? apiFields[k];
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+    <form method="post" onSubmit={submit} noValidate className="flex flex-col gap-4">
       <Input
         label="Nom"
         required

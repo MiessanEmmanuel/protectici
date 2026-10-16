@@ -78,7 +78,7 @@ export function InfoTab({ est, reference, readOnly, onSaved }: TabProps) {
   const summary = { ...errors };
 
   return (
-    <form
+    <form method="post"
       className="flex max-w-3xl flex-col gap-5"
       noValidate
       onSubmit={(e) => {

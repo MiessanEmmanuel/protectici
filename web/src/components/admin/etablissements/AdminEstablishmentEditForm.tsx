@@ -203,7 +203,7 @@ export function AdminEstablishmentEditForm({
   }
 
   return (
-    <form
+    <form method="post"
       onSubmit={submit}
       noValidate
       className="flex flex-col gap-6"

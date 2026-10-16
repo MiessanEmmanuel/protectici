@@ -289,7 +289,7 @@ function RequestForm({
   };
 
   return (
-    <form
+    <form method="post"
       noValidate
       className="flex flex-col gap-4 border-2 border-ink p-4"
       onSubmit={(e) => {

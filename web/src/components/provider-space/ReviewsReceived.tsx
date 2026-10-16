@@ -257,7 +257,7 @@ function ReplyForm({
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-3">
+    <form method="post" onSubmit={submit} noValidate className="flex flex-col gap-3">
       <Textarea
         label="Votre réponse"
         value={body}

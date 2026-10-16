@@ -80,7 +80,7 @@ function PageEditor({ slug }: { slug: string }) {
     <QueryBoundary state={state} loadingLabel="Chargement de la page…">
       {(page) =>
         canEdit ? (
-          <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
+          <form method="post" onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
             <FormError message={formError} />
             <Input label="Titre" name="title" defaultValue={page.title} maxLength={160} required error={errors.title} />
             <RichTextEditor label="Contenu" value={page.body} onChange={setBody} error={errors.body} />

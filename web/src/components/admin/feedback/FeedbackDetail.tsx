@@ -258,7 +258,7 @@ function ReplyForm({ feedbackId, onSent }: { feedbackId: number; onSent: () => v
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-3" aria-label="Répondre au dossier">
+    <form method="post" onSubmit={submit} noValidate className="flex flex-col gap-3" aria-label="Répondre au dossier">
       <h3 className="font-semibold">Répondre</h3>
       <Textarea
         label="Votre réponse"

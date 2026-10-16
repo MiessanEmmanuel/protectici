@@ -118,7 +118,7 @@ function PostForm({ post, categories }: { post?: ContentPost; categories: (PostC
   }
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-5">
+    <form method="post" onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-5">
       <AdminPageHeader section="Contenu" title={post ? 'Modifier l’article' : 'Nouvel article'} />
       <FormError message={formError} />
       <Input label="Titre" name="title" defaultValue={post?.title} maxLength={160} required error={errors.title} />

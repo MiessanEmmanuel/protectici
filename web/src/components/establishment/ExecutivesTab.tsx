@@ -61,7 +61,7 @@ export function ExecutivesTab({ est, readOnly, onSaved }: TabProps) {
   }
 
   return (
-    <form
+    <form method="post"
       className="flex max-w-3xl flex-col gap-4"
       noValidate
       onSubmit={(e) => {

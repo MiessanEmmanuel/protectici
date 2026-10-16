@@ -137,7 +137,7 @@ function PartnerForm({ partner, onDone }: { partner?: ContentPartner; onDone: ()
   }
 
   return (
-    <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-3">
+    <form method="post" onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-3">
       <FormError message={formError} />
       <Select label="Type" name="type" defaultValue={partner?.type ?? 'partner'} error={errors.type}>
         <option value="partner">Partenaire</option>

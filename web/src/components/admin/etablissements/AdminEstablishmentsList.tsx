@@ -60,7 +60,7 @@ export function AdminEstablishmentsList({
         role="search"
         aria-label="Filtrer les établissements"
         onSubmit={submit}
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 border-2 border-ink bg-c4 p-3 sm:p-4"
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.6fr] border-2 border-ink bg-c4 p-3 sm:p-4"
       >
         <Select
           label="Type"
@@ -103,7 +103,7 @@ export function AdminEstablishmentsList({
           <option value="-submitted_at">Plus récentes d’abord</option>
           <option value="name">Nom (A à Z)</option>
         </Select>
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-2 [&>*:first-child]:min-w-0 [&>*:first-child]:flex-1">
           <Input
             label="Recherche"
             type="search"

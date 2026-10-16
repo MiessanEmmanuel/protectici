@@ -356,7 +356,7 @@ function QuoteDetail({
       ) : null}
 
       {open && mode === 'reply' ? (
-        <form onSubmit={submitReply} noValidate className="flex flex-col gap-3">
+        <form method="post" onSubmit={submitReply} noValidate className="flex flex-col gap-3">
           <Textarea
             label="Votre message"
             required

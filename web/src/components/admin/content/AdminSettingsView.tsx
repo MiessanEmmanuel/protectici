@@ -76,7 +76,7 @@ export function AdminSettingsView() {
       <AdminPageHeader section="Site" title="Paramètres du site" />
       <QueryBoundary state={state} loadingLabel="Chargement des paramètres…">
         {(settings) => (
-          <form onSubmit={(e) => void submit(e)} noValidate className="flex max-w-2xl flex-col gap-5">
+          <form method="post" onSubmit={(e) => void submit(e)} noValidate className="flex max-w-2xl flex-col gap-5">
             <FormError message={formError} />
             {settings.map((s) => (
               <fieldset key={s.key} className="flex flex-col gap-2 border-2 border-ink p-4">

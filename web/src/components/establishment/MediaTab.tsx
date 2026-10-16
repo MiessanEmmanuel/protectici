@@ -135,7 +135,7 @@ function MediaSection({
             : 'Une seule image est autorisée : supprimez l’actuelle pour la remplacer.'}
         </p>
       ) : (
-        <form
+        <form method="post"
           noValidate
           className="flex flex-col gap-3 border-2 border-ink p-4"
           onSubmit={(e) => {

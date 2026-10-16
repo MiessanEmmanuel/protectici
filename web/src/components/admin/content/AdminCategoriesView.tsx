@@ -70,7 +70,7 @@ function CategoryForm({ category, onSaved }: { category: ContentCategory; onSave
 
   return (
     <Card as="section" aria-label={category.name}>
-      <form onSubmit={(e) => void submit(e)} noValidate className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+      <form method="post" onSubmit={(e) => void submit(e)} noValidate className="grid gap-3 sm:grid-cols-[2fr_1fr]">
         <FormError message={formError} />
         <Input label="Nom" name="name" defaultValue={category.name} maxLength={80} required error={errors.name} />
         <Input label="Ordre d’affichage" name="sort_order" type="number" min={0} defaultValue={category.sort_order} error={errors.sort_order} />
