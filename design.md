@@ -2,6 +2,20 @@
 
 Contexte, stack : `CLAUDE.md`. Règles de sécurité : `security.md`. Plan : `plan_de_développement.md`.
 
+> **Décision du 2026-10-16 : la maquette `design/maquette/landing-v9.html` est VALIDÉE par le porteur. Elle est la référence visuelle de la méga-refonte (phase 6).** Les maquettes `landing-v2` à `landing-v8` sont conservées comme historique. La section « Direction validée » ci-dessous prime sur les sections 3 à 9 en cas de conflit.
+
+## Direction validée (v9, 2026-10-16)
+
+| Sujet | Règle |
+|---|---|
+| Style | Aplats de couleur pleins (« Vibrant & Block-based / Flat », skill ui-ux-pro-max) : **angles droits (rayon 0), aucune ombre, aucun dégradé**. Filets de 2 px noirs pour structurer. |
+| Palette | Palette du logo : bleu `#0343A4` (aplat principal, texte blanc), or `#EAAB13` (aplat d'accent, **texte foncé uniquement**), nuit `#0d1b2a`, sable `#f3eee4`, blanc. Contrastes texte ≥ 4,5:1. |
+| Typographie | **Archivo** (400–900) pour tout le site ; titres en 900 serrés, libellés en petites capitales espacées. |
+| Icônes | **Lucide** (`lucide-react`), tracé 2 px, **avec parcimonie** : navigation, flash info, actions (appeler, rechercher, autour de moi), urgences, tuiles de services, badge « vérifiée », note, barre mobile. Pas d'icône décorative devant les titres ni dans les listes. |
+| Images | Photo en **arrière-plan du hero** sous un voile bleu plein (opacité ~0,8) ; photos dans les actualités (16:10, une à la une en 16:9) ; crédit affiché. Photos définitives à fournir (ProtectIci / prestataires). |
+| Mise en page accueil | En-tête bleu fixe · flash info (une dépêche à la fois, précédent / pause / suivant) · hero 2/3 (texte + recherche) – 1/3 (Urgence + Dis-moi tout) · mosaïque des services · « Les plus consultés » 2/3 – 1/3 (forces proches) · méthode en 3 aplats · démarches · actualités · appel aux professionnels · pied de page nuit. |
+| Ergonomie | Menu mobile, barre d'actions mobile (Rechercher / Urgences / Dis-moi tout), suggestions de recherche, « Autour de moi », actions directes sur les fiches (Appeler, Demander un devis), cibles tactiles ≥ 44 px, mouvement réduit respecté, contenu visible sans JavaScript. |
+
 > **Décision du 2026-10-07 : aucune des trois maquettes (A, B, C) n'a été retenue. Le design est DIFFÉRÉ.** Le développement démarre par le **fonctionnel** avec une interface volontairement neutre et sobre ; une **méga-refonte visuelle** suivra une fois le fonctionnel en place (voir `plan_de_développement.md`, phase 6). Les sections ci-dessous (identité, palette de marque, contrastes, principes, accessibilité) restent valables ; les directions A/B/C sont **abandonnées** et conservées uniquement comme historique.
 >
 > **Statut précédent : v0.1 — EN TEST.** Les fondations (logo, palette, typographie, composants) sont posées d'après l'ancien site. **La direction visuelle n'est pas encore choisie** : trois directions sont comparables dans la maquette `design/maquette/index.html`. Après validation, ce fichier sera mis à jour (§9) et deviendra la référence figée pour le développement (phase 1).

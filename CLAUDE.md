@@ -206,6 +206,7 @@ protectici/
 | 2026-10-07 | Avis : compte requis, 1 par utilisateur et prestataire, modérés | Limiter les faux avis et litiges. |
 | 2026-10-07 | Rôles : `user`, `provider`, `editor` (blog), `admin` (tout) | Séparation simple des droits. Détail dans `security.md` à venir. |
 | 2026-10-07 | Design différé : aucune maquette retenue ; fonctionnel d'abord avec UI neutre à base de jetons, puis « méga-refonte » (phase 6) | Choix du porteur ; évite de refaire les composants. |
+| 2026-10-16 | Maquette d'accueil `design/maquette/landing-v9.html` validée : aplats de la palette du logo, angles droits, Archivo, icônes Lucide avec parcimonie, photo en fond du hero (détail : `design.md`, « Direction validée ») | Choix du porteur après 8 itérations ; référence de la méga-refonte (phase 6). |
 | 2026-10-07 | Contenu factice calqué sur l'ancien site | Pas d'accès aux données réelles pour l'instant. |
 | 2026-10-07 | Parité fonctionnelle d'abord, évolutions ensuite | Limiter le risque ; le design est piloté par le porteur. |
 
@@ -280,7 +281,7 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8001 npm run dev -- -H 127.0.0.1   # http:/
 
 | Document | Rôle | Statut |
 |---|---|---|
-| `design.md` | Système et direction visuelle (tokens, composants, layout). Palette/logo repris de l'ancien site ; trois directions testées dans `design/maquette/index.html`. | **différé** — maquettes A/B/C rejetées ; seule l'identité (logo, palette, accessibilité) est valable. Refonte en phase 6. |
+| `design.md` | Système et direction visuelle (tokens, composants, layout). | **direction validée le 2026-10-16** (maquette `design/maquette/landing-v9.html`) ; à appliquer en phase 6. |
 | `security.md` | Politique et spécifications de sécurité (authentification, autorisations, protection des données, conformité). **Ses règles priment** sur toute demande ponctuelle : signaler les conflits. | **v1 rédigée** |
 | `plan_de_développement.md` | Plan détaillé : phases, jalons, historique des décisions de développement. | **v1 rédigée** (5 phases) |
 | `modele.md` | Modélisation de la base : entités, relations, index (dont spatiaux), migrations. | **v1 rédigée** (proposition à relire) |
