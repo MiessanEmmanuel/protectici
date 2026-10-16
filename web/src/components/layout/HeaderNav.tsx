@@ -9,7 +9,7 @@ import { isActive, NAV_LINKS } from './nav-links';
 import { useSession } from './SessionProvider';
 
 const deskLink =
-  'inline-flex h-header items-center gap-2 px-4 text-[0.95rem] font-bold text-inherit no-underline hover:bg-c3 hover:text-on-c3 aria-[current=page]:bg-c3 aria-[current=page]:text-on-c3 [&_svg]:size-[1.15em]';
+  'inline-flex h-header items-center gap-2 px-2.5 text-[0.88rem] xl:px-4 xl:text-[0.95rem] font-bold whitespace-nowrap [&_svg]:max-xl:hidden text-inherit no-underline hover:bg-c3 hover:text-on-c3 aria-[current=page]:bg-c3 aria-[current=page]:text-on-c3 [&_svg]:size-[1.15em]';
 const mobileLink =
   'flex min-h-14 items-center gap-3 border-t-2 border-white/15 px-4 font-extrabold text-inherit no-underline hover:bg-c2 hover:text-on-c2 aria-[current=page]:bg-c1 [&_svg]:size-[1.15em]';
 
@@ -71,7 +71,7 @@ export function HeaderNav({ logo }: { logo: ReactNode }) {
     <>
       <div className="wrap flex min-h-header items-center gap-7">
         {logo}
-        <nav aria-label="Navigation principale" className="ml-auto hidden xl:flex">
+        <nav aria-label="Navigation principale" className="ml-auto hidden lg:flex">
           {NAV_LINKS.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
@@ -85,7 +85,7 @@ export function HeaderNav({ logo }: { logo: ReactNode }) {
           ))}
         </nav>
 
-        <div className="hidden xl:block">
+        <div className="hidden lg:block">
           {authed ? (
             <div ref={accountRef} className="relative">
               <button
@@ -142,7 +142,7 @@ export function HeaderNav({ logo }: { logo: ReactNode }) {
           aria-expanded={open}
           aria-controls="menu-mobile"
           onClick={() => setOpenFor(open ? null : pathname)}
-          className="ml-auto inline-flex min-h-12 min-w-12 items-center gap-2 border-2 border-current px-3 text-[0.85rem] font-extrabold xl:hidden [&_svg]:size-[1.15em]"
+          className="ml-auto inline-flex min-h-12 min-w-12 items-center gap-2 border-2 border-current px-3 text-[0.85rem] font-extrabold lg:hidden [&_svg]:size-[1.15em]"
         >
           {open ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
           {open ? 'Fermer' : 'Menu'}
@@ -153,7 +153,7 @@ export function HeaderNav({ logo }: { logo: ReactNode }) {
         id="menu-mobile"
         aria-label="Menu mobile"
         hidden={!open}
-        className="bg-c3 text-on-c3 xl:hidden"
+        className="bg-c3 text-on-c3 lg:hidden"
       >
         <ul>
           {NAV_LINKS.map(({ href, label, longLabel, icon: Icon }) => (
