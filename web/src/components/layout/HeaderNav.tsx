@@ -9,7 +9,7 @@ import { isActive, NAV_LINKS } from './nav-links';
 import { useSession } from './SessionProvider';
 
 const deskLink =
-  'inline-flex h-header items-center gap-2 px-2.5 text-[0.88rem] xl:px-4 xl:text-[0.95rem] font-bold whitespace-nowrap [&_svg]:max-xl:hidden text-inherit no-underline hover:bg-c3 hover:text-on-c3 aria-[current=page]:bg-c3 aria-[current=page]:text-on-c3 [&_svg]:size-[1.15em]';
+  'inline-flex h-header items-center gap-1.5 px-2 text-[0.88rem] xl:gap-2 xl:px-4 xl:text-[0.95rem] font-bold whitespace-nowrap text-inherit no-underline hover:bg-c3 hover:text-on-c3 aria-[current=page]:bg-c3 aria-[current=page]:text-on-c3 [&_svg]:size-[1.15em]';
 const mobileLink =
   'flex min-h-14 items-center gap-3 border-t-2 border-white/15 px-4 font-extrabold text-inherit no-underline hover:bg-c2 hover:text-on-c2 aria-[current=page]:bg-c1 [&_svg]:size-[1.15em]';
 
@@ -69,7 +69,7 @@ export function HeaderNav({ logo }: { logo: ReactNode }) {
 
   return (
     <>
-      <div className="wrap flex min-h-header items-center gap-7">
+      <div className="wrap flex min-h-header items-center gap-4 xl:gap-7">
         {logo}
         <nav aria-label="Navigation principale" className="ml-auto hidden lg:flex">
           {NAV_LINKS.map(({ href, label, icon: Icon }) => (
