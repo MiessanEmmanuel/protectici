@@ -225,6 +225,22 @@ Mêmes conventions que §1 et §7. Les formulaires **publics** (feedbacks, devis
 
 **AdminFeedbackRow** : `{ id, reference, author: {first_name, last_name, email}, provider: {id, name}|null, action_type, target_type, status, assigned_to: {id, name}|null, created_at }` · **AdminFeedback** = row + `{ civility|null, phone|null, service_type: Option|null, topic: Option|null, product_type|null, location|null, comment, consent_at, resolved_at|null, replies: [{ id, author: {id,name}|null, body, is_internal, sent_at|null, created_at }] }`.
 
+### 8.2 bis Commentaire vocal (ajout 2026-10-24)
+
+La personne choisit **un commentaire écrit OU un message vocal** (les deux sont acceptés ensemble).
+
+- `POST /feedbacks` accepte aussi `multipart/form-data` (mêmes champs) avec `voice` (fichier) et `voice_duration_seconds` (entier 1–120, déclaré par le navigateur, borné côté serveur).
+- Règle : `comment` requis **sauf** si `voice` est présent (`comment` reste 10–3000 s'il est fourni). Erreur si aucun des deux : « Écrivez un commentaire ou enregistrez un message vocal. »
+- `voice` : ≤ 5 Mo ; type **détecté par le contenu** (signature), liste blanche `audio/webm` (EBML `1A45DFA3`, Chrome/Firefox/Android), `audio/mp4` (boîte `ftyp` à l'octet 4, Safari/iOS ; finfo peut répondre `video/mp4` ou `audio/x-m4a` : normaliser en `audio/mp4`), `audio/ogg` (`OggS`). Tout le reste refusé : « Le message vocal doit être un enregistrement audio (WebM, MP4 ou Ogg) de 5 Mo maximum. »
+- Stockage : disque **privé** (`config('feedback.voice_disk')`, par défaut le disque des justificatifs), chemin `feedback-voice/{feedback_id}/{ulid}.{webm|m4a|ogg}`, jamais le nom d'origine. Pas de réencodage (pas de ffmpeg) : fichier conservé tel quel, jamais servi publiquement.
+- Colonnes `feedbacks` : `voice_disk`, `voice_path`, `voice_mime`, `voice_size_bytes`, `voice_duration_seconds` (toutes nullables). Échec d'écriture → aucune ligne créée (fichier supprimé si l'insert échoue).
+- Accusé de réception e-mail : ligne « Votre message vocal a bien été reçu. » si vocal.
+- Suivi public (`/feedbacks/track`) : **aucune** information sur le vocal.
+- `AdminFeedback` (et `AdminFeedbackRow`) : `voice: { duration_seconds, mime, size_bytes } | null`.
+- `GET /admin/feedbacks/{id}/voice` (admin, 2FA comme le reste de `/admin`) : renvoie le binaire, `Content-Type` = `voice_mime` enregistré, `Content-Disposition: inline; filename="DMT-…​.ext"`, `Cache-Control: private, no-store`, `X-Content-Type-Options: nosniff`, prise en charge de `Range` facultative. 404 si pas de vocal. Accès journalisé (`feedback_voice_accessed`, sans donnée personnelle). Le front le récupère avec `fetch` (cookies) puis le lit via une URL `blob:`.
+- Rétention : l'anonymisation (> 36 mois) **supprime le fichier vocal** et met les colonnes `voice_*` à null (la voix est une donnée personnelle). Idem si un dossier est supprimé définitivement.
+- Front : CSP `media-src 'self' blob:` ; `Permissions-Policy` du site web : `microphone=(self)`.
+
 ## 8.3 Devis
 
 | Méthode | Chemin | Corps / paramètres | Réponse |

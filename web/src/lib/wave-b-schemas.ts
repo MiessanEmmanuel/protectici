@@ -48,6 +48,8 @@ const consentLiteral = (message: string) => z.literal(true, { error: message });
 /* ---------- Dis-moi tout (§8.2) ---------- */
 
 export const FEEDBACK_COMMENT_MAX = 3000;
+export const FEEDBACK_COMMENT_OR_VOICE = 'Écrivez un commentaire ou enregistrez un message vocal.';
+const commentText = textBetween('Le commentaire', 10, FEEDBACK_COMMENT_MAX);
 
 export const feedbackStep1Schema = z.object({
   civility: z.union([z.literal(''), z.enum(['M.', 'Mme', 'Mlle'])]).optional(),
@@ -76,9 +78,20 @@ export const feedbackStep4Schema = z
     topic_id: optionalId,
     product_type: z.string().trim().max(150, { error: 'Le produit est trop long.' }).optional(),
     location: z.string().trim().max(190, { error: 'Le lieu est trop long.' }).optional(),
-    comment: textBetween('Le commentaire', 10, FEEDBACK_COMMENT_MAX),
+    comment: z.string().trim().optional(),
+    /** Vrai si un message vocal est joint : le commentaire écrit devient facultatif (§8.2 bis). */
+    has_voice: z.boolean().optional(),
   })
   .superRefine((v, ctx) => {
+    const comment = v.comment ?? '';
+    if (!comment && !v.has_voice) {
+      ctx.addIssue({ code: 'custom', path: ['comment'], message: FEEDBACK_COMMENT_OR_VOICE });
+    } else if (comment) {
+      const r = commentText.safeParse(comment);
+      if (!r.success) {
+        ctx.addIssue({ code: 'custom', path: ['comment'], message: r.error.issues[0]!.message });
+      }
+    }
     if (v.target_type === 'service' && !v.service_type_id) {
       ctx.addIssue({ code: 'custom', path: ['service_type_id'], message: 'Choisissez le type de prestation.' });
     }

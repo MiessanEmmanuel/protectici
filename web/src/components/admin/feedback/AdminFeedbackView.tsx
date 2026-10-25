@@ -1,5 +1,6 @@
 'use client';
 
+import { Mic } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { clientApi } from '@/lib/api/client';
 import type {
@@ -15,6 +16,7 @@ import {
   FEEDBACK_TARGET_LABELS,
 } from '@/lib/labels';
 import { useResource } from '@/lib/use-async';
+import { formatClock } from '../../ui/AudioPlayer';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
 import { EmptyState } from '../../ui/EmptyState';
@@ -157,7 +159,19 @@ export function AdminFeedbackView({ initialStatus = '' }: { initialStatus?: Feed
                 <tbody>
                   {res.data.map((row: AdminFeedbackRow) => (
                     <Tr key={row.id}>
-                      <Td className="font-semibold whitespace-nowrap">{row.reference}</Td>
+                      <Td className="font-semibold whitespace-nowrap">
+                        {row.reference}
+                        {row.voice ? (
+                          <span className="mt-1 flex items-center gap-1 text-sm font-medium text-muted">
+                            <Mic aria-hidden="true" className="size-4" />
+                            Vocal
+                            <span className="sr-only">
+                              {' '}
+                              (message vocal de {formatClock(row.voice.duration_seconds)})
+                            </span>
+                          </span>
+                        ) : null}
+                      </Td>
                       <Td>
                         <span className="font-medium">
                           {row.author.first_name} {row.author.last_name}

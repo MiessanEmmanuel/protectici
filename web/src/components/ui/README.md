@@ -27,6 +27,7 @@ Référence visuelle : `design/maquette/landing-v9.html` · règles : `design.md
 | `Field`, `Input`, `Select`, `Textarea` | Contrôles 50 px, filet 2 px, fond sable au focus (`controlClasses`). |
 | `InlineField` + `inlineControlClasses` | Cellule de barre de recherche (hero) : libellé capitales + champ sans bord. |
 | `Card` | Bloc blanc à filet 2 px. |
+| `AudioPlayer` + `formatClock` | Lecteur audio conçu, **aucun contrôle natif visible** (`<audio>` masqué, sans `controls`) : bouton lecture/pause 44 px, barre de progression `role="slider"` cliquable et pilotable au clavier (flèches ±5 s, Page ±10 %, Début/Fin), temps `m:ss / m:ss`. `src` : URL `blob:` ou `Blob` (URL créée et **révoquée au démontage**). `durationSeconds` = durée de secours (WebM de MediaRecorder sous Chrome : `duration === Infinity`). Jetons adaptatifs (`ink`, `white`, `primary`, classes `ui-btn ui-btn-primary`) : public et admin sombre/clair. Largeur de progression posée via le CSSOM (pas d'attribut `style`, CSP). Exige `media-src 'self' blob:` (`lib/csp.ts`). |
 
 ## Thème de l'administration (maquette `design/maquette/admin-v1.html`)
 

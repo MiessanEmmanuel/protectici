@@ -56,6 +56,7 @@ export type WaveBApi = Pick<
   | 'trackFeedback'
   | 'adminListFeedbacks'
   | 'adminGetFeedback'
+  | 'adminGetFeedbackVoice'
   | 'adminUpdateFeedback'
   | 'adminReplyFeedback'
   | 'createQuoteRequest'
@@ -144,6 +145,32 @@ interface FeedbackRec {
   created_at: string;
   resolved_at: string | null;
   replies: FeedbackReply[];
+  /** Message vocal factice (en mémoire uniquement). */
+  voice: { blob: Blob; mime: string; duration_seconds: number } | null;
+}
+
+/** WAV silencieux (8 kHz, mono, 8 bits) : message vocal de démonstration lisible partout. */
+function silentWav(seconds: number): Blob {
+  const rate = 8000;
+  const samples = rate * seconds;
+  const buf = new ArrayBuffer(44 + samples);
+  const v = new DataView(buf);
+  const str = (o: number, t: string) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  str(0, 'RIFF');
+  v.setUint32(4, 36 + samples, true);
+  str(8, 'WAVE');
+  str(12, 'fmt ');
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true);
+  v.setUint32(28, rate, true);
+  v.setUint16(32, 1, true);
+  v.setUint16(34, 8, true);
+  str(36, 'data');
+  v.setUint32(40, samples, true);
+  new Uint8Array(buf, 44).fill(128);
+  return new Blob([buf], { type: 'audio/wav' });
 }
 
 interface RecipientRec {
@@ -399,6 +426,7 @@ export function createWaveBMocks(
       created_at: isoDaysAgo(feedbackSeq - 99),
       resolved_at: null,
       replies: [],
+      voice: null,
       ...partial,
     };
     feedbacks.push(rec);
@@ -447,6 +475,7 @@ export function createWaveBMocks(
     providerSlug: slugAt(1),
     comment: 'Bravo à l’agent de l’accueil, toujours souriant et très serviable.',
     status: 'new',
+    voice: { blob: silentWav(4), mime: 'audio/wav', duration_seconds: 4 },
   });
   seedFeedback({
     first_name: 'Mariam',
@@ -500,6 +529,9 @@ export function createWaveBMocks(
     status: f.status,
     assigned_to: adminName(f.assigned_to),
     created_at: f.created_at,
+    voice: f.voice
+      ? { duration_seconds: f.voice.duration_seconds, mime: f.voice.mime, size_bytes: f.voice.blob.size }
+      : null,
   });
   const toFeedback = (f: FeedbackRec): AdminFeedback => ({
     ...toFeedbackRow(f),
@@ -509,7 +541,7 @@ export function createWaveBMocks(
     topic: optionById(feedbackTopics, f.topic_id),
     product_type: f.product_type,
     location: f.location,
-    comment: f.comment,
+    comment: f.comment || null,
     consent_at: f.created_at,
     resolved_at: f.resolved_at,
     replies: structuredClone(f.replies),
@@ -921,7 +953,7 @@ export function createWaveBMocks(
     },
 
     /* ----- Dis-moi tout ----- */
-    async createFeedback(input, idempotencyKey) {
+    async createFeedback(input, idempotencyKey, voice) {
       await ctx.delay();
       if (input.company_website) {
         // Robot : succès simulé identique, rien n'est enregistré.
@@ -941,7 +973,14 @@ export function createWaveBMocks(
       if (input.target_type !== 'product' && !input.topic_id) throw invalid('topic_id', 'Choisissez le sujet concerné.');
       if (input.target_type === 'service' && !input.service_type_id)
         throw invalid('service_type_id', 'Choisissez le type de prestation.');
-      between('comment', input.comment, 10, 3000, 'Le commentaire');
+      if (!voice && !input.comment?.trim())
+        throw invalid('comment', 'Écrivez un commentaire ou enregistrez un message vocal.');
+      if (input.comment?.trim()) between('comment', input.comment, 10, 3000, 'Le commentaire');
+      if (voice && voice.blob.size > 5 * 1024 * 1024)
+        throw invalid(
+          'voice',
+          'Le message vocal doit être un enregistrement audio (WebM, MP4 ou Ogg) de 5 Mo maximum.',
+        );
       if (input.provider_slug && providerIndex(input.provider_slug) < 0)
         throw invalid('provider_slug', 'Ce prestataire est introuvable.');
       const rec: FeedbackRec = {
@@ -959,12 +998,19 @@ export function createWaveBMocks(
         topic_id: input.topic_id ?? null,
         product_type: input.product_type?.trim() || null,
         location: input.location?.trim() || null,
-        comment: input.comment.trim(),
+        comment: input.comment?.trim() ?? '',
         status: 'new',
         assigned_to: null,
         created_at: new Date().toISOString(),
         resolved_at: null,
         replies: [],
+        voice: voice
+          ? {
+              blob: voice.blob,
+              mime: voice.mimeType.split(';')[0] || 'audio/webm',
+              duration_seconds: Math.min(120, Math.max(1, Math.round(voice.durationSeconds))),
+            }
+          : null,
       };
       feedbacks.unshift(rec);
       feedbackKeys.set(idempotencyKey, rec);
@@ -1013,6 +1059,13 @@ export function createWaveBMocks(
       const f = feedbacks.find((x) => x.id === id);
       if (!f) throw notFound();
       return toFeedback(f);
+    },
+    async adminGetFeedbackVoice(id) {
+      requireAdmin();
+      await ctx.delay();
+      const f = feedbacks.find((x) => x.id === id);
+      if (!f?.voice) throw notFound();
+      return f.voice.blob;
     },
     async adminUpdateFeedback(id, patch) {
       requireAdmin();

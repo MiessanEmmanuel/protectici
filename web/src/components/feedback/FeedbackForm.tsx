@@ -1,7 +1,8 @@
 'use client';
 
+import { Mic, PenLine } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { ApiError, describeError, errorMessage } from '@/lib/api/errors';
 import type { FeedbackInput, FeedbackReceipt, ReferenceData } from '@/lib/api/types';
@@ -21,16 +22,21 @@ import { ReferenceCard } from '../ui/ReferenceCard';
 import { Select } from '../ui/Select';
 import { Stepper } from '../ui/Stepper';
 import { Textarea } from '../ui/Textarea';
+import { cn } from '../ui/cn';
 import {
+  activeVoice,
   buildFeedbackBody,
   emptyFeedbackDraft,
+  formatVoiceDuration,
   FEEDBACK_STEPS,
   stepIndexOfField,
   TOPICS_UNAVAILABLE,
   validateFeedbackStep,
+  type FeedbackCommentMode,
   type FeedbackDraft,
 } from './feedback-draft';
 import { RadioGroup } from './RadioGroup';
+import { VoiceRecorder } from './VoiceRecorder';
 
 const ACTION_OPTIONS = (
   Object.keys(FEEDBACK_ACTION_LABELS) as (keyof typeof FEEDBACK_ACTION_LABELS)[]
@@ -73,6 +79,7 @@ export function FeedbackForm({
   const step = FEEDBACK_STEPS[index]!;
   const last = index === FEEDBACK_STEPS.length - 1;
   const announced = useDebounced(draft.comment.length, 700);
+  const uid = useId();
 
   useEffect(() => {
     if (focusHeading.current) {
@@ -124,14 +131,21 @@ export function FeedbackForm({
     setErrors({});
     setFormError(null);
     const body = buildFeedbackBody(draft);
+    const voice = activeVoice(draft);
     // Même clé pour un nouvel essai identique ; nouvelle clé si les données ont changé.
-    const sig = JSON.stringify(body);
+    const sig = JSON.stringify([
+      body,
+      voice ? [voice.blob.size, voice.mimeType, voice.durationSeconds] : null,
+    ]);
     if (keyRef.current.sig !== sig) keyRef.current = { key: newIdempotencyKey(), sig };
     const payload: FeedbackInput = { ...body, ...spam.payload() };
     let caught: unknown = null;
     const result = await run(async () => {
       try {
-        return await clientApi.createFeedback(payload, keyRef.current.key);
+        // Avec vocal : multipart/form-data ; sans vocal : JSON (inchangé).
+        return voice
+          ? await clientApi.createFeedback(payload, keyRef.current.key, voice)
+          : await clientApi.createFeedback(payload, keyRef.current.key);
       } catch (e) {
         caught = e;
         throw e;
@@ -177,6 +191,8 @@ export function FeedbackForm({
     spam.reset();
   }
 
+  const sentVoice = activeVoice(draft);
+
   if (receipt) {
     return (
       <div className="flex flex-col gap-5">
@@ -188,6 +204,11 @@ export function FeedbackForm({
         <p className="font-semibold">
           Conservez ce numéro, il vous permettra de suivre votre dossier.
         </p>
+        {sentVoice ? (
+          <p>
+            Message vocal ({formatVoiceDuration(sentVoice.durationSeconds)}) joint à votre dossier.
+          </p>
+        ) : null}
         <p className="text-sm text-muted">
           Un accusé de réception vous a été envoyé par e-mail avec cette référence.
         </p>
@@ -372,24 +393,38 @@ export function FeedbackForm({
             onChange={(e) => set({ location: e.target.value })}
             error={errors.location}
           />
-          <div className="flex flex-col gap-1">
-            <Textarea
-              label="Commentaire"
-              name="comment"
-              required
-              rows={6}
-              hint="Entre 10 et 3 000 caractères. N’indiquez ni mot de passe ni donnée bancaire."
-              value={draft.comment}
-              onChange={(e) => set({ comment: e.target.value })}
-              error={errors.comment}
+          <CommentModeSwitch
+            value={draft.comment_mode}
+            onChange={(mode) => set({ comment_mode: mode })}
+          />
+          {draft.comment_mode === 'text' ? (
+            <div className="flex flex-col gap-1">
+              <Textarea
+                label="Commentaire"
+                name="comment"
+                required
+                rows={6}
+                hint="Entre 10 et 3 000 caractères. N’indiquez ni mot de passe ni donnée bancaire."
+                value={draft.comment}
+                onChange={(e) => set({ comment: e.target.value })}
+                error={errors.comment}
+              />
+              <p className="text-right text-sm text-muted">
+                {draft.comment.length} / {FEEDBACK_COMMENT_MAX}
+              </p>
+              <p role="status" aria-live="polite" className="sr-only">
+                {announced > 0 ? `${announced} caractères sur ${FEEDBACK_COMMENT_MAX}` : ''}
+              </p>
+            </div>
+          ) : (
+            <VoiceRecorder
+              value={draft.voice}
+              onChange={(voice) => set({ voice })}
+              onUseText={() => set({ comment_mode: 'text' })}
+              error={errors.voice}
+              errorId={`${uid}-voice-error`}
             />
-            <p className="text-right text-sm text-muted">
-              {draft.comment.length} / {FEEDBACK_COMMENT_MAX}
-            </p>
-            <p role="status" aria-live="polite" className="sr-only">
-              {announced > 0 ? `${announced} caractères sur ${FEEDBACK_COMMENT_MAX}` : ''}
-            </p>
-          </div>
+          )}
         </div>
       ) : null}
 
@@ -428,7 +463,14 @@ export function FeedbackForm({
               <Row label="Sujet" value={topicName ?? ''} />
             )}
             <Row label="Lieu rattaché" value={draft.location || 'Non précisé'} />
-            <Row label="Commentaire" value={draft.comment} />
+            {sentVoice ? (
+              <Row
+                label="Votre message"
+                value={`Message vocal (${formatVoiceDuration(sentVoice.durationSeconds)})`}
+              />
+            ) : (
+              <Row label="Commentaire" value={draft.comment} />
+            )}
           </dl>
           <Checkbox
             name="consent"
@@ -483,5 +525,46 @@ function Row({ label, value }: { label: string; value: string }) {
       <dt className="eyebrow text-ink-2">{label}</dt>
       <dd className="break-words whitespace-pre-line">{value}</dd>
     </>
+  );
+}
+
+const MODES: { value: FeedbackCommentMode; label: string; Icon: typeof Mic }[] = [
+  { value: 'text', label: 'Écrire un commentaire', Icon: PenLine },
+  { value: 'voice', label: 'Enregistrer un message vocal', Icon: Mic },
+];
+
+/** Choix écrit / vocal : contrôle segmenté (boutons aria-pressed), angles droits, filet 2 px. */
+function CommentModeSwitch({
+  value,
+  onChange,
+}: {
+  value: FeedbackCommentMode;
+  onChange: (mode: FeedbackCommentMode) => void;
+}) {
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <legend className="mb-1 font-bold text-ink">Votre message</legend>
+      <div className="grid border-2 border-ink sm:grid-cols-2">
+        {MODES.map(({ value: mode, label, Icon }, i) => {
+          const active = value === mode;
+          return (
+            <button
+              key={mode}
+              type="button"
+              aria-pressed={active}
+              onClick={() => onChange(mode)}
+              className={cn(
+                'flex min-h-btn items-center justify-center gap-2.5 px-4 py-2 font-extrabold transition-colors focus-visible:outline-3 focus-visible:-outline-offset-4 focus-visible:outline-ink',
+                i > 0 && 'border-t-2 border-ink sm:border-t-0 sm:border-l-2',
+                active ? 'bg-c3 text-on-c3' : 'bg-white text-ink hover:bg-c4',
+              )}
+            >
+              <Icon aria-hidden="true" className="size-5 shrink-0" />
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }

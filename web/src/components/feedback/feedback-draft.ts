@@ -1,4 +1,4 @@
-import type { FeedbackInput } from '@/lib/api/types';
+import type { FeedbackInput, FeedbackVoiceUpload } from '@/lib/api/types';
 import type { PickedProvider } from '../directory/ProviderPicker';
 import {
   feedbackStep1Schema,
@@ -24,8 +24,13 @@ export interface FeedbackDraft {
   product_type: string;
   location: string;
   comment: string;
+  /** Commentaire écrit ou message vocal (contrat §8.2 bis). */
+  comment_mode: FeedbackCommentMode;
+  voice: FeedbackVoiceUpload | null;
   consent: boolean;
 }
+
+export type FeedbackCommentMode = 'text' | 'voice';
 
 export const emptyFeedbackDraft = (provider: PickedProvider | null = null): FeedbackDraft => ({
   civility: '',
@@ -41,6 +46,8 @@ export const emptyFeedbackDraft = (provider: PickedProvider | null = null): Feed
   product_type: '',
   location: '',
   comment: '',
+  comment_mode: 'text',
+  voice: null,
   consent: false,
 });
 
@@ -61,9 +68,16 @@ export function stepIndexOfField(field: string): number {
   if (root === 'provider_slug') return 1;
   if (root === 'action_type') return 2;
   if (
-    ['target_type', 'service_type_id', 'topic_id', 'product_type', 'location', 'comment'].includes(
-      root,
-    )
+    [
+      'target_type',
+      'service_type_id',
+      'topic_id',
+      'product_type',
+      'location',
+      'comment',
+      'voice',
+      'voice_duration_seconds',
+    ].includes(root)
   )
     return 3;
   return 4;
@@ -95,15 +109,22 @@ export function validateFeedbackStep(
     case 2:
       res = validate(feedbackStep3Schema, { action_type: d.action_type });
       break;
-    case 3:
+    case 3: {
+      const voiceMode = d.comment_mode === 'voice';
       res = validate(feedbackStep4Schema, {
         target_type: d.target_type,
         service_type_id: d.service_type_id,
         topic_id: d.topic_id,
         product_type: d.product_type,
         location: d.location,
-        comment: d.comment,
+        comment: voiceMode ? '' : d.comment,
+        has_voice: voiceMode && d.voice !== null,
       });
+      // En mode vocal, l'erreur s'affiche sous l'enregistreur (pas de champ de commentaire visible).
+      if (!res.ok && voiceMode && res.errors.comment) {
+        res.errors.voice = res.errors.comment;
+        delete res.errors.comment;
+      }
       if (!res.ok && !topicsAvailable && res.errors.topic_id) {
         res.errors.topic_id = TOPICS_UNAVAILABLE;
       }
@@ -111,6 +132,7 @@ export function validateFeedbackStep(
         return { topic_id: TOPICS_UNAVAILABLE };
       }
       break;
+    }
     default:
       res = validate(feedbackStep5Schema, { consent: d.consent });
   }
@@ -127,9 +149,10 @@ export function buildFeedbackBody(
     email: d.email.trim(),
     action_type: d.action_type as FeedbackInput['action_type'],
     target_type: d.target_type as FeedbackInput['target_type'],
-    comment: d.comment.trim(),
     consent: d.consent,
   };
+  // Mode vocal : seul l'enregistrement est envoyé (le texte éventuellement saisi avant reste local).
+  if (!activeVoice(d)) body.comment = d.comment.trim();
   if (d.civility) body.civility = d.civility as FeedbackInput['civility'];
   if (d.phone.trim()) body.phone = d.phone.trim();
   if (d.provider) body.provider_slug = d.provider.slug;
@@ -140,4 +163,15 @@ export function buildFeedbackBody(
     body.product_type = d.product_type.trim();
   if (d.location.trim()) body.location = d.location.trim();
   return body;
+}
+
+/** Message vocal à joindre à l'envoi (mode vocal avec un enregistrement), sinon null. */
+export function activeVoice(d: FeedbackDraft): FeedbackVoiceUpload | null {
+  return d.comment_mode === 'voice' ? d.voice : null;
+}
+
+/** Durée au format m:ss (ex. 0:42, 2:00). */
+export function formatVoiceDuration(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }

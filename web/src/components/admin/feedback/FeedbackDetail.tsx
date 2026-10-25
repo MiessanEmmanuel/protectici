@@ -3,7 +3,12 @@
 import { useRef, useState } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
-import type { AdminFeedback, FeedbackReply, FeedbackStatus } from '@/lib/api/types';
+import type {
+  AdminFeedback,
+  FeedbackReply,
+  FeedbackStatus,
+  FeedbackVoiceMeta,
+} from '@/lib/api/types';
 import { formatDateTime, formatPhone } from '@/lib/format';
 import {
   FEEDBACK_ACTION_LABELS,
@@ -12,6 +17,7 @@ import {
 } from '@/lib/labels';
 import { newIdempotencyKey } from '@/lib/uuid';
 import { useAsyncAction, useResource } from '@/lib/use-async';
+import { AudioPlayer, formatClock } from '../../ui/AudioPlayer';
 import { Button } from '../../ui/Button';
 import { Checkbox } from '../../ui/Checkbox';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
@@ -94,12 +100,16 @@ export function FeedbackDetail({
             </Info>
           </dl>
 
-          <div className="flex flex-col gap-2">
-            <h3 className="font-semibold">Commentaire</h3>
-            <blockquote className="rounded-[var(--a-r-md)] border-l-4 border-l-[var(--a-gold)] bg-surface-alt p-4 whitespace-pre-line break-words">
-              {f.comment}
-            </blockquote>
-          </div>
+          {f.comment ? (
+            <div className="flex flex-col gap-2">
+              <h3 className="font-semibold">Commentaire</h3>
+              <blockquote className="rounded-[var(--a-r-md)] border-l-4 border-l-[var(--a-gold)] bg-surface-alt p-4 whitespace-pre-line break-words">
+                {f.comment}
+              </blockquote>
+            </div>
+          ) : null}
+
+          {f.voice ? <VoiceMessage key={`voice-${f.id}`} feedbackId={f.id} voice={f.voice} /> : null}
 
           <div className="grid gap-4 rounded-[var(--a-r-md)] border border-line p-4 sm:grid-cols-2">
             <Select
@@ -160,6 +170,73 @@ function assignable(f: AdminFeedback, admins: { id: number; first_name: string; 
   const list = admins.map((a) => ({ id: a.id, name: `${a.first_name} ${a.last_name}`.trim() }));
   if (f.assigned_to && !list.some((a) => a.id === f.assigned_to!.id)) list.push(f.assigned_to);
   return list;
+}
+
+const VOICE_NOT_FOUND = 'Ce message vocal est introuvable : il a peut-être été supprimé.';
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`;
+}
+
+/** Message vocal : binaire chargé à la demande (cookies de session), lu via une URL blob: révoquée au démontage. */
+function VoiceMessage({ feedbackId, voice }: { feedbackId: number; voice: FeedbackVoiceMeta }) {
+  const [blob, setBlob] = useState<Blob | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const loadingRef = useRef(false);
+
+  async function listen() {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    setLoading(true);
+    setError(null);
+    try {
+      setBlob(await clientApi.adminGetFeedbackVoice(feedbackId));
+    } catch (e) {
+      setError(
+        e instanceof ApiError && e.status === 404
+          ? VOICE_NOT_FOUND
+          : e instanceof ApiError
+            ? e.message
+            : 'Impossible de charger le message vocal. Réessayez.',
+      );
+    } finally {
+      loadingRef.current = false;
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section aria-labelledby={`vocal-${feedbackId}`} className="flex flex-col gap-3">
+      <h3 id={`vocal-${feedbackId}`} className="font-semibold">
+        Message vocal
+      </h3>
+      <div className="ui-subcard flex flex-col gap-3 rounded-[var(--a-r-md)] bg-surface-alt p-4">
+        <p className="text-sm text-muted">
+          Durée {formatClock(voice.duration_seconds)} · {formatSize(voice.size_bytes)}
+        </p>
+        {blob ? (
+          <AudioPlayer
+            src={blob}
+            durationSeconds={voice.duration_seconds}
+            label="Message vocal du dossier"
+            autoFocus
+          />
+        ) : (
+          <Button
+            variant="secondary"
+            onClick={() => void listen()}
+            loading={loading}
+            className="self-start"
+          >
+            Écouter le message vocal
+          </Button>
+        )}
+        <FormError message={error} />
+      </div>
+    </section>
+  );
 }
 
 function Info({ label, children }: { label: string; children: React.ReactNode }) {

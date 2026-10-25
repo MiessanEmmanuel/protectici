@@ -71,6 +71,7 @@ Route::prefix('admin')->name('admin.')
         Route::get('feedbacks/{id}', [AdminFeedbackController::class, 'show'])->name('feedbacks.show');
         Route::patch('feedbacks/{id}', [AdminFeedbackController::class, 'update'])->name('feedbacks.update');
         Route::post('feedbacks/{id}/replies', [AdminFeedbackController::class, 'reply'])->name('feedbacks.reply');
+        Route::get('feedbacks/{id}/voice', [AdminFeedbackController::class, 'voice'])->name('feedbacks.voice');
 
         Route::get('quote-requests', [AdminQuoteRequestController::class, 'index'])->name('quote-requests.index');
         Route::get('quote-requests/{id}', [AdminQuoteRequestController::class, 'show'])->name('quote-requests.show');

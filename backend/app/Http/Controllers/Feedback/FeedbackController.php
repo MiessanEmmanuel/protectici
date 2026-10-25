@@ -16,7 +16,7 @@ class FeedbackController extends Controller
             return $this->respond($service->fakeReference());
         }
 
-        [$feedback] = $service->create($request->optionalUser(), $request->formData(), $request->idempotencyKey(), (string) $request->ip());
+        [$feedback] = $service->create($request->optionalUser(), $request->formData(), $request->idempotencyKey(), (string) $request->ip(), $request->voice());
 
         return $this->respond($feedback->reference);
     }

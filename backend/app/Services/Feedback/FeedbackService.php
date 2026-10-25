@@ -12,6 +12,7 @@ use App\Notifications\Feedback\FeedbackMail;
 use App\Services\AuditLogger;
 use App\Services\Notifications\SafeNotifier;
 use App\Services\PublicForms\FormSubmission;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 
 /** « Dis-moi tout » : création publique, suivi par référence + e-mail, traitement par l'administration. */
@@ -25,35 +26,62 @@ class FeedbackService
         private readonly FormSubmission $submission,
         private readonly SafeNotifier $notifier,
         private readonly AuditLogger $audit,
+        private readonly VoiceNoteStore $voiceNotes,
     ) {}
 
     /**
      * @param  array<string, mixed>  $data  données validées sans champs techniques
+     * @param  UploadedFile|null  $voice  message vocal facultatif (type vérifié par signature avant toute écriture)
      * @return array{0: Feedback, 1: bool}
      */
-    public function create(?User $user, array $data, ?string $idempotencyKey, string $ip): array
+    public function create(?User $user, array $data, ?string $idempotencyKey, string $ip, ?UploadedFile $voice = null): array
     {
-        /** @var array{0: Feedback, 1: bool} $result */
-        $result = $this->submission->handle(
-            'feedback', 'feedback', $user, $data, (string) ($data['email'] ?? ''), $idempotencyKey, $ip,
-            function (?string $ipHash) use ($user, $data): Feedback {
-                $feedback = (new Feedback)->fill(array_intersect_key($data, array_flip(self::FILLABLE)));
-                $feedback->forceFill([
-                    'user_id' => $user?->id,
-                    'provider_id' => isset($data['provider_slug'])
-                        ? Provider::query()->published()->where('slug', $data['provider_slug'])->value('id')
-                        : null,
-                    'consent_at' => now(),
-                    'ip_hash' => $ipHash,
-                ])->save();
+        // Vérification du type AVANT toute écriture (erreur de validation sur `voice`).
+        $inspected = $voice === null ? null : $this->voiceNotes->inspect($voice);
+        /** @var array{voice_disk: string, voice_path: string}|null $written */
+        $written = null;
 
-                return $feedback->refresh(); // relit la référence DMT-AAAA-nnnnnn générée par la base
-            },
-        );
+        try {
+            /** @var array{0: Feedback, 1: bool} $result */
+            $result = $this->submission->handle(
+                'feedback', 'feedback', $user, $data, (string) ($data['email'] ?? ''), $idempotencyKey, $ip,
+                function (?string $ipHash) use ($user, $data, $voice, $inspected, &$written): Feedback {
+                    $feedback = (new Feedback)->fill(array_intersect_key($data, array_flip(self::FILLABLE)));
+                    $feedback->forceFill([
+                        'user_id' => $user?->id,
+                        'provider_id' => isset($data['provider_slug'])
+                            ? Provider::query()->published()->where('slug', $data['provider_slug'])->value('id')
+                            : null,
+                        'consent_at' => now(),
+                        'ip_hash' => $ipHash,
+                    ])->save();
+
+                    if ($voice !== null && $inspected !== null) {
+                        // Le chemin dépend de l'id : écriture après l'insert, dans la même transaction.
+                        $written = $this->voiceNotes->store($feedback, $voice, $inspected);
+                        $feedback->forceFill($written + ['voice_duration_seconds' => (int) $data['voice_duration_seconds']])->save();
+                    }
+
+                    return $feedback->refresh(); // relit la référence DMT-AAAA-nnnnnn générée par la base
+                },
+            );
+        } catch (\Throwable $e) {
+            // Transaction annulée : aucun fichier orphelin.
+            if ($written !== null) {
+                $this->voiceNotes->delete($written['voice_disk'], $written['voice_path']);
+            }
+
+            throw $e;
+        }
 
         [$feedback, $created] = $result;
+        if (! $created && $written !== null) {
+            // Envoi concurrent rejoué : la transaction de cette requête a été annulée, son fichier est retiré.
+            $this->voiceNotes->delete($written['voice_disk'], $written['voice_path']);
+        }
+
         if ($created) {
-            $this->notifier->toAddress($feedback->email, new FeedbackMail(FeedbackMail::RECEIVED, $feedback->reference, $feedback->first_name), 'feedback_received');
+            $this->notifier->toAddress($feedback->email, new FeedbackMail(FeedbackMail::RECEIVED, $feedback->reference, $feedback->first_name, withVoice: $feedback->hasVoice()), 'feedback_received');
             $this->notifier->admins(new AdminAlert(
                 AdminAlert::KIND_FEEDBACK_RECEIVED,
                 'Nouveau message « Dis-moi tout »',

@@ -631,8 +631,25 @@ export interface FeedbackInput extends AntiSpamPayload {
   topic_id?: number | null;
   product_type?: string | null;
   location?: string | null;
-  comment: string;
+  /** Requis sauf si un message vocal est joint (contrat §8.2 bis). */
+  comment?: string;
   consent: boolean;
+}
+
+/** Message vocal joint à l'envoi (multipart, contrat §8.2 bis). */
+export interface FeedbackVoiceUpload {
+  blob: Blob;
+  /** Type MIME de l'enregistrement (audio/webm, audio/mp4, audio/ogg…). */
+  mimeType: string;
+  /** Durée déclarée, en secondes entières (1–120). */
+  durationSeconds: number;
+}
+
+/** Métadonnées du message vocal côté administration (le binaire se lit via /voice). */
+export interface FeedbackVoiceMeta {
+  duration_seconds: number;
+  mime: string;
+  size_bytes: number;
 }
 
 export interface FeedbackReceipt {
@@ -659,6 +676,7 @@ export interface AdminFeedbackRow {
   status: FeedbackStatus;
   assigned_to: { id: number; name: string } | null;
   created_at: string;
+  voice: FeedbackVoiceMeta | null;
 }
 
 export interface FeedbackReply {
@@ -677,7 +695,8 @@ export interface AdminFeedback extends AdminFeedbackRow {
   topic: Option | null;
   product_type: string | null;
   location: string | null;
-  comment: string;
+  /** Vide si seul un message vocal a été envoyé. */
+  comment: string | null;
   consent_at: string;
   resolved_at: string | null;
   replies: FeedbackReply[];

@@ -35,6 +35,8 @@ export function buildCsp({
     'script-src': script,
     'style-src': isDev ? [`'self'`, `'unsafe-inline'`] : [`'self'`, `'nonce-${nonce}'`],
     'img-src': img,
+    // Lecture des messages vocaux (« Dis-moi tout ») via des URL blob: créées côté client.
+    'media-src': [`'self'`, 'blob:'],
     'font-src': [`'self'`],
     'connect-src': connect,
     'object-src': [`'none'`],

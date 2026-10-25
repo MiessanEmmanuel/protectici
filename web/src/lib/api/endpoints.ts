@@ -18,6 +18,7 @@ import type {
   FeedbackReply,
   FeedbackStatus,
   FeedbackTracking,
+  FeedbackVoiceUpload,
   MyReview,
   OwnerReview,
   ProviderQuote,
@@ -243,11 +244,18 @@ export interface Api extends ContentApi {
   adminReviewReportAction(id: number, action: 'accept' | 'dismiss'): Promise<void>;
 
   // --- Vague B : « Dis-moi tout » (contrat §8.2) ---
-  createFeedback(input: FeedbackInput, idempotencyKey: string): Promise<FeedbackReceipt>;
+  /** JSON, ou multipart/form-data si un message vocal est joint (contrat §8.2 bis). */
+  createFeedback(
+    input: FeedbackInput,
+    idempotencyKey: string,
+    voice?: FeedbackVoiceUpload | null,
+  ): Promise<FeedbackReceipt>;
   /** POST (jamais d'URL) ; 404 générique si référence inconnue OU e-mail faux. */
   trackFeedback(input: { reference: string; email: string }): Promise<FeedbackTracking>;
   adminListFeedbacks(query?: AdminFeedbackQuery): Promise<Paginated<AdminFeedbackRow>>;
   adminGetFeedback(id: number): Promise<AdminFeedback>;
+  /** Binaire du message vocal (cookies de session) ; 404 si le dossier n'en a pas. */
+  adminGetFeedbackVoice(id: number): Promise<Blob>;
   adminUpdateFeedback(
     id: number,
     patch: { status?: FeedbackStatus; assigned_to?: number | null },
@@ -339,6 +347,39 @@ export const RESEND_NEUTRAL_MESSAGE =
 
 export const REGISTER_NEUTRAL_MESSAGE =
   'Si cette adresse est valide, vous allez recevoir un e-mail pour activer votre compte.';
+
+/** Extension du fichier vocal selon son type (nom imposé : jamais le nom d'origine). */
+export function voiceFileExtension(mimeType: string): 'webm' | 'm4a' | 'ogg' {
+  const t = mimeType.toLowerCase();
+  if (t.includes('mp4') || t.includes('m4a') || t.includes('aac')) return 'm4a';
+  if (t.includes('ogg')) return 'ogg';
+  return 'webm';
+}
+
+/**
+ * Corps multipart de « Dis-moi tout » avec message vocal (contrat §8.2 bis) : tous les champs
+ * du formulaire (booléens en « 1 »/« 0 »), + `voice` et `voice_duration_seconds` (1–120).
+ */
+export function feedbackFormData(input: FeedbackInput, voice: FeedbackVoiceUpload): FormData {
+  const fd = new FormData();
+  for (const [key, value] of Object.entries(input)) {
+    if (value === undefined || value === null) continue;
+    if (typeof value === 'boolean') fd.append(key, value ? '1' : '0');
+    else fd.append(key, String(value));
+  }
+  const ext = voiceFileExtension(voice.mimeType);
+  const type = voice.mimeType || voice.blob.type || 'audio/webm';
+  const file =
+    typeof File !== 'undefined'
+      ? new File([voice.blob], `message-vocal.${ext}`, { type })
+      : voice.blob;
+  fd.append('voice', file, `message-vocal.${ext}`);
+  fd.append(
+    'voice_duration_seconds',
+    String(Math.min(120, Math.max(1, Math.round(voice.durationSeconds)))),
+  );
+  return fd;
+}
 
 export function buildApi(req: Requester): Api {
   return {
@@ -688,11 +729,14 @@ export function buildApi(req: Requester): Api {
       await req('POST', `/admin/review-reports/${id}/${action}`);
     },
 
-    async createFeedback(input, idempotencyKey) {
-      const res = await req<{ data: FeedbackReceipt }>('POST', '/feedbacks', {
-        body: input,
-        idempotencyKey,
-      });
+    async createFeedback(input, idempotencyKey, voice) {
+      const res = await req<{ data: FeedbackReceipt }>(
+        'POST',
+        '/feedbacks',
+        voice
+          ? { formData: feedbackFormData(input, voice), idempotencyKey }
+          : { body: input, idempotencyKey },
+      );
       return res.data;
     },
     async trackFeedback(input) {
@@ -717,6 +761,9 @@ export function buildApi(req: Requester): Api {
     async adminGetFeedback(id) {
       const res = await req<{ data: AdminFeedback }>('GET', `/admin/feedbacks/${id}`);
       return res.data;
+    },
+    adminGetFeedbackVoice(id) {
+      return req<Blob>('GET', `/admin/feedbacks/${id}/voice`, { responseType: 'blob' });
     },
     async adminUpdateFeedback(id, patch) {
       const res = await req<{ data: AdminFeedback }>('PATCH', `/admin/feedbacks/${id}`, {

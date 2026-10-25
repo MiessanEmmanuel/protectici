@@ -196,6 +196,8 @@ return [
         'rating' => 'note',
         'body' => 'texte',
         'comment' => 'commentaire',
+        'voice' => 'message vocal',
+        'voice_duration_seconds' => 'durée du message vocal',
         'title' => 'titre',
         'subject' => 'objet',
         'message' => 'message',

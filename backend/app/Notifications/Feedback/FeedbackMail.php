@@ -27,6 +27,7 @@ class FeedbackMail extends Notification implements ShouldQueueAfterCommit
         public readonly string $reference,
         public readonly string $firstName,
         public readonly ?string $body = null,
+        public readonly bool $withVoice = false,
     ) {}
 
     /** @return array<int, string> */
@@ -42,7 +43,11 @@ class FeedbackMail extends Notification implements ShouldQueueAfterCommit
 
         if ($this->event === self::RECEIVED) {
             $mail->subject('Votre message a bien été reçu - ProtectIci')
-                ->line('Nous avons bien reçu votre message « Dis-moi tout ».')
+                ->line('Nous avons bien reçu votre message « Dis-moi tout ».');
+            if ($this->withVoice) {
+                $mail->line('Votre message vocal a bien été reçu.');
+            }
+            $mail
                 ->line('Votre numéro de suivi : '.$this->reference)
                 ->line('Conservez-le : il vous permet de suivre l\'avancement de votre dossier avec votre adresse e-mail.')
                 ->action('Suivre mon dossier', $front.'/dis-moi-tout/suivi');

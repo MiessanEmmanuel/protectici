@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exceptions\ApiHttpException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminReplyRequest;
 use App\Http\Requests\Admin\ListFeedbacksRequest;
@@ -9,9 +10,13 @@ use App\Http\Requests\Admin\UpdateFeedbackRequest;
 use App\Models\Feedback;
 use App\Models\FeedbackReply;
 use App\Models\User;
+use App\Services\AuditLogger;
 use App\Services\Feedback\FeedbackService;
+use App\Services\Feedback\VoiceNoteStore;
 use App\Support\ApiPage;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /** Administration des dossiers « Dis-moi tout » (contrat §8.2). Données personnelles : admin uniquement. */
 class FeedbackController extends Controller
@@ -74,6 +79,45 @@ class FeedbackController extends Controller
         return response()->json(['data' => $this->replyRow($reply)], 201);
     }
 
+    /**
+     * Écoute du message vocal (contrat §8.2 bis) : flux serveur depuis le disque privé (jamais d'URL publique ni de
+     * redirection vers le stockage : le front lit le binaire via fetch + URL blob:). Accès journalisé.
+     */
+    public function voice(int $id, AuditLogger $audit): StreamedResponse
+    {
+        $feedback = Feedback::query()->findOrFail($id);
+        if (! $feedback->hasVoice() || $feedback->voice_mime === null) {
+            throw new ApiHttpException(404, 'Aucun message vocal pour ce dossier.');
+        }
+
+        try {
+            $stream = Storage::disk((string) $feedback->voice_disk)->readStream((string) $feedback->voice_path);
+        } catch (\Throwable) {
+            $stream = null; // fichier absent du stockage : même réponse que sans vocal
+        }
+        if (! is_resource($stream)) {
+            throw new ApiHttpException(404, 'Aucun message vocal pour ce dossier.');
+        }
+
+        $audit->record('feedback_voice_accessed', $feedback, null, null, ['feedback_id' => $feedback->id]);
+
+        $extension = VoiceNoteStore::EXTENSIONS[$feedback->voice_mime] ?? 'bin';
+        $headers = [
+            'Content-Type' => $feedback->voice_mime,
+            'Content-Disposition' => 'inline; filename="'.$feedback->reference.'.'.$extension.'"',
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ];
+        if ($feedback->voice_size_bytes !== null) {
+            $headers['Content-Length'] = (string) $feedback->voice_size_bytes;
+        }
+
+        return response()->stream(function () use ($stream): void {
+            fpassthru($stream);
+            fclose($stream);
+        }, 200, $headers);
+    }
+
     private function find(int $id): Feedback
     {
         return Feedback::query()
@@ -93,8 +137,17 @@ class FeedbackController extends Controller
             'target_type' => $f->target_type,
             'status' => $f->status,
             'assigned_to' => $f->assignee === null ? null : ['id' => $f->assignee->id, 'name' => trim($f->assignee->first_name.' '.$f->assignee->last_name)],
+            'voice' => $this->voiceMeta($f),
             'created_at' => ApiPage::iso($f->created_at),
         ];
+    }
+
+    /** @return array{duration_seconds: int|null, mime: string|null, size_bytes: int|null}|null */
+    private function voiceMeta(Feedback $f): ?array
+    {
+        return $f->hasVoice()
+            ? ['duration_seconds' => $f->voice_duration_seconds, 'mime' => $f->voice_mime, 'size_bytes' => $f->voice_size_bytes]
+            : null;
     }
 
     /** @return array<string, mixed> */
