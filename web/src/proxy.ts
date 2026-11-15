@@ -47,6 +47,7 @@ export function proxy(request: NextRequest) {
       process.env.NEXT_PUBLIC_HERO_IMAGE_URL,
     ),
     turnstile: turnstileSiteKey() !== '',
+    upgradeInsecure: !(process.env.NEXT_PUBLIC_SITE_URL ?? '').startsWith('http:'),
   });
 
   const requestHeaders = new Headers(request.headers);

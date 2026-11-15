@@ -41,6 +41,16 @@ describe('CSP', () => {
     const dev = buildCsp({ nonce: 'abc', isDev: true, apiOrigin: 'http://localhost:8000' });
     expect(dev).toContain("'unsafe-eval'");
   });
+  it('force HTTPS sauf pour un site servi en HTTP', () => {
+    expect(prod).toContain('upgrade-insecure-requests');
+    const http = buildCsp({
+      nonce: 'abc',
+      isDev: false,
+      apiOrigin: 'http://api.exemple.test',
+      upgradeInsecure: false,
+    });
+    expect(http).not.toContain('upgrade-insecure-requests');
+  });
 });
 
 describe('search-params', () => {

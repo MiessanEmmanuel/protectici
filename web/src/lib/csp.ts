@@ -9,6 +9,8 @@ export interface CspOptions {
   tileOrigins?: string;
   /** Autorise Cloudflare Turnstile (script + iframe) : seulement si la clé de site est définie. */
   turnstile?: boolean;
+  /** `upgrade-insecure-requests` (défaut : oui) ; désactivé quand le site est servi en HTTP (liens temporaires). */
+  upgradeInsecure?: boolean;
 }
 
 export const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';
@@ -22,6 +24,7 @@ export function buildCsp({
   mediaOrigins = '',
   tileOrigins = OSM_TILES,
   turnstile = false,
+  upgradeInsecure = true,
 }: CspOptions): string {
   const script = [`'self'`, `'nonce-${nonce}'`, `'strict-dynamic'`];
   if (turnstile) script.push(TURNSTILE_ORIGIN);
@@ -47,7 +50,7 @@ export function buildCsp({
   };
   if (turnstile) directives['frame-src'] = [TURNSTILE_ORIGIN];
   const parts = Object.entries(directives).map(([k, v]) => `${k} ${v.join(' ')}`);
-  if (!isDev) parts.push('upgrade-insecure-requests');
+  if (!isDev && upgradeInsecure) parts.push('upgrade-insecure-requests');
   return parts.join('; ');
 }
 
