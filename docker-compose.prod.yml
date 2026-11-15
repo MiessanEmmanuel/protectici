@@ -22,7 +22,8 @@ x-backend-env: &backend-env
   DB_SSLMODE: disable
   SESSION_DRIVER: database
   SESSION_DOMAIN: ${SESSION_DOMAIN:?}
-  SESSION_SECURE_COOKIE: "true"
+  # "false" uniquement le temps de liens temporaires en HTTP (ex. *.traefik.me).
+  SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
   SESSION_ENCRYPT: "true"
   SESSION_SAME_SITE: lax
   SANCTUM_STATEFUL_DOMAINS: ${SANCTUM_STATEFUL_DOMAINS:?}
@@ -31,10 +32,11 @@ x-backend-env: &backend-env
   CACHE_STORE: database
   LOG_CHANNEL: stderr
   LOG_LEVEL: ${LOG_LEVEL:-warning}
-  MAIL_MAILER: resend
+  # "log" en attendant Resend (e-mails écrits dans les journaux, rien n'est envoyé).
+  MAIL_MAILER: ${MAIL_MAILER:-resend}
   MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:?}
   MAIL_FROM_NAME: ProtectIci
-  RESEND_API_KEY: ${RESEND_API_KEY:?}
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
   NEWSLETTER_RESEND_SYNC: ${NEWSLETTER_RESEND_SYNC:-false}
   RESEND_AUDIENCE_ID: ${RESEND_AUDIENCE_ID:-}
   TURNSTILE_ENABLED: ${TURNSTILE_ENABLED:-true}
@@ -42,16 +44,17 @@ x-backend-env: &backend-env
   SSR_SHARED_SECRET: ${SSR_SHARED_SECRET:?}
   NOMINATIM_USER_AGENT: ${NOMINATIM_USER_AGENT:?}
   IP_HASH_SECRET: ${IP_HASH_SECRET:?}
-  FILESYSTEM_DISK: s3
+  # Sans R2 : FILESYSTEM_DISK=local, MEDIA_DISK=public, DOCUMENTS_DISK=private (volume « storage »).
+  FILESYSTEM_DISK: ${FILESYSTEM_DISK:-s3}
   MEDIA_DISK: ${MEDIA_DISK:-s3}
   DOCUMENTS_DISK: ${DOCUMENTS_DISK:-s3-private}
-  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:?}
-  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
   AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-auto}
-  AWS_BUCKET: ${AWS_BUCKET:?}
-  AWS_PRIVATE_BUCKET: ${AWS_PRIVATE_BUCKET:?}
-  AWS_ENDPOINT: ${AWS_ENDPOINT:?}
-  AWS_URL: ${AWS_URL:?}
+  AWS_BUCKET: ${AWS_BUCKET:-}
+  AWS_PRIVATE_BUCKET: ${AWS_PRIVATE_BUCKET:-}
+  AWS_ENDPOINT: ${AWS_ENDPOINT:-}
+  AWS_URL: ${AWS_URL:-}
   AWS_USE_PATH_STYLE_ENDPOINT: "true"
 
 services:
@@ -74,6 +77,8 @@ services:
 
   backend:
     build: ./backend
+    volumes:
+      - storage:/app/storage/app
     restart: unless-stopped
     environment:
       <<: *backend-env
@@ -85,6 +90,8 @@ services:
 
   worker:
     build: ./backend
+    volumes:
+      - storage:/app/storage/app
     restart: unless-stopped
     command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600"]
     environment: *backend-env
@@ -97,6 +104,8 @@ services:
 
   scheduler:
     build: ./backend
+    volumes:
+      - storage:/app/storage/app
     restart: unless-stopped
     command: ["php", "artisan", "schedule:work"]
     environment: *backend-env
@@ -135,3 +144,5 @@ networks:
 volumes:
   pgdata:
   pgbackups:
+  # Fichiers déposés quand le stockage est local (MEDIA_DISK=public / DOCUMENTS_DISK=private).
+  storage:

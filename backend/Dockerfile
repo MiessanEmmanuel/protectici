@@ -54,6 +54,7 @@ COPY --from=vendor /app ./
 COPY docker/Caddyfile /etc/caddy/Caddyfile
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
+# Lien public/storage -> storage/app/public : médias servis par l'API quand MEDIA_DISK=public.
 # Non-root : utilisateur 1001. Les capacités de liaison de ports < 1024
 # (setcap) sont retirées car le serveur écoute sur 8080.
 RUN addgroup -g 1001 -S app && adduser -u 1001 -S -G app app \
@@ -63,7 +64,8 @@ RUN addgroup -g 1001 -S app && adduser -u 1001 -S -G app app \
         bootstrap/cache /tmp/caddy-config /tmp/caddy-data \
     && chown -R app:app storage bootstrap/cache /tmp/caddy-config /tmp/caddy-data \
     && chmod -R u+rwX storage bootstrap/cache \
-    && chmod +x /usr/local/bin/entrypoint.sh
+    && chmod +x /usr/local/bin/entrypoint.sh \
+    && rm -rf public/storage && ln -s /app/storage/app/public public/storage
 
 USER app
 EXPOSE 8080

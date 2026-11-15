@@ -18,3 +18,5 @@ phpstan.neon
 *.md
 Dockerfile
 .dockerignore
+storage/app/public/*
+storage/app/private/*
