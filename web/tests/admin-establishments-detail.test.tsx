@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api/errors';
@@ -22,11 +22,23 @@ vi.mock('next/navigation', () => ({
   },
 }));
 vi.mock('@/lib/api/client', () => ({ clientApi: api }));
-vi.mock('@/components/map/MiniMap', () => ({ MiniMap: () => <div>carte</div> }));
-vi.mock('@/components/establishment/LocationFields', () => ({ LocationFields: () => <div>localisation</div> }));
+const miniMap = vi.hoisted(() => vi.fn());
+vi.mock('@/components/map/MiniMap', () => ({
+  MiniMap: (props: unknown) => {
+    miniMap(props);
+    return <div>carte</div>;
+  },
+}));
+vi.mock('@/components/establishment/LocationFields', () => ({
+  LocationFields: () => <div>localisation</div>,
+  PositionFields: () => <div>position</div>,
+}));
 
 import { AdminEstablishmentDetail } from '@/components/admin/etablissements/AdminEstablishmentDetail';
-import { computePatch, toDraft } from '@/components/admin/etablissements/AdminEstablishmentEditForm';
+import {
+  computePatch,
+  toDraft,
+} from '@/components/admin/etablissements/AdminEstablishmentEditForm';
 import notFoundGuard from '@/app/admin/etablissements/[type]/[id]/page';
 
 function buttons() {
@@ -72,6 +84,149 @@ describe('fiche admin : affichage', () => {
   });
 });
 
+const BRANCH = {
+  id: 31,
+  label: 'Agence du Plateau',
+  city_id: 1,
+  district_id: 10,
+  address: 'Rue du Commerce',
+  geo_description: 'Face à la banque',
+  phone: '+2250709445122',
+  lat: 5.32,
+  lng: -4.02,
+};
+
+describe('fiche admin : agences', () => {
+  it('affiche les agences (noms de référentiel) et les passe à la carte', async () => {
+    await load({ branches: [BRANCH] });
+    const section = screen.getByRole('region', { name: 'Agences' });
+    expect(within(section).getByText('Agence du Plateau')).toBeInTheDocument();
+    expect(await within(section).findByText('Plateau, Abidjan')).toBeInTheDocument();
+    expect(within(section).getByText('Rue du Commerce')).toBeInTheDocument();
+    expect(within(section).getByText('Face à la banque')).toBeInTheDocument();
+    expect(within(section).getByText('+225 07 09 44 51 22')).toBeInTheDocument();
+    expect(miniMap).toHaveBeenLastCalledWith(
+      expect.objectContaining({ lat: null, lng: null, branches: [BRANCH] }),
+    );
+  });
+
+  it('signale l’absence d’agence et n’affiche pas la section pour une force étatique', async () => {
+    await load();
+    expect(screen.getByText('Aucune agence renseignée.')).toBeInTheDocument();
+    cleanup();
+    await load({ type: 'state_force' });
+    expect(screen.queryByRole('region', { name: 'Agences' })).not.toBeInTheDocument();
+  });
+
+  it('computePatch envoie toute la liste quand elle change, et [] quand elle est vidée', () => {
+    const initial = toDraft(establishment({ branches: [BRANCH] }));
+    const flags = { initial: false, current: false };
+    expect(computePatch(initial, toDraft(establishment({ branches: [BRANCH] })), flags)).toEqual(
+      {},
+    );
+    expect(computePatch(initial, { ...initial, branches: [] }, flags)).toEqual({ branches: [] });
+    const renamed = [{ ...initial.branches[0]!, label: 'Plateau centre' }];
+    expect(computePatch(initial, { ...initial, branches: renamed }, flags)).toEqual({
+      branches: [{ ...BRANCH, label: 'Plateau centre' }],
+    });
+  });
+
+  it('modifie les agences depuis le formulaire et refuse une agence invalide', async () => {
+    api.adminUpdateEstablishment.mockResolvedValue(establishment({ branches: [] }));
+    const u = userEvent.setup();
+    await load({ branches: [BRANCH] });
+    await u.click(screen.getByRole('button', { name: 'Modifier' }));
+    const label = await screen.findByLabelText(/Nom de l’agence/);
+    await u.clear(label);
+    await u.click(screen.getByRole('button', { name: 'Enregistrer les modifications' }));
+    expect(await screen.findByText('Le nom de l’agence est obligatoire.')).toBeInTheDocument();
+    expect(screen.getByText(/Certains champs sont à corriger/)).toBeInTheDocument();
+    expect(api.adminUpdateEstablishment).not.toHaveBeenCalled();
+    await u.click(screen.getByRole('button', { name: 'Retirer Agence 1' }));
+    await u.click(screen.getByRole('button', { name: 'Enregistrer les modifications' }));
+    await waitFor(() =>
+      expect(api.adminUpdateEstablishment).toHaveBeenCalledWith('provider', 7, { branches: [] }),
+    );
+  });
+
+  it('pas d’éditeur d’agences pour une force étatique', async () => {
+    const u = userEvent.setup();
+    await load({ type: 'state_force' });
+    await u.click(screen.getByRole('button', { name: 'Modifier' }));
+    await screen.findByLabelText(/Nom de la structure/);
+    expect(screen.queryByRole('button', { name: 'Ajouter une agence' })).not.toBeInTheDocument();
+  });
+});
+
+describe('fiche admin : force étatique avec horaires (R02)', () => {
+  const HOURS = {
+    mon: [['08:00', '17:00']],
+    tue: [['08:00', '17:00']],
+    wed: [['08:00', '17:00']],
+    thu: [['08:00', '17:00']],
+    fri: [['08:00', '17:00']],
+  } as Record<string, [string, string][]>;
+
+  function force(over = {}) {
+    // L'API ne renvoie pas `executives` pour une force étatique.
+    const { executives: _omit, ...rest } = establishment({
+      type: 'state_force',
+      status: 'pending',
+      force_type_id: REFERENCE.state_force_types[0]!.id,
+      opening_hours: HOURS,
+      is_open_24h: false,
+      ...over,
+    });
+    void _omit;
+    return rest;
+  }
+
+  it('affiche les horaires formatés sans planter', async () => {
+    api.adminGetEstablishment.mockResolvedValue(force());
+    render(<AdminEstablishmentDetail type="state_force" id={7} />);
+    await screen.findByRole('heading', { level: 1 });
+    expect(screen.getByText(/Du lundi au vendredi : 8 h – 17 h/)).toBeInTheDocument();
+    expect(screen.getByText(/Samedi et dimanche : fermé/)).toBeInTheDocument();
+  });
+
+  it('modifie les horaires avec l’éditeur et envoie le format structuré', async () => {
+    api.adminUpdateEstablishment.mockResolvedValue(force());
+    const u = userEvent.setup();
+    api.adminGetEstablishment.mockResolvedValue(force());
+    render(<AdminEstablishmentDetail type="state_force" id={7} />);
+    await screen.findByRole('heading', { level: 1 });
+    await u.click(screen.getByRole('button', { name: 'Modifier' }));
+    await u.click(await screen.findByRole('checkbox', { name: 'Vendredi, jour ouvert' }));
+    await u.click(screen.getByRole('button', { name: 'Enregistrer les modifications' }));
+    const { fri: _fri, ...withoutFriday } = HOURS;
+    void _fri;
+    await waitFor(() =>
+      expect(api.adminUpdateEstablishment).toHaveBeenCalledWith('state_force', 7, {
+        opening_hours: withoutFriday,
+      }),
+    );
+  });
+
+  it('ouvert 24 h/24 : les horaires détaillés sont effacés', async () => {
+    api.adminUpdateEstablishment.mockResolvedValue(force());
+    const u = userEvent.setup();
+    api.adminGetEstablishment.mockResolvedValue(force());
+    render(<AdminEstablishmentDetail type="state_force" id={7} />);
+    await screen.findByRole('heading', { level: 1 });
+    await u.click(screen.getByRole('button', { name: 'Modifier' }));
+    await u.click(
+      await screen.findByRole('checkbox', { name: 'Ouvert 24 h sur 24, 7 jours sur 7' }),
+    );
+    await u.click(screen.getByRole('button', { name: 'Enregistrer les modifications' }));
+    await waitFor(() =>
+      expect(api.adminUpdateEstablishment).toHaveBeenCalledWith('state_force', 7, {
+        opening_hours: null,
+        is_open_24h: true,
+      }),
+    );
+  });
+});
+
 describe('fiche admin : boutons selon le statut', () => {
   it('en attente : approuver, rejeter, pas de rétablissement', async () => {
     await load();
@@ -102,7 +257,9 @@ describe('fiche admin : boutons selon le statut', () => {
   });
 
   it('une force étatique n’a pas de vérification', async () => {
-    api.adminGetEstablishment.mockResolvedValue(establishment({ type: 'state_force', status: 'approved' }));
+    api.adminGetEstablishment.mockResolvedValue(
+      establishment({ type: 'state_force', status: 'approved' }),
+    );
     render(<AdminEstablishmentDetail type="state_force" id={7} />);
     await screen.findByRole('heading', { level: 1 });
     expect(buttons()).not.toContain('Vérifier');
@@ -153,7 +310,9 @@ describe('fiche admin : actions', () => {
   });
 
   it('un 409 s’affiche clairement dans la boîte', async () => {
-    api.adminEstablishmentAction.mockRejectedValue(new ApiError(409, 'La fiche est déjà suspendue.'));
+    api.adminEstablishmentAction.mockRejectedValue(
+      new ApiError(409, 'La fiche est déjà suspendue.'),
+    );
     const u = userEvent.setup();
     await load();
     await u.click(screen.getByRole('button', { name: 'Approuver' }));
@@ -166,7 +325,9 @@ describe('fiche admin : actions', () => {
     const u = userEvent.setup();
     await load({ status: 'suspended' });
     await u.click(screen.getByRole('button', { name: 'Rétablir' }));
-    expect(await screen.findByText(/introuvable : elle a peut-être été supprimée/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/introuvable : elle a peut-être été supprimée/),
+    ).toBeInTheDocument();
   });
 
   it('supprimer exige le nom exact puis revient à la liste', async () => {
@@ -183,7 +344,11 @@ describe('fiche admin : actions', () => {
     await u.type(input, 'Sentinelle Sécurité');
     await u.click(submit);
     await waitFor(() =>
-      expect(api.adminDeleteEstablishment).toHaveBeenCalledWith('provider', 7, 'Sentinelle Sécurité'),
+      expect(api.adminDeleteEstablishment).toHaveBeenCalledWith(
+        'provider',
+        7,
+        'Sentinelle Sécurité',
+      ),
     );
     await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/etablissements'));
   });
@@ -194,7 +359,9 @@ describe('fiche admin : actions', () => {
     await load();
     await u.click(screen.getByRole('button', { name: 'Mettre en avant' }));
     await waitFor(() =>
-      expect(api.adminUpdateEstablishment).toHaveBeenCalledWith('provider', 7, { is_featured: true }),
+      expect(api.adminUpdateEstablishment).toHaveBeenCalledWith('provider', 7, {
+        is_featured: true,
+      }),
     );
     expect(await screen.findByRole('button', { name: 'Retirer de la une' })).toBeInTheDocument();
   });
@@ -202,7 +369,9 @@ describe('fiche admin : actions', () => {
   it('télécharger un justificatif appelle adminDownloadDocument', async () => {
     URL.createObjectURL = vi.fn(() => 'blob:x');
     URL.revokeObjectURL = vi.fn();
-    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
     const u = userEvent.setup();
     await load();
     await u.click(screen.getByRole('button', { name: 'Télécharger rccm.pdf' }));
@@ -222,7 +391,12 @@ describe('édition admin', () => {
       { ...initial, name: 'Nouveau nom', legal_form: '', executives: [] },
       { initial: false, current: true },
     );
-    expect(patch).toEqual({ name: 'Nouveau nom', legal_form: null, executives: [], is_featured: true });
+    expect(patch).toEqual({
+      name: 'Nouveau nom',
+      legal_form: null,
+      executives: [],
+      is_featured: true,
+    });
   });
 
   it('enregistre uniquement ce qui change', async () => {
@@ -235,16 +409,26 @@ describe('édition admin', () => {
     await u.type(name, 'Autre nom');
     await u.click(screen.getByRole('button', { name: 'Enregistrer les modifications' }));
     await waitFor(() =>
-      expect(api.adminUpdateEstablishment).toHaveBeenCalledWith('provider', 7, { name: 'Autre nom' }),
+      expect(api.adminUpdateEstablishment).toHaveBeenCalledWith('provider', 7, {
+        name: 'Autre nom',
+      }),
     );
   });
 });
 
 describe('page [type]/[id]', () => {
   it('refuse un type ou un identifiant invalide', async () => {
-    await expect(notFoundGuard({ params: Promise.resolve({ type: 'x', id: '1' }) })).rejects.toThrow('NEXT_NOT_FOUND');
-    await expect(notFoundGuard({ params: Promise.resolve({ type: 'provider', id: '0' }) })).rejects.toThrow('NEXT_NOT_FOUND');
-    await expect(notFoundGuard({ params: Promise.resolve({ type: 'provider', id: '1e3' }) })).rejects.toThrow('NEXT_NOT_FOUND');
-    await expect(notFoundGuard({ params: Promise.resolve({ type: 'state_force', id: '12' }) })).resolves.toBeTruthy();
+    await expect(
+      notFoundGuard({ params: Promise.resolve({ type: 'x', id: '1' }) }),
+    ).rejects.toThrow('NEXT_NOT_FOUND');
+    await expect(
+      notFoundGuard({ params: Promise.resolve({ type: 'provider', id: '0' }) }),
+    ).rejects.toThrow('NEXT_NOT_FOUND');
+    await expect(
+      notFoundGuard({ params: Promise.resolve({ type: 'provider', id: '1e3' }) }),
+    ).rejects.toThrow('NEXT_NOT_FOUND');
+    await expect(
+      notFoundGuard({ params: Promise.resolve({ type: 'state_force', id: '12' }) }),
+    ).resolves.toBeTruthy();
   });
 });

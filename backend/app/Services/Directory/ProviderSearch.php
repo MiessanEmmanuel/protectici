@@ -4,6 +4,7 @@ namespace App\Services\Directory;
 
 use App\Models\City;
 use App\Models\Provider;
+use App\Models\ProviderBranch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -22,7 +23,7 @@ class ProviderSearch
      */
     public function listing(array $f): Builder
     {
-        $query = Provider::query()->published()->with(['city', 'district', 'serviceTypes', 'logo']);
+        $query = Provider::query()->published()->with(['city', 'district', 'serviceTypes', 'logo'])->withCount('branches');
         $this->filter($query, $f, true);
         $this->sort($query, $f);
 
@@ -30,7 +31,7 @@ class ProviderSearch
     }
 
     /**
-     * Requête filtrée pour la carte (sans distance ni relations).
+     * Requête filtrée pour la carte : points des sièges (sans distance ni relations).
      *
      * @param  array<string, mixed>  $f
      * @return Builder<Provider>
@@ -38,6 +39,22 @@ class ProviderSearch
     public function markers(array $f): Builder
     {
         $query = Provider::query()->published()->whereNotNull('providers.latitude');
+        $this->filter($query, $f, false);
+
+        return $query;
+    }
+
+    /**
+     * Requête filtrée pour la carte : un point par agence géolocalisée. Le siège n'a pas besoin d'être géolocalisé.
+     *
+     * @param  array<string, mixed>  $f
+     * @return Builder<Provider>
+     */
+    public function branchMarkers(array $f): Builder
+    {
+        $query = Provider::query()->published()
+            ->join('provider_branches', 'provider_branches.provider_id', '=', 'providers.id')
+            ->whereNotNull('provider_branches.latitude');
         $this->filter($query, $f, false);
 
         return $query;
@@ -52,11 +69,16 @@ class ProviderSearch
         if (! empty($f['q'])) {
             DirectoryFilters::fullText($query, 'providers', $f['q']);
         }
+        // Ville / quartier : correspondance sur le siège OU sur une agence.
         if (! empty($f['city'])) {
-            $query->whereIn('providers.city_id', City::query()->where('slug', $f['city'])->select('id'));
+            $cityIds = City::query()->where('slug', $f['city'])->select('id');
+            $query->where(fn ($w) => $w->whereIn('providers.city_id', $cityIds)
+                ->orWhereIn('providers.id', ProviderBranch::query()->whereIn('city_id', $cityIds)->select('provider_id')));
         }
         if (! empty($f['district'])) {
-            $query->whereIn('providers.district_id', DirectoryFilters::districtIds($f['district']));
+            $districtIds = DirectoryFilters::districtIds($f['district']);
+            $query->where(fn ($w) => $w->whereIn('providers.district_id', $districtIds)
+                ->orWhereIn('providers.id', ProviderBranch::query()->whereIn('district_id', $districtIds)->select('provider_id')));
         }
         if (! empty($f['service'])) {
             $query->whereHas('serviceTypes', fn ($q) => $q->whereIn('service_types.slug', $f['service']));
@@ -108,7 +130,7 @@ class ProviderSearch
      */
     public function popular(): Builder
     {
-        return Provider::query()->published()->with(['city', 'district', 'serviceTypes', 'logo'])
+        return Provider::query()->published()->with(['city', 'district', 'serviceTypes', 'logo'])->withCount('branches')
             ->orderByDesc('providers.is_featured')
             ->orderByDesc('providers.rating_avg')
             ->orderByDesc('providers.rating_count')

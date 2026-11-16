@@ -17,6 +17,7 @@ export function navCounts(d: AdminCounts | null): Record<string, number> {
     '/admin/devis': d.new_quote_requests,
     '/admin/messages': d.new_contact_messages,
     '/admin/commentaires': d.pending_comments,
+    '/admin/revendications': d.pending_claims ?? 0,
   };
 }
 
@@ -31,7 +32,8 @@ export function totalTodo(d: AdminCounts): number {
     d.pending_providers +
     d.pending_state_forces +
     d.pending_comments +
-    d.pending_change_requests
+    d.pending_change_requests +
+    (d.pending_claims ?? 0)
   );
 }
 

@@ -16,7 +16,10 @@ const text = (label: string, min: number, max: number) =>
   z
     .string({ error: `${label} est requis.` })
     .trim()
-    .min(min, { error: min <= 1 ? `${label} est requis.` : `${label} doit comporter au moins ${min} caractères.` })
+    .min(min, {
+      error:
+        min <= 1 ? `${label} est requis.` : `${label} doit comporter au moins ${min} caractères.`,
+    })
     .max(max, { error: `${label} ne doit pas dépasser ${max} caractères.` });
 
 const optionalText = (label: string, max: number) =>
@@ -60,11 +63,9 @@ export const postFormSchema = z
       .regex(/^\d+$/, { error: 'La catégorie est requise.' })
       .transform(Number),
     excerpt: optionalText('Le résumé', 300),
-    body: z
-      .string()
-      .refine((v) => v.replace(/<[^>]+>/g, '').trim().length >= 10, {
-        error: 'Le contenu doit comporter au moins 10 caractères.',
-      }),
+    body: z.string().refine((v) => v.replace(/<[^>]+>/g, '').trim().length >= 10, {
+      error: 'Le contenu doit comporter au moins 10 caractères.',
+    }),
     status: z.enum(POST_STATUSES, { error: 'Le statut est requis.' }),
     published_at: z.string().optional(),
     is_featured: z.boolean(),
@@ -94,11 +95,9 @@ export const categoryFormSchema = z.object({
 
 export const pageFormSchema = z.object({
   title: text('Le titre', 3, 160),
-  body: z
-    .string()
-    .refine((v) => v.replace(/<[^>]+>/g, '').trim().length >= 10, {
-      error: 'Le contenu doit comporter au moins 10 caractères.',
-    }),
+  body: z.string().refine((v) => v.replace(/<[^>]+>/g, '').trim().length >= 10, {
+    error: 'Le contenu doit comporter au moins 10 caractères.',
+  }),
   seo_title: optionalText('Le titre SEO', 70),
   seo_description: optionalText('La description SEO', 160),
   is_visible: z.boolean(),

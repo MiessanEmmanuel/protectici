@@ -461,36 +461,6 @@ svg.ic{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:square}
   </div>
 </details>
 
-<script>
-/* Menu mobile */
-const bg=document.querySelector('.burger'),menu=document.getElementById('menu');
-bg.addEventListener('click',()=>{const o=menu.classList.toggle('open');bg.setAttribute('aria-expanded',o);});
-/* Flash info : une dépêche à la fois, pause au survol/focus, contrôles clavier */
-const news=[["09H42","Patrouilles de nuit renforcées à Cocody et Marcory"],["10H15","Arnaques au mobile money : les signes qui doivent alerter"],["11H30","Formation des agents de sécurité incendie à Yamoussoukro"],["13H05","Vérifier l’agrément d’une société de gardiennage"]];
-let k=0,timer=null,paused=matchMedia('(prefers-reduced-motion: reduce)').matches,hold=false;
-const now=document.getElementById('now'),cnt=document.getElementById('count'),play=document.getElementById('play'),fl=document.getElementById('flash');
-const show=d=>{k=(k+d+news.length)%news.length;now.innerHTML=`<time>${news[k][0]}</time><a href="#">${news[k][1]}</a>`;now.classList.remove('fade');void now.offsetWidth;now.classList.add('fade');cnt.textContent=`${k+1} / ${news.length}`;};
-const tick=()=>{clearInterval(timer);if(!paused&&!hold)timer=setInterval(()=>show(1),6000);};
-const setPaused=p=>{paused=p;play.setAttribute('aria-pressed',p);play.setAttribute('aria-label',p?'Reprendre':'Mettre en pause');play.textContent=p?'▶':'❚❚';now.setAttribute('aria-live',p?'polite':'off');tick();};
-document.getElementById('prev').onclick=()=>{show(-1);setPaused(true)};
-document.getElementById('next').onclick=()=>{show(1);setPaused(true)};
-play.onclick=()=>setPaused(!paused);
-fl.addEventListener('mouseenter',()=>{hold=true;tick()});fl.addEventListener('mouseleave',()=>{hold=false;tick()});
-fl.addEventListener('focusin',()=>{hold=true;tick()});fl.addEventListener('focusout',()=>{hold=false;tick()});
-setPaused(paused);
-/* Géolocalisation (maquette : simulée) */
-document.getElementById('geo').onclick=e=>{e.currentTarget.lastChild.textContent=' Position utilisée';};
-document.querySelector('.geo2').onclick=e=>{e.currentTarget.textContent='Position utilisée ✓';};
-/* Raccourci « Rechercher » du dock : place le focus dans le champ */
-document.getElementById('dock-search').onclick=e=>{e.preventDefault();const f=document.querySelector('#search input');f.scrollIntoView({block:'center'});f.focus({preventScroll:true});};
-document.querySelectorAll('.pal button').forEach(x=>x.addEventListener('click',()=>{document.documentElement.dataset.palette=x.dataset.p;document.querySelectorAll('.pal button').forEach(y=>y.setAttribute('aria-pressed',y===x));}));
-if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches){
-  const els=[...document.querySelectorAll('.rv')], show=()=>els.forEach(e=>e.classList.add('in'));
-  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:0,rootMargin:'0px 0px -8% 0px'});
-  els.forEach(el=>{const r=el.getBoundingClientRect(); if(r.top<innerHeight) el.classList.add('in'); else io.observe(el);});
-  document.documentElement.classList.add('anim');
-  setTimeout(show,4000); // filet de sécurité : rien ne reste jamais masqué
-}
-</script>
+<script src="landing-v6.inline.js"></script>
 </body>
 </html>

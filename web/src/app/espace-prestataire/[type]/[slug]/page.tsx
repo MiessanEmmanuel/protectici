@@ -27,7 +27,10 @@ export default async function ManageEstablishmentPage({ params }: Props) {
     <>
       <PageHeader title="Gérer ma fiche">
         <p className="mb-2 text-sm">
-          <Link href="/espace-prestataire">← Mes établissements</Link>
+          {/* Cible tactile ≥ 24 px (WCAG 2.5.8). */}
+          <Link href="/espace-prestataire" className="inline-flex min-h-tap items-center">
+            ← Mes établissements
+          </Link>
         </p>
       </PageHeader>
       <Container className="py-8">

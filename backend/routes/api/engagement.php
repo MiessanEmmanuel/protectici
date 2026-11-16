@@ -9,8 +9,10 @@ use App\Http\Controllers\Contact\ContactController;
 use App\Http\Controllers\Establishments\ProviderReviewController;
 use App\Http\Controllers\Feedback\FeedbackController;
 use App\Http\Controllers\Feedback\FeedbackTrackController;
+use App\Http\Controllers\Feedback\MyFeedbackController;
 use App\Http\Controllers\Quotes\ProviderQuoteController;
 use App\Http\Controllers\Quotes\QuoteRequestController;
+use App\Http\Controllers\Quotes\SentQuoteController;
 use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Reviews\ReviewReportController;
 use Illuminate\Support\Facades\Route;
@@ -34,19 +36,27 @@ Route::middleware(['auth:sanctum', 'verified.api', 'throttle:api-authenticated']
     Route::post('providers/{publishedProvider}/reviews', [ReviewController::class, 'store'])
         ->middleware('throttle:review-create')->name('reviews.store');
     Route::get('me/reviews', [ReviewController::class, 'mine'])->name('me.reviews.index');
-    Route::patch('me/reviews/{id}', [ReviewController::class, 'update'])->whereNumber('id')->name('me.reviews.update');
-    Route::delete('me/reviews/{id}', [ReviewController::class, 'destroy'])->whereNumber('id')->name('me.reviews.destroy');
+    Route::patch('me/reviews/{id}', [ReviewController::class, 'update'])->where(['id' => '[0-9]{1,18}'])->name('me.reviews.update');
+    Route::delete('me/reviews/{id}', [ReviewController::class, 'destroy'])->where(['id' => '[0-9]{1,18}'])->name('me.reviews.destroy');
     Route::post('reviews/{id}/report', [ReviewReportController::class, 'store'])
-        ->middleware('throttle:review-report')->whereNumber('id')->name('reviews.report');
+        ->middleware('throttle:review-report')->where(['id' => '[0-9]{1,18}'])->name('reviews.report');
 
     // Avis reçus par une fiche prestataire dont on est propriétaire.
     Route::prefix('me/establishments/provider/{slug}/reviews')->where(['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])->group(function () {
         Route::get('/', [ProviderReviewController::class, 'index'])->name('me.provider-reviews.index');
-        Route::post('{id}/reply', [ProviderReviewController::class, 'reply'])->whereNumber('id')->name('me.provider-reviews.reply');
+        Route::post('{id}/reply', [ProviderReviewController::class, 'reply'])->where(['id' => '[0-9]{1,18}'])->name('me.provider-reviews.reply');
     });
 
+    // Dossiers « Dis-moi tout » envoyés par l'utilisateur.
+    Route::get('me/feedbacks', [MyFeedbackController::class, 'index'])->name('me.feedbacks.index');
+    Route::get('me/feedbacks/{id}', [MyFeedbackController::class, 'show'])->where(['id' => '[0-9]{1,18}'])->name('me.feedbacks.show');
+
+    // Devis envoyés par l'utilisateur (suivi côté demandeur).
+    Route::get('me/sent-quote-requests', [SentQuoteController::class, 'index'])->name('me.sent-quotes.index');
+    Route::get('me/sent-quote-requests/{id}', [SentQuoteController::class, 'show'])->where(['id' => '[0-9]{1,18}'])->name('me.sent-quotes.show');
+
     // Devis adressés aux fiches du prestataire.
-    Route::prefix('me/quote-requests')->whereNumber('id')->group(function () {
+    Route::prefix('me/quote-requests')->where(['id' => '[0-9]{1,18}'])->group(function () {
         Route::get('/', [ProviderQuoteController::class, 'index'])->name('me.quotes.index');
         Route::get('{id}', [ProviderQuoteController::class, 'show'])->name('me.quotes.show');
         Route::post('{id}/reply', [ProviderQuoteController::class, 'reply'])->name('me.quotes.reply');
@@ -57,7 +67,7 @@ Route::middleware(['auth:sanctum', 'verified.api', 'throttle:api-authenticated']
 // --- Administration ------------------------------------------------------------------------------------------
 Route::prefix('admin')->name('admin.')
     ->middleware(['auth:sanctum', 'verified.api', 'can:admin-area', '2fa.staff', 'throttle:admin-api'])
-    ->whereNumber('id')
+    ->where(['id' => '[0-9]{1,18}'])
     ->group(function () {
         Route::get('reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
         Route::post('reviews/{id}/approve', [AdminReviewController::class, 'approve'])->name('reviews.approve');

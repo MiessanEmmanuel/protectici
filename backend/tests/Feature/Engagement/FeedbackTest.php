@@ -103,9 +103,11 @@ it('applique les validations conditionnelles et la liste blanche', function () {
     expect($last->status)->toBe('new')->and($last->user_id)->toBeNull()->and($last->reference)->not->toBe('DMT-2020-000001');
 });
 
-it('nettoie le texte libre (aucun HTML conservé)', function () {
-    $this->postJson(FEEDBACKS_URL, feedbackPayload(['comment' => '<script>alert(1)</script>Ceci est un long commentaire <b>gras</b>.']))->assertCreated();
-    expect(Feedback::query()->firstOrFail()->comment)->not->toContain('<')->and(Feedback::query()->firstOrFail()->comment)->toContain('Ceci est un long commentaire');
+it('rejette le HTML dans le texte libre (422, rien enregistré)', function () {
+    $this->postJson(FEEDBACKS_URL, feedbackPayload(['comment' => '<script>alert(1)</script>Ceci est un long commentaire <b>gras</b>.']))
+        ->assertUnprocessable()->assertJsonValidationErrors('comment')
+        ->assertJsonPath('errors.comment.0', fn (string $m) => str_contains($m, 'ne doit pas contenir de balises HTML'));
+    expect(Feedback::query()->count())->toBe(0);
 });
 
 it('champ piège rempli : succès simulé identique, rien enregistré ni envoyé', function () {
@@ -267,6 +269,30 @@ it('met à jour statut et affectation, pose resolved_at et audite', function () 
     $this->actingAs($admin)->patchJson('/api/v1/admin/feedbacks/'.$feedback->id, ['assigned_to' => User::factory()->create()->id])->assertUnprocessable(); // pas un admin
     $this->actingAs($admin)->patchJson('/api/v1/admin/feedbacks/'.$feedback->id, ['status' => 'closed', 'reference' => 'X'])->assertOk();
     expect($feedback->refresh()->reference)->toStartWith('DMT-');
+});
+
+it('prévient l\'auteur par e-mail à chaque changement de statut, jamais sinon', function () {
+    $admin = makeAdmin();
+    $feedback = makeFeedback();
+    $url = '/api/v1/admin/feedbacks/'.$feedback->id;
+
+    $this->actingAs($admin)->patchJson($url, ['status' => 'in_progress'])->assertOk();
+    Notification::assertSentOnDemand(FeedbackMail::class, fn (FeedbackMail $m, array $channels, $notifiable) => $notifiable->routes['mail'] === 'awa.traore@exemple.test'
+        && $m->event === FeedbackMail::STATUS_CHANGED && $m->body === 'in_progress'
+        && str_contains(implode(' ', $m->toMail($notifiable)->introLines), 'En cours de traitement'));
+
+    // Même statut rejoué ou simple réaffectation : aucun nouvel e-mail.
+    $this->actingAs($admin)->patchJson($url, ['status' => 'in_progress'])->assertOk();
+    $this->actingAs($admin)->patchJson($url, ['assigned_to' => $admin->id])->assertOk();
+    Notification::assertSentOnDemandTimes(FeedbackMail::class, 1);
+
+    $this->actingAs($admin)->patchJson($url, ['status' => 'resolved'])->assertOk();
+    Notification::assertSentOnDemandTimes(FeedbackMail::class, 2);
+
+    // Dossier anonymisé : statut modifiable, aucun e-mail.
+    Feedback::query()->whereKey($feedback->id)->update(['email' => null]);
+    $this->actingAs($admin)->patchJson($url, ['status' => 'closed'])->assertOk();
+    Notification::assertSentOnDemandTimes(FeedbackMail::class, 2);
 });
 
 it('réponse interne = note ; réponse externe = e-mail envoyé une seule fois', function () {

@@ -1,4 +1,4 @@
-import type { StateForceDetail } from '../api/types';
+import type { OpeningHours, StateForceDetail } from '../api/types';
 import { cities, procedureTypes, stateForceTypes } from './reference';
 
 /** Structures étatiques FICTIVES (noms et coordonnées d'exemple). */
@@ -15,7 +15,7 @@ interface Seed {
   emergency: string | null;
   address: string;
   open24h: boolean;
-  hours: string | null;
+  hours: OpeningHours | null;
   procedures: string[];
   description: string;
   email?: string;
@@ -94,7 +94,15 @@ const seeds: Seed[] = [
     emergency: '111',
     address: 'Bingerville, route de la Cité administrative',
     open24h: false,
-    hours: 'Tous les jours, de 7 h à 19 h. Permanence téléphonique la nuit.',
+    hours: {
+      mon: [['07:00', '19:00']],
+      tue: [['07:00', '19:00']],
+      wed: [['07:00', '19:00']],
+      thu: [['07:00', '19:00']],
+      fri: [['07:00', '19:00']],
+      sat: [['07:00', '19:00']],
+      sun: [['07:00', '19:00']],
+    },
     procedures: [...standard, 'assistance-pour-une-ceremonie'],
     description:
       'Brigade territoriale couvrant Bingerville et ses environs. Dépôt de plainte, constats et assistance aux cérémonies sur demande préalable.',
@@ -128,7 +136,13 @@ const seeds: Seed[] = [
     emergency: null,
     address: 'Zone portuaire, entrée principale',
     open24h: false,
-    hours: 'Du lundi au vendredi, de 8 h à 16 h.',
+    hours: {
+      mon: [['08:00', '16:00']],
+      tue: [['08:00', '16:00']],
+      wed: [['08:00', '16:00']],
+      thu: [['08:00', '16:00']],
+      fri: [['08:00', '16:00']],
+    },
     procedures: ['signaler-un-fait-suspect', 'declaration-de-perte'],
     description:
       'Poste de contrôle douanier de la zone portuaire. Signalement de marchandises suspectes et renseignements aux professionnels.',
@@ -162,7 +176,14 @@ const seeds: Seed[] = [
     emergency: null,
     address: 'Yamoussoukro, hôtel de ville',
     open24h: false,
-    hours: 'Du lundi au samedi, de 8 h à 17 h.',
+    hours: {
+      mon: [['08:00', '17:00']],
+      tue: [['08:00', '17:00']],
+      wed: [['08:00', '17:00']],
+      thu: [['08:00', '17:00']],
+      fri: [['08:00', '17:00']],
+      sat: [['08:00', '17:00']],
+    },
     procedures: ['signaler-un-fait-suspect', 'assistance-pour-une-ceremonie'],
     description:
       "Police municipale chargée du respect des arrêtés communaux, de la circulation et de l'encadrement des manifestations.",
@@ -194,7 +215,7 @@ export const stateForces: StateForceDetail[] = seeds.map((s) => {
     email: s.email ?? null,
     geo_description: s.geo ?? null,
     plus_code: null,
-    opening_hours: s.open24h ? 'Ouvert 24 h/24, 7 j/7' : s.hours,
+    opening_hours: s.open24h ? null : s.hours,
     procedures: s.procedures.map((slug) => {
       const proc = procBySlug.get(slug);
       if (!proc) throw new Error(`Démarche inconnue : ${slug}`);

@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Models\AuditLog;
+use App\Models\EstablishmentClaim;
 use App\Models\Feedback;
 use App\Models\Provider;
 use App\Models\QuoteRequest;
@@ -37,6 +38,8 @@ class DashboardStats
             // Phase 4 (contrat §9.3) : commentaires à modérer et abonnés confirmés.
             'pending_comments' => DB::table('post_comments as pc')->join('posts as p', 'p.id', '=', 'pc.post_id')->whereNull('pc.deleted_at')->whereNull('p.deleted_at')->where('pc.status', 'pending')->count(),
             'confirmed_subscribers' => DB::table('newsletter_subscribers')->where('status', 'confirmed')->count(),
+            // Contrat §10.3 : revendications de fiche en attente de décision.
+            'pending_claims' => EstablishmentClaim::query()->where('status', 'pending')->count(),
         ];
     }
 

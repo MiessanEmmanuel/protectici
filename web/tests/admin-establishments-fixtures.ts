@@ -56,6 +56,7 @@ export function establishment(over: Partial<AdminEstablishment> = {}): AdminEsta
     executives: [
       { id: 1, full_name: 'Awa Koné', position: 'general_manager', position_label: null, is_visible: false },
     ],
+    branches: [],
     media: [{ id: 1, collection: 'logo', url: 'https://img.example.test/l.webp', alt: 'Logo Sentinelle' }],
     documents: [
       {

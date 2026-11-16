@@ -167,6 +167,7 @@ describe('corps d’envoi', () => {
       submitter_role: 'manager',
       is_in_service: true,
       executives: [],
+      branches: [],
       media: [],
       documents: [],
       change_requests: [],

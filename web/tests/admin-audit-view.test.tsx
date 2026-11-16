@@ -43,6 +43,31 @@ describe('AdminAuditView', () => {
     expect(text).toContain('"editor"');
   });
 
+  it('n’affiche pas « Objet : n° » pour un événement sans objet (R40)', async () => {
+    api.adminListAuditLogs.mockResolvedValue(
+      page([
+        {
+          ...log,
+          event: 'login_succeeded',
+          auditable_type: null,
+          auditable_id: null,
+          old_values: null,
+          new_values: null,
+        } as unknown as AdminAuditLog,
+      ]),
+    );
+    render(<AdminAuditView />);
+    expect(await screen.findByText('login_succeeded')).toBeInTheDocument();
+    expect(screen.queryByText('Objet :')).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/n°\s*$/m);
+  });
+
+  it('affiche l’objet et son numéro quand il existe', async () => {
+    render(<AdminAuditView />);
+    expect(await screen.findByText('Objet :')).toBeInTheDocument();
+    expect(screen.getByText(/n° 12/)).toBeInTheDocument();
+  });
+
   it('transmet les filtres (dont dates) à l’API', async () => {
     const u = userEvent.setup();
     render(<AdminAuditView />);

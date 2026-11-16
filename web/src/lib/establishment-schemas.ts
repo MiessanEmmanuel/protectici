@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type {
+  BranchInput,
   DocumentType,
   EstablishmentCreateInput,
   EstablishmentType,
@@ -8,6 +9,7 @@ import type {
   SubmitterRole,
 } from './api/types';
 import { checkFile, DOCUMENT_RULES, MAX_DOCUMENTS } from './files';
+import { openingHoursErrors, openingHoursPayload, type OpeningHours } from './opening-hours';
 import { validate, type ValidationResult } from './validation';
 
 /**
@@ -20,6 +22,68 @@ export interface ExecutiveDraft {
   position: ExecutivePosition;
   position_label: string;
   is_visible: boolean;
+}
+
+/** Agence (adresse secondaire d'un prestataire ; l'adresse de la fiche reste le siège). */
+export interface BranchDraft {
+  /** Identifiant serveur d'une agence existante (absent pour une nouvelle agence). */
+  id?: number;
+  /** Clé locale stable pour l'affichage de la liste (jamais envoyée à l'API). */
+  uid: string;
+  label: string;
+  city_id: string;
+  district_id: string;
+  address: string;
+  geo_description: string;
+  phone: string;
+  lat: string;
+  lng: string;
+}
+
+export const MAX_BRANCHES = 20;
+
+let branchSeq = 0;
+/** Agence vide (clé locale unique). */
+export function emptyBranch(): BranchDraft {
+  branchSeq += 1;
+  return {
+    uid: `branch-${branchSeq}`,
+    label: '',
+    city_id: '',
+    district_id: '',
+    address: '',
+    geo_description: '',
+    phone: '',
+    lat: '',
+    lng: '',
+  };
+}
+
+/** Agence lue depuis l'API (propriétaire ou admin) → brouillon. */
+export function branchToDraft(b: {
+  id: number;
+  label: string;
+  city_id: number;
+  district_id: number | null;
+  address: string | null;
+  geo_description: string | null;
+  phone: string | null;
+  lat: number | null;
+  lng: number | null;
+}): BranchDraft {
+  const s = (v: string | number | null): string => (v === null ? '' : String(v));
+  return {
+    id: b.id,
+    uid: `branch-id-${b.id}`,
+    label: b.label,
+    city_id: String(b.city_id),
+    district_id: s(b.district_id),
+    address: s(b.address),
+    geo_description: s(b.geo_description),
+    phone: s(b.phone),
+    lat: s(b.lat),
+    lng: s(b.lng),
+  };
 }
 
 export interface DocumentDraft {
@@ -51,6 +115,8 @@ export interface EstablishmentDraft {
   approval_number: string;
   approval_expires_at: string;
   executives: ExecutiveDraft[];
+  /** Prestataire uniquement. */
+  branches: BranchDraft[];
   phone: string;
   phone_alt: string;
   emergency_phone: string;
@@ -62,7 +128,8 @@ export interface EstablishmentDraft {
   linkedin_url: string;
   whatsapp_number: string;
   price_from: string;
-  opening_hours: string;
+  /** Horaires structurés (jour absent = fermé). Ignorés si `is_open_24h`. */
+  opening_hours: OpeningHours;
   is_open_24h: boolean;
   documents: DocumentDraft[];
   consent: boolean;
@@ -93,6 +160,7 @@ export function emptyDraft(): EstablishmentDraft {
     approval_number: '',
     approval_expires_at: '',
     executives: [],
+    branches: [],
     phone: '',
     phone_alt: '',
     emergency_phone: '',
@@ -104,7 +172,7 @@ export function emptyDraft(): EstablishmentDraft {
     linkedin_url: '',
     whatsapp_number: '',
     price_from: '',
-    opening_hours: '',
+    opening_hours: {},
     is_open_24h: false,
     documents: [],
     consent: false,
@@ -134,7 +202,10 @@ export function parseCoordinate(value: string, limit: number): number | null {
 /* --------------------------------- Schémas --------------------------------- */
 
 const text = (max: number, label: string) =>
-  z.string().trim().max(max, { error: `${label} est trop long (${max} caractères maximum).` });
+  z
+    .string()
+    .trim()
+    .max(max, { error: `${label} est trop long (${max} caractères maximum).` });
 
 const requiredText = (max: number, label: string) =>
   z
@@ -228,7 +299,9 @@ const declarantStep = z.object({
 
 const providerIdentity = z.object({
   name: requiredText(255, 'La raison sociale'),
-  company_type_ids: z.array(z.number()).min(1, { error: 'Choisissez au moins un type d’entreprise.' }),
+  company_type_ids: z
+    .array(z.number())
+    .min(1, { error: 'Choisissez au moins un type d’entreprise.' }),
   service_type_ids: z.array(z.number()).min(1, { error: 'Choisissez au moins un service.' }),
   description: text(5000, 'La description'),
 });
@@ -242,15 +315,21 @@ const forceIdentity = z.object({
   description: text(5000, 'La description'),
 });
 
-const locationStep = z
+const branch = z
   .object({
+    label: z
+      .string({ error: 'Le nom de l’agence est obligatoire.' })
+      .trim()
+      .min(1, { error: 'Le nom de l’agence est obligatoire.' })
+      .min(2, { error: 'Le nom de l’agence doit contenir au moins 2 caractères.' })
+      .max(150, { error: 'Le nom de l’agence est trop long (150 caractères maximum).' }),
     city_id: z
-      .string({ error: 'Choisissez une ville.' })
-      .min(1, { error: 'Choisissez une ville.' }),
+      .string({ error: 'Choisissez la ville de l’agence.' })
+      .min(1, { error: 'Choisissez la ville de l’agence.' }),
     district_id: z.string(),
-    address: text(255, 'L’adresse'),
-    geo_description: text(500, 'Les repères géographiques'),
-    plus_code: text(32, 'Le Plus Code'),
+    address: text(255, 'L’adresse de l’agence'),
+    geo_description: text(2000, 'Les repères géographiques de l’agence'),
+    phone: phoneOptional,
     lat: coordinate(90, 'La latitude'),
     lng: coordinate(180, 'La longitude'),
   })
@@ -258,6 +337,34 @@ const locationStep = z
     path: ['lng'],
     error: 'Renseignez la latitude et la longitude ensemble, ou aucune des deux.',
   });
+
+export const branchesSchema = z
+  .array(branch)
+  .max(MAX_BRANCHES, { error: `${MAX_BRANCHES} agences au maximum.` });
+
+const locationFields = {
+  city_id: z.string({ error: 'Choisissez une ville.' }).min(1, { error: 'Choisissez une ville.' }),
+  district_id: z.string(),
+  address: text(255, 'L’adresse'),
+  geo_description: text(500, 'Les repères géographiques'),
+  plus_code: text(32, 'Le Plus Code'),
+  lat: coordinate(90, 'La latitude'),
+  lng: coordinate(180, 'La longitude'),
+};
+
+const coordinatePair = {
+  path: ['lng'],
+  error: 'Renseignez la latitude et la longitude ensemble, ou aucune des deux.',
+};
+
+const locationStep = z
+  .object(locationFields)
+  .refine((v) => (v.lat === '') === (v.lng === ''), coordinatePair);
+
+/** Prestataire : siège + agences facultatives. */
+const providerLocationStep = z
+  .object({ ...locationFields, branches: branchesSchema })
+  .refine((v) => (v.lat === '') === (v.lng === ''), coordinatePair);
 
 const legalStep = z.object({
   rccm: text(50, 'Le numéro RCCM'),
@@ -288,14 +395,34 @@ const providerContacts = z.object({
   price_from: integerOptional('Le tarif de départ', 100_000_000),
 });
 
-const forceContacts = z.object({
-  phone: phoneOptional,
-  phone_alt: phoneOptional,
-  emergency_phone: phoneOptional,
-  email: emailOptional,
-  opening_hours: text(255, 'Les horaires'),
-  is_open_24h: z.boolean(),
-});
+const forceContacts = z
+  .object({
+    phone: phoneOptional,
+    phone_alt: phoneOptional,
+    emergency_phone: phoneOptional,
+    email: emailOptional,
+    opening_hours: z.custom<OpeningHours>(
+      (v) => typeof v === 'object' && v !== null && !Array.isArray(v),
+      { error: 'Les horaires d’ouverture sont invalides.' },
+    ),
+    is_open_24h: z.boolean(),
+  })
+  .superRefine(
+    (v, ctx) => {
+      // Exécuté même si un autre champ est en erreur (`when`) : la valeur peut être incomplète.
+      if (v.is_open_24h === true) return;
+      const hours = v.opening_hours;
+      if (typeof hours !== 'object' || hours === null || Array.isArray(hours)) return;
+      for (const [key, message] of Object.entries(openingHoursErrors(hours))) {
+        ctx.addIssue({
+          code: 'custom',
+          path: key.split('.').map((part) => (/^\d+$/.test(part) ? Number(part) : part)),
+          message,
+        });
+      }
+    },
+    { when: () => true },
+  );
 
 const documentsStep = z.object({
   documents: z
@@ -318,14 +445,7 @@ const reviewStep = z.object({
 /* ----------------------------------- Étapes ----------------------------------- */
 
 export type StepId =
-  | 'type'
-  | 'declarant'
-  | 'identity'
-  | 'location'
-  | 'legal'
-  | 'contacts'
-  | 'documents'
-  | 'review';
+  'type' | 'declarant' | 'identity' | 'location' | 'legal' | 'contacts' | 'documents' | 'review';
 
 const STEP_LABELS: Record<StepId, string> = {
   type: 'Type d’établissement',
@@ -356,7 +476,7 @@ export function schemaForStep(step: StepId, type: EstablishmentType | '') {
     case 'identity':
       return type === 'state_force' ? forceIdentity : providerIdentity;
     case 'location':
-      return locationStep;
+      return type === 'provider' ? providerLocationStep : locationStep;
     case 'legal':
       return legalStep;
     case 'contacts':
@@ -366,6 +486,11 @@ export function schemaForStep(step: StepId, type: EstablishmentType | '') {
     case 'review':
       return reviewStep;
   }
+}
+
+/** Valide uniquement la liste des agences (clés d'erreur : `branches.0.label`…). */
+export function validateBranches(branches: BranchDraft[]): ValidationResult<unknown> {
+  return validate(z.object({ branches: branchesSchema }), { branches });
 }
 
 /** Valide une étape. Les clés d'erreur sont les noms de champs (`executives.0.full_name`…). */
@@ -381,6 +506,30 @@ const str = (v: string): string | undefined => {
 };
 const int = (v: string): number | undefined => (v.trim() === '' ? undefined : Number(v));
 const phone = (v: string): string | undefined => (v.trim() === '' ? undefined : normalizePhone(v));
+
+/**
+ * Agences → corps API (remplacement complet de la liste). `id` conservé pour une agence existante ;
+ * champs vides envoyés à `null` ; coordonnées envoyées seulement en paire.
+ */
+export function buildBranchesInput(branches: BranchDraft[]): BranchInput[] {
+  return branches.map((b) => {
+    const lat = parseCoordinate(b.lat, 90);
+    const lng = parseCoordinate(b.lng, 180);
+    const pair = lat !== null && lng !== null;
+    const t = (v: string): string | null => (v.trim() === '' ? null : v.trim());
+    return {
+      ...(b.id !== undefined ? { id: b.id } : {}),
+      label: b.label.trim(),
+      city_id: Number(b.city_id),
+      district_id: b.district_id.trim() === '' ? null : Number(b.district_id),
+      address: t(b.address),
+      geo_description: t(b.geo_description),
+      phone: b.phone.trim() === '' ? null : normalizePhone(b.phone),
+      lat: pair ? lat : null,
+      lng: pair ? lng : null,
+    };
+  });
+}
 
 /** Convertit le brouillon validé en corps de `POST /establishments` (champs vides omis). */
 export function buildCreateInput(draft: EstablishmentDraft): EstablishmentCreateInput {
@@ -405,7 +554,7 @@ export function buildCreateInput(draft: EstablishmentDraft): EstablishmentCreate
       phone_alt: phone(draft.phone_alt),
       emergency_phone: phone(draft.emergency_phone),
       email: str(draft.email),
-      opening_hours: str(draft.opening_hours),
+      opening_hours: openingHoursPayload(draft.opening_hours, draft.is_open_24h) ?? undefined,
       is_open_24h: draft.is_open_24h,
       procedure_type_ids: draft.procedure_type_ids.length ? draft.procedure_type_ids : undefined,
       consent: true,
@@ -443,6 +592,7 @@ export function buildCreateInput(draft: EstablishmentDraft): EstablishmentCreate
     approval_number: str(draft.approval_number),
     approval_expires_at: str(draft.approval_expires_at),
     executives: executives.length ? executives : undefined,
+    branches: draft.branches.length ? buildBranchesInput(draft.branches) : undefined,
     consent: true,
   };
 }

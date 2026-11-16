@@ -1,0 +1,338 @@
+/* Thème des e-mails ProtectIci (direction validée v9, design.md) : aplats de la palette du logo, angles droits,
+   aucune ombre ni dégradé, Archivo avec repli système. Styles mis en ligne par Laravel à l'envoi. */
+
+/* Base */
+
+body,
+body *:not(html):not(style):not(br):not(tr):not(code) {
+    box-sizing: border-box;
+    font-family: 'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    position: relative;
+}
+
+body {
+    -webkit-text-size-adjust: none;
+    background-color: #f3eee4;
+    color: #0d1b2a;
+    height: 100%;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+}
+
+p,
+ul,
+ol,
+blockquote {
+    line-height: 1.6;
+    text-align: left;
+}
+
+a {
+    color: #0343A4;
+}
+
+a img {
+    border: none;
+}
+
+/* Typographie */
+
+h1 {
+    color: #0d1b2a;
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+h2 {
+    color: #0d1b2a;
+    font-size: 18px;
+    font-weight: 900;
+    margin-top: 0;
+    text-align: left;
+}
+
+h3 {
+    color: #0d1b2a;
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 0;
+    text-align: left;
+}
+
+p {
+    color: #0d1b2a;
+    font-size: 16px;
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+p.sub {
+    font-size: 13px;
+}
+
+img {
+    max-width: 100%;
+}
+
+/* Mise en page */
+
+.wrapper {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #f3eee4;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.content {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+/* En-tête : bandeau bleu, éléphant sur plaque blanche + mot « PROTECTICI » */
+
+.header {
+    background-color: #0343A4;
+    padding: 0;
+    text-align: center;
+}
+
+.header-inner {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+    margin: 0 auto;
+    width: 570px;
+}
+
+.header-cell {
+    padding: 20px 32px;
+    text-align: left;
+}
+
+.brand {
+    color: #ffffff;
+    display: inline-block;
+    text-decoration: none;
+}
+
+.logo {
+    background-color: #ffffff;
+    border: 0;
+    height: 44px;
+    padding: 4px;
+    vertical-align: middle;
+    width: 44px;
+}
+
+.brand-name {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    padding-left: 12px;
+    vertical-align: middle;
+}
+
+/* Corps */
+
+.body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #f3eee4;
+    border-bottom: 0;
+    border-top: 0;
+    margin: 0;
+    padding: 32px 0;
+    width: 100%;
+}
+
+.inner-body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+    background-color: #ffffff;
+    border-top: 6px solid #EAAB13;
+    margin: 0 auto;
+    padding: 0;
+    width: 570px;
+}
+
+.inner-body a {
+    word-break: break-all;
+}
+
+/* Lien de secours sous le bouton */
+
+.subcopy {
+    border-top: 2px solid #0d1b2a;
+    margin-top: 28px;
+    padding-top: 20px;
+}
+
+.subcopy p {
+    color: #4F5B70;
+    font-size: 13px;
+}
+
+/* Pied de page : aplat nuit */
+
+.footer-band {
+    background-color: #0d1b2a;
+    padding: 0;
+}
+
+.footer {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+    margin: 0 auto;
+    padding: 0;
+    text-align: left;
+    width: 570px;
+}
+
+.footer p {
+    color: #d5dcea;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+.footer p strong {
+    color: #ffffff;
+}
+
+.footer a {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+/* Tableaux */
+
+.table table {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 24px auto;
+    width: 100%;
+}
+
+.table th {
+    border-bottom: 2px solid #0d1b2a;
+    margin: 0;
+    padding-bottom: 8px;
+}
+
+.table td {
+    color: #0d1b2a;
+    font-size: 15px;
+    line-height: 20px;
+    margin: 0;
+    padding: 8px 0;
+}
+
+.content-cell {
+    max-width: 100vw;
+    padding: 36px 32px;
+}
+
+/* Boutons : aplats, angles droits */
+
+.action {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 28px auto;
+    padding: 0;
+    text-align: left;
+    width: 100%;
+    float: unset;
+}
+
+.button {
+    -webkit-text-size-adjust: none;
+    border-radius: 0;
+    color: #ffffff;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: 700;
+    overflow: hidden;
+    text-decoration: none;
+}
+
+.button-blue,
+.button-primary {
+    background-color: #0343A4;
+    border-bottom: 14px solid #0343A4;
+    border-left: 28px solid #0343A4;
+    border-right: 28px solid #0343A4;
+    border-top: 14px solid #0343A4;
+}
+
+/* L'or porte toujours du texte foncé (contraste 9,3:1). */
+.button-green,
+.button-success {
+    background-color: #EAAB13;
+    border-bottom: 14px solid #EAAB13;
+    border-left: 28px solid #EAAB13;
+    border-right: 28px solid #EAAB13;
+    border-top: 14px solid #EAAB13;
+    color: #0d1b2a;
+}
+
+.button-red,
+.button-error {
+    background-color: #C62828;
+    border-bottom: 14px solid #C62828;
+    border-left: 28px solid #C62828;
+    border-right: 28px solid #C62828;
+    border-top: 14px solid #C62828;
+}
+
+/* Encadrés */
+
+.panel {
+    border-left: #0343A4 solid 6px;
+    margin: 24px 0;
+}
+
+.panel-content {
+    background-color: #EAF1FB;
+    color: #0d1b2a;
+    padding: 16px;
+}
+
+.panel-content p {
+    color: #0d1b2a;
+}
+
+.panel-item {
+    padding: 0;
+}
+
+.panel-item p:last-of-type {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Utilitaires */
+
+.break-all {
+    word-break: break-all;
+}

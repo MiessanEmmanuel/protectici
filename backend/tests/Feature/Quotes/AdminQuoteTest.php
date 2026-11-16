@@ -62,7 +62,7 @@ it('affiche le détail complet d\'un devis avec ses destinataires', function () 
 
     $this->actingAs($admin)->getJson("/api/v1/admin/quote-requests/{$quote->id}")->assertOk()
         ->assertJsonPath('data.reference', $quote->reference)
-        ->assertJsonPath('data.phone', '+2250709445111')
+        ->assertJsonPath('data.phone', '+2250708123456')
         ->assertJsonPath('data.company_name', 'Entrepôts Traoré')
         ->assertJsonPath('data.desired_start_date', '2030-01-15')
         ->assertJsonPath('data.recipients_count', 1)

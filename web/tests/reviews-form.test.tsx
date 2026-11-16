@@ -12,11 +12,24 @@ const createReview = vi.fn((...args: unknown[]) => {
   void args;
   return impl();
 });
+const listMyReviews = vi.fn();
 vi.mock('@/lib/api/client', () => ({
-  clientApi: { createReview: (...a: unknown[]) => createReview(...a) },
+  clientApi: {
+    createReview: (...a: unknown[]) => createReview(...a),
+    listMyReviews: (...a: unknown[]) => listMyReviews(...a),
+  },
 }));
 
+import { invalidateMyReviews } from '@/components/reviews/my-reviews';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
+
+const EMPTY_PAGE = { data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 }, links: { next: null, prev: null } };
+
+/** Rend le formulaire et attend la fin de la recherche d'un avis existant (R27). */
+async function renderForm() {
+  render(<ReviewForm slug="agence-x" providerName="Agence X" />);
+  await screen.findByRole('button', { name: 'Envoyer mon avis' });
+}
 
 const BODY = 'Service rapide et agents très professionnels.';
 
@@ -29,6 +42,9 @@ async function fillAndSubmit(u: ReturnType<typeof userEvent.setup>, rate = true)
 describe('ReviewForm', () => {
   beforeEach(() => {
     createReview.mockClear();
+    invalidateMyReviews();
+    listMyReviews.mockReset();
+    listMyReviews.mockResolvedValue(EMPTY_PAGE);
     impl = async () => ({});
     session = { user: { email_verified: true }, status: 'authenticated' };
   });
@@ -61,7 +77,7 @@ describe('ReviewForm', () => {
 
   it('étoiles : groupe radio navigable au clavier, valeur en texte', async () => {
     const u = userEvent.setup();
-    render(<ReviewForm slug="agence-x" providerName="Agence X" />);
+    await renderForm();
     expect(screen.getByRole('radiogroup', { name: /Votre note/ })).toBeInTheDocument();
     expect(screen.getAllByRole('radio')).toHaveLength(5);
     expect(screen.getByText('Aucune note choisie')).toBeInTheDocument();
@@ -79,7 +95,7 @@ describe('ReviewForm', () => {
 
   it('validation : note et texte requis, aucun appel', async () => {
     const u = userEvent.setup();
-    render(<ReviewForm slug="agence-x" providerName="Agence X" />);
+    await renderForm();
     await u.click(screen.getByRole('button', { name: 'Envoyer mon avis' }));
     expect(await screen.findByText('Choisissez une note de 1 à 5.')).toBeInTheDocument();
     expect(screen.getByText(/au moins 10 caractères/)).toBeInTheDocument();
@@ -88,7 +104,7 @@ describe('ReviewForm', () => {
 
   it('compteur de caractères en zone polie', async () => {
     const u = userEvent.setup();
-    render(<ReviewForm slug="agence-x" providerName="Agence X" />);
+    await renderForm();
     const counter = screen.getByText('0 / 3000 caractères');
     expect(counter).toHaveAttribute('aria-live', 'polite');
     await u.type(screen.getByLabelText(/Votre avis/, { selector: 'textarea' }), 'abcde');
@@ -97,7 +113,7 @@ describe('ReviewForm', () => {
 
   it('succès : message de modération et lien vers mon avis', async () => {
     const u = userEvent.setup();
-    render(<ReviewForm slug="agence-x" providerName="Agence X" />);
+    await renderForm();
     await u.type(screen.getByLabelText(/Titre/), '  Très bien ');
     await fillAndSubmit(u);
     expect(
@@ -120,7 +136,7 @@ describe('ReviewForm', () => {
       throw new ApiError(409, 'Vous avez déjà donné un avis pour ce prestataire.');
     };
     const u = userEvent.setup();
-    render(<ReviewForm slug="agence-x" providerName="Agence X" />);
+    await renderForm();
     await fillAndSubmit(u);
     expect(
       await screen.findByText('Vous avez déjà donné un avis pour ce prestataire.'),
@@ -133,7 +149,7 @@ describe('ReviewForm', () => {
       throw new ApiError(403, 'Vous ne pouvez pas noter votre propre fiche.');
     };
     const u = userEvent.setup();
-    render(<ReviewForm slug="agence-x" providerName="Agence X" />);
+    await renderForm();
     await fillAndSubmit(u);
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Vous ne pouvez pas noter votre propre fiche.',
@@ -146,7 +162,7 @@ describe('ReviewForm', () => {
       throw new ApiError(404, 'Introuvable');
     };
     const u = userEvent.setup();
-    render(<ReviewForm slug="agence-x" providerName="Agence X" />);
+    await renderForm();
     await fillAndSubmit(u);
     expect(await screen.findByRole('alert')).toHaveTextContent('Cette fiche n’est plus disponible');
   });
@@ -156,7 +172,7 @@ describe('ReviewForm', () => {
       throw new ApiError(422, 'Invalide', { body: ['Le texte contient un terme interdit.'] });
     };
     const u = userEvent.setup();
-    render(<ReviewForm slug="agence-x" providerName="Agence X" />);
+    await renderForm();
     await fillAndSubmit(u);
     expect(await screen.findByText('Le texte contient un terme interdit.')).toBeInTheDocument();
   });
@@ -166,7 +182,7 @@ describe('ReviewForm', () => {
       throw new ApiError(429, 'Trop', {}, 120);
     };
     const u = userEvent.setup();
-    render(<ReviewForm slug="agence-x" providerName="Agence X" />);
+    await renderForm();
     await fillAndSubmit(u);
     expect(await screen.findByRole('alert')).toHaveTextContent('2 minutes');
   });
@@ -175,7 +191,7 @@ describe('ReviewForm', () => {
     let release: () => void = () => undefined;
     impl = () => new Promise((r) => (release = () => r({})));
     const u = userEvent.setup();
-    render(<ReviewForm slug="agence-x" providerName="Agence X" />);
+    await renderForm();
     await u.click(screen.getByRole('radio', { name: '5 sur 5' }));
     await u.type(screen.getByLabelText(/Votre avis/, { selector: 'textarea' }), BODY);
     const btn = screen.getByRole('button', { name: 'Envoyer mon avis' });
@@ -184,5 +200,39 @@ describe('ReviewForm', () => {
     expect(btn).toBeDisabled();
     release();
     await screen.findByText(/Merci !/);
+  });
+
+  it('avis déjà donné : « votre avis » affiché à la place du formulaire (R27)', async () => {
+    listMyReviews.mockResolvedValue({
+      ...EMPTY_PAGE,
+      data: [
+        {
+          id: 3,
+          provider: { slug: 'agence-x', name: 'Agence X' },
+          rating: 4,
+          title: 'Sérieux',
+          body: 'Agents ponctuels et courtois.',
+          status: 'pending',
+          rejection_reason: null,
+          is_visible: false,
+          created_at: '2026-11-01T10:00:00Z',
+          provider_reply: null,
+        },
+      ],
+    });
+    render(<ReviewForm slug="agence-x" providerName="Agence X" />);
+    expect(await screen.findByText(/Votre avis \(4\/5\)/)).toHaveTextContent('En attente de modération');
+    expect(screen.getByText('Agents ponctuels et courtois.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Envoyer mon avis' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Modifier mon avis' })).toHaveAttribute('href', '/compte/mes-avis');
+  });
+
+  it('avis sur un autre prestataire uniquement : formulaire proposé, pages parcourues', async () => {
+    const other = { id: 9, provider: { slug: 'autre', name: 'Autre' }, rating: 3, title: null, body: 'x', status: 'approved', rejection_reason: null, is_visible: true, created_at: '2026-11-01T10:00:00Z', provider_reply: null };
+    listMyReviews
+      .mockResolvedValueOnce({ ...EMPTY_PAGE, data: [other], meta: { ...EMPTY_PAGE.meta, last_page: 2 } })
+      .mockResolvedValueOnce({ ...EMPTY_PAGE, data: [], meta: { ...EMPTY_PAGE.meta, current_page: 2, last_page: 2 } });
+    await renderForm();
+    expect(listMyReviews).toHaveBeenCalledTimes(2);
   });
 });

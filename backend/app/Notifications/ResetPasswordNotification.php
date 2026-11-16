@@ -7,7 +7,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Lien de réinitialisation vers le front : {FRONTEND_URL}/reinitialiser-mot-de-passe?token=…&email=…
+ * Lien de réinitialisation vers le front : {FRONTEND_URL}/reinitialiser-mot-de-passe?token=…
  * (base issue de la configuration uniquement : jamais de la requête).
  */
 class ResetPasswordNotification extends Notification

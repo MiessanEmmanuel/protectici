@@ -93,15 +93,25 @@ export const feedbackStep4Schema = z
       }
     }
     if (v.target_type === 'service' && !v.service_type_id) {
-      ctx.addIssue({ code: 'custom', path: ['service_type_id'], message: 'Choisissez le type de prestation.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['service_type_id'],
+        message: 'Choisissez le type de prestation.',
+      });
     }
     if (v.target_type !== 'product' && !v.topic_id) {
-      ctx.addIssue({ code: 'custom', path: ['topic_id'], message: 'Choisissez le sujet concerné.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['topic_id'],
+        message: 'Choisissez le sujet concerné.',
+      });
     }
   });
 
 export const feedbackStep5Schema = z.object({
-  consent: consentLiteral('Vous devez accepter le traitement de vos informations pour envoyer ce message.'),
+  consent: consentLiteral(
+    'Vous devez accepter le traitement de vos informations pour envoyer ce message.',
+  ),
 });
 
 export const feedbackTrackSchema = z.object({
@@ -123,7 +133,11 @@ export const quoteSchema = z.object({
   last_name: required('Le nom').max(100, { error: 'Le nom est trop long.' }),
   email,
   phone: required('Le téléphone').pipe(phoneFormat),
-  company_name: z.string().trim().max(190, { error: 'Le nom de l’entreprise est trop long.' }).optional(),
+  company_name: z
+    .string()
+    .trim()
+    .max(190, { error: 'Le nom de l’entreprise est trop long.' })
+    .optional(),
   service_type_id: idString('Choisissez un service.'),
   city_id: idString('Choisissez une ville.'),
   district_id: optionalId,
@@ -133,12 +147,20 @@ export const quoteSchema = z.object({
     .optional()
     .refine((v) => !v || /^\d{4}-\d{2}-\d{2}$/.test(v), { error: 'La date n’est pas valide.' })
     .refine((v) => !v || v >= todayIso(), { error: 'La date souhaitée ne peut pas être passée.' }),
-  budget_range: z.string().trim().max(50, { error: 'Le budget est trop long (50 caractères).' }).optional(),
+  budget_range: z
+    .string()
+    .trim()
+    .max(50, { error: 'Le budget est trop long (50 caractères).' })
+    .optional(),
   provider_slugs: z
     .array(z.string())
-    .max(QUOTE_MAX_PROVIDERS, { error: `Vous pouvez choisir ${QUOTE_MAX_PROVIDERS} prestataires au maximum.` })
+    .max(QUOTE_MAX_PROVIDERS, {
+      error: `Vous pouvez choisir ${QUOTE_MAX_PROVIDERS} prestataires au maximum.`,
+    })
     .optional(),
-  consent: consentLiteral('Vous devez accepter le traitement de vos informations pour envoyer votre demande.'),
+  consent: consentLiteral(
+    'Vous devez accepter le traitement de vos informations pour envoyer votre demande.',
+  ),
 });
 
 /** Date du jour au format AAAA-MM-JJ (fuseau local). */
@@ -156,7 +178,9 @@ export const contactSchema = z.object({
   email,
   subject: required('L’objet').max(200, { error: 'L’objet ne doit pas dépasser 200 caractères.' }),
   message: textBetween('Le message', 10, 5000),
-  consent: consentLiteral('Vous devez accepter le traitement de vos informations pour envoyer votre message.'),
+  consent: consentLiteral(
+    'Vous devez accepter le traitement de vos informations pour envoyer votre message.',
+  ),
 });
 
 /* ---------- Avis (§8.1) ---------- */
@@ -171,7 +195,13 @@ export const reviewSchema = z.object({
     .int({ error: 'Choisissez une note de 1 à 5.' })
     .min(1, { error: 'Choisissez une note de 1 à 5.' })
     .max(5, { error: 'Choisissez une note de 1 à 5.' }),
-  title: z.string().trim().max(REVIEW_TITLE_MAX, { error: `Le titre ne doit pas dépasser ${REVIEW_TITLE_MAX} caractères.` }).optional(),
+  title: z
+    .string()
+    .trim()
+    .max(REVIEW_TITLE_MAX, {
+      error: `Le titre ne doit pas dépasser ${REVIEW_TITLE_MAX} caractères.`,
+    })
+    .optional(),
   body: textBetween('Votre avis', REVIEW_BODY_MIN, REVIEW_BODY_MAX),
 });
 

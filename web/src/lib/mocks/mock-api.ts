@@ -15,6 +15,7 @@ import type {
 import { createWaveAMocks, type MockContext } from './establishments';
 import { createWaveBMocks } from './wave-b';
 import { createContentMocks } from './content';
+import { isMockClaimable } from './claims';
 import { stateForces } from './forces';
 import { providers } from './providers';
 import { cities, referenceData } from './reference';
@@ -159,7 +160,30 @@ function toSummary(p: (typeof providers)[number]): ProviderSummary {
     lat: p.lat,
     lng: p.lng,
     distance_m: null,
+    branches_count: p.branches.length,
+    nearest_branch: null,
   };
+}
+
+/** Distance au point le plus proche entre le siège et les agences géolocalisées (contrat API). */
+function providerWithDistance(
+  p: (typeof providers)[number],
+  lat?: number,
+  lng?: number,
+): ProviderSummary {
+  const summary = withDistance(toSummary(p), lat, lng);
+  if (lat === undefined || lng === undefined) return summary;
+  let best = summary.distance_m;
+  let nearest: ProviderSummary['nearest_branch'] = null;
+  for (const b of p.branches) {
+    if (b.lat === null || b.lng === null) continue;
+    const d = haversineMeters(lat, lng, b.lat, b.lng);
+    if (best === null || d < best) {
+      best = d;
+      nearest = { id: b.id, label: b.label };
+    }
+  }
+  return { ...summary, distance_m: best, nearest_branch: nearest };
 }
 
 function filterProviders(q: ProviderQuery): ProviderSummary[] {
@@ -184,7 +208,7 @@ function filterProviders(q: ProviderQuery): ProviderSummary[] {
         !q.company_type?.length ||
         q.company_type.some((t) => p.company_types.some((c) => c.slug === t)),
     )
-    .map((p) => withDistance(toSummary(p), q.lat, q.lng));
+    .map((p) => providerWithDistance(p, q.lat, q.lng));
   if (hasGeo && q.radius_km !== undefined)
     list = list.filter((p) => p.distance_m !== null && p.distance_m <= radius);
   const views = new Map(providers.map((p) => [p.slug, p.views_count]));
@@ -492,7 +516,11 @@ export const mockApi: Api = {
     const p = providers.find((x) => x.slug === slug);
     if (!p) throw new ApiError(404, 'Cette page ou cette ressource est introuvable.');
     const state = readState();
-    return { ...p, is_favorite: state ? state.fav.includes(slug) : null };
+    return {
+      ...p,
+      is_favorite: state ? state.fav.includes(slug) : null,
+      is_claimable: isMockClaimable(slug),
+    };
   },
   async trackProviderView() {},
   async listStateForces(query = {}) {
@@ -502,16 +530,24 @@ export const mockApi: Api = {
   async getStateForce(slug) {
     const f = stateForces.find((x) => x.slug === slug);
     if (!f) throw new ApiError(404, 'Cette page ou cette ressource est introuvable.');
-    return f;
+    return { ...f, is_claimable: isMockClaimable(slug) };
   },
   async getMapMarkers(query): Promise<MapMarker[]> {
     await delay(60);
     const items =
       query.kind === 'providers' ? filterProviders(query.filters) : filterForces(query.filters);
-    return items
-      .filter((i) => i.lat !== null && i.lng !== null && inBbox(i.lat, i.lng, query.bbox))
-      .map((i) => ({ slug: i.slug, name: i.name, lat: i.lat as number, lng: i.lng as number }))
-      .slice(0, 500);
+    const points: MapMarker[] = [];
+    for (const i of items) {
+      if (i.lat !== null && i.lng !== null)
+        points.push({ slug: i.slug, name: i.name, branch_label: null, lat: i.lat, lng: i.lng });
+      if (query.kind !== 'providers') continue;
+      // Un point par agence géolocalisée, avec le libellé de l'agence.
+      for (const b of providers.find((p) => p.slug === i.slug)?.branches ?? []) {
+        if (b.lat !== null && b.lng !== null)
+          points.push({ slug: i.slug, name: i.name, branch_label: b.label, lat: b.lat, lng: b.lng });
+      }
+    }
+    return points.filter((m) => inBbox(m.lat, m.lng, query.bbox)).slice(0, 500);
   },
   async geocode(q) {
     await delay(150);

@@ -78,12 +78,15 @@ describe('devis reçus : accès et navigation', () => {
   });
 
   it('renvoie vers l’inscription quand le compte n’est propriétaire d’aucune fiche (403)', async () => {
-    vi.spyOn(clientApi, 'listMyQuotes').mockRejectedValue(new ApiError(403, 'Interdit'));
+    const list = vi.spyOn(clientApi, 'listMyQuotes').mockRejectedValue(new ApiError(403, 'Interdit'));
     render(<QuotesReceived />);
     expect(await screen.findByRole('link', { name: 'Inscrire mon établissement' })).toHaveAttribute(
       'href',
       '/inscription-etablissement',
     );
+    // R17 : un seul appel (la liste), pas de rafale de 403 pour les compteurs.
+    await new Promise((r) => setTimeout(r, 20));
+    expect(list).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -94,7 +97,8 @@ describe('devis reçus : liste et détail', () => {
     render(<QuotesReceived />);
     const table = await screen.findByRole('table', { name: 'Devis reçus' });
     expect(within(table).getAllByRole('row').length).toBeGreaterThan(1);
-    expect(screen.getByRole('list', { name: 'Nombre de devis par statut' })).toBeInTheDocument();
+    // Compteurs chargés après le premier succès de la liste.
+    expect(await screen.findByRole('list', { name: 'Nombre de devis par statut' })).toBeInTheDocument();
     await chooseOption(u, screen.getByLabelText('Filtrer par statut'), 'replied');
     await waitFor(() => expect(list).toHaveBeenCalledWith({ status: 'replied', page: 1 }));
   });

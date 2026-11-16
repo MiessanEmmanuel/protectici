@@ -9,6 +9,7 @@ import { formatDate, pluralize } from '@/lib/format';
 import { useResource } from '@/lib/use-async';
 import { validate } from '@/lib/validation';
 import { REVIEW_REPLY_MAX, REVIEW_REPLY_MIN, reviewReplySchema } from '@/lib/wave-b-schemas';
+import { ReportReviewButton } from '../reviews/ReportReviewButton';
 import { Button, ButtonLink } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
@@ -187,9 +188,18 @@ function ReviewItem({
       </div>
       {review.title ? <h3 className="text-lg heading-block">{review.title}</h3> : null}
       <p className="whitespace-pre-line">{review.body}</p>
-      <p className="text-sm text-muted">
-        Par {review.author} · {formatDate(review.created_at)}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted">
+          Par {review.author} · {formatDate(review.created_at)}
+        </p>
+        {/* Un avis publié peut être signalé à la modération, comme sur la fiche publique. */}
+        {review.status === 'approved' ? (
+          <ReportReviewButton
+            reviewId={review.id}
+            redirectTo={`/espace-prestataire/avis?fiche=${encodeURIComponent(slug)}`}
+          />
+        ) : null}
+      </div>
       {review.provider_reply ? (
         <div className="ml-4 border-l-4 border-primary bg-c4 p-3">
           <p className="text-sm font-semibold">
@@ -256,22 +266,26 @@ function ReplyForm({
     }
   }
 
+  // Le ConfirmDialog contient son propre <form> : il doit rester frère du formulaire de saisie
+  // (des formulaires imbriqués soumettraient le formulaire parent en GET natif).
   return (
-    <form method="post" onSubmit={submit} noValidate className="flex flex-col gap-3">
-      <Textarea
-        label="Votre réponse"
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        error={error}
-        maxLength={REVIEW_REPLY_MAX}
-        hint={`${REVIEW_REPLY_MIN} à ${REVIEW_REPLY_MAX} caractères (${body.trim().length}/${REVIEW_REPLY_MAX}). Une seule réponse est possible.`}
-        rows={3}
-      />
-      <div>
-        <Button type="submit" variant="secondary">
-          Répondre à cet avis
-        </Button>
-      </div>
+    <>
+      <form method="post" onSubmit={submit} noValidate className="flex flex-col gap-3">
+        <Textarea
+          label="Votre réponse"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          error={error}
+          maxLength={REVIEW_REPLY_MAX}
+          hint={`${REVIEW_REPLY_MIN} à ${REVIEW_REPLY_MAX} caractères (${body.trim().length}/${REVIEW_REPLY_MAX}). Une seule réponse est possible.`}
+          rows={3}
+        />
+        <div>
+          <Button type="submit" variant="secondary">
+            Répondre à cet avis
+          </Button>
+        </div>
+      </form>
       <ConfirmDialog
         open={confirm !== null}
         onClose={() => setConfirm(null)}
@@ -282,6 +296,6 @@ function ReplyForm({
         <p>Une seule réponse est possible et elle ne pourra plus être modifiée.</p>
         <p className="mt-2 whitespace-pre-line bg-c4 p-3">{confirm}</p>
       </ConfirmDialog>
-    </form>
+    </>
   );
 }

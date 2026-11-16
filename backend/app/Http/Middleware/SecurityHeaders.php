@@ -38,6 +38,15 @@ class SecurityHeaders
             $response->headers->set('Cache-Control', 'no-store, private');
         }
 
+        // Une réponse « public » (CachePublicResponse) ne doit jamais transporter de cookie : un cache partagé
+        // pourrait resservir la session ou le jeton XSRF d'un visiteur à un autre. Les cookies de session Sanctum
+        // sont posés plus tard que le middleware de cache (origine « stateful ») : la réponse passe alors en
+        // « private », sans retirer les cookies dont le SPA a besoin.
+        $cacheControl = (string) $response->headers->get('Cache-Control');
+        if ($response->headers->getCookies() !== [] && preg_match('/\bpublic\b/', $cacheControl) === 1) {
+            $response->headers->set('Cache-Control', trim((string) preg_replace('/\bpublic\b/', 'private', $cacheControl)));
+        }
+
         // X-Powered-By est ajouté par PHP lui-même (expose_php), hors de l'objet Response :
         // on le retire aussi au niveau du runtime. En production, positionner aussi expose_php=Off.
         $response->headers->remove('X-Powered-By');

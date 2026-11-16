@@ -25,8 +25,12 @@ const QUOTE_URL = '/api/v1/quote-requests';
 it('crée un devis anonyme (statut new), trace le consentement et envoie accusé + alerte admin', function () {
     $admin = makeAdmin();
 
+    $this->postJson(QUOTE_URL, quotePayload(['description' => 'Nous cherchons un <b>gardiennage</b> de nuit pour un entrepôt de 2000 m².']))
+        ->assertUnprocessable()->assertJsonValidationErrors('description');
+    expect(QuoteRequest::query()->count())->toBe(0);
+
     $res = $this->postJson(QUOTE_URL, quotePayload([
-        'description' => 'Nous cherchons un <b>gardiennage</b> de nuit pour un entrepôt de 2000 m².',
+        'description' => "Nous cherchons un gardiennage\x07 de nuit pour un entrepôt de 2000 m².",
         'status' => 'answered', 'user_id' => 999, 'assigned_to' => 1,
     ]))->assertCreated();
 
@@ -38,7 +42,7 @@ it('crée un devis anonyme (statut new), trace le consentement et envoie accusé
         ->and($quote->user_id)->toBeNull()
         ->and($quote->status)->toBe('new')
         ->and($quote->assigned_to ?? null)->toBeNull()
-        ->and($quote->phone)->toBe('+2250709445111')
+        ->and($quote->phone)->toBe('+2250708123456')
         ->and($quote->description)->toBe('Nous cherchons un gardiennage de nuit pour un entrepôt de 2000 m².')
         ->and($quote->consent_at)->not->toBeNull()
         ->and($quote->recipients()->count())->toBe(0);
@@ -77,7 +81,7 @@ it('crée un destinataire par prestataire publié, statut sent, et prévient cha
 
         return $n->event === QuoteMail::RECEIVED
             && str_contains($html, $quote->reference)
-            && ! str_contains($html, 'Awa') && ! str_contains($html, '2250709445111')
+            && ! str_contains($html, 'Awa') && ! str_contains($html, '2250708123456')
             && ! str_contains($html, 'entrepôt') && ! str_contains($html, 'awa.traore@example.com');
     });
     Notification::assertSentOnDemand(QuoteMail::class, fn (QuoteMail $n, $c, $notifiable) => $n->event === QuoteMail::RECEIVED
@@ -207,5 +211,5 @@ it('exige et vérifie le jeton Turnstile quand il est activé', function () {
 it('ne renvoie aucune coordonnée du demandeur dans la réponse publique', function () {
     $body = $this->postJson(QUOTE_URL, quotePayload())->assertCreated()->getContent();
 
-    expect($body)->not->toContain('awa.traore@example.com')->not->toContain('2250709445111')->not->toContain('Traoré');
+    expect($body)->not->toContain('awa.traore@example.com')->not->toContain('2250708123456')->not->toContain('Traoré');
 });

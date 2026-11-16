@@ -113,7 +113,7 @@ export function FeedbackDetail({
 
           <div className="grid gap-4 rounded-[var(--a-r-md)] border border-line p-4 sm:grid-cols-2">
             <Select
-              label="Statut du dossier"
+              label="Changer le statut du dossier"
               value={f.status}
               disabled={update.busy}
               onChange={(e) => {
@@ -341,37 +341,41 @@ function ReplyForm({ feedbackId, onSent }: { feedbackId: number; onSent: () => v
     else setConfirming(true);
   }
 
+  // Le ConfirmDialog contient son propre <form> : il reste frère du formulaire de réponse
+  // (des formulaires imbriqués soumettraient le formulaire parent en GET natif).
   return (
-    <form
-      method="post"
-      onSubmit={submit}
-      noValidate
-      className="flex flex-col gap-3 rounded-[var(--a-r-md)] border border-line bg-surface-alt p-4 sm:p-5"
-      aria-label="Répondre au dossier"
-    >
-      <h3 className="font-semibold">Répondre</h3>
-      <Textarea
-        label="Votre réponse"
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        error={fieldError ?? undefined}
-        maxLength={5000}
-        required
-        disabled={action.busy}
-      />
-      <Checkbox
-        label="Note interne (non envoyée à l’auteur)"
-        checked={internal}
-        onChange={(e) => setInternal(e.target.checked)}
-        disabled={action.busy}
-      />
-      <FormError message={action.error?.form} />
-      <FormSuccess message={done} />
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" loading={action.busy} disabled={action.busy}>
-          {internal ? 'Enregistrer la note' : 'Envoyer la réponse'}
-        </Button>
-      </div>
+    <>
+      <form
+        method="post"
+        onSubmit={submit}
+        noValidate
+        className="flex flex-col gap-3 rounded-[var(--a-r-md)] border border-line bg-surface-alt p-4 sm:p-5"
+        aria-label="Répondre au dossier"
+      >
+        <h3 className="font-semibold">Répondre</h3>
+        <Textarea
+          label="Votre réponse"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          error={fieldError ?? undefined}
+          maxLength={5000}
+          required
+          disabled={action.busy}
+        />
+        <Checkbox
+          label="Note interne (non envoyée à l’auteur)"
+          checked={internal}
+          onChange={(e) => setInternal(e.target.checked)}
+          disabled={action.busy}
+        />
+        <FormError message={action.error?.form} />
+        <FormSuccess message={done} />
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" loading={action.busy} disabled={action.busy}>
+            {internal ? 'Enregistrer la note' : 'Envoyer la réponse'}
+          </Button>
+        </div>
+      </form>
       <ConfirmDialog
         open={confirming}
         onClose={() => setConfirming(false)}
@@ -381,6 +385,6 @@ function ReplyForm({ feedbackId, onSent }: { feedbackId: number; onSent: () => v
       >
         <p>Un e-mail contenant votre réponse sera envoyé à l’auteur du message. Il ne pourra pas être rappelé.</p>
       </ConfirmDialog>
-    </form>
+    </>
   );
 }

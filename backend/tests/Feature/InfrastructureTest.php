@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use App\Providers\AppServiceProvider;
 use Illuminate\Support\Facades\URL;
 
@@ -65,4 +66,24 @@ it('ancre les URL générées sur APP_URL en production (injection d\'en-tête H
         app()['env'] = 'testing';
         URL::forceRootUrl(null);
     }
+});
+
+it('rejette un corps JSON malformé (400 uniforme) au lieu de le traiter comme vide', function () {
+    $user = User::factory()->create(['first_name' => 'Awa']);
+
+    $response = $this->actingAs($user)->call('PATCH', '/api/v1/auth/profile', [], [], [], [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_ACCEPT' => 'application/json',
+    ], '{"first_name": "Koffi",');
+
+    $response->assertStatus(400)
+        ->assertExactJson(['message' => 'Le corps de la requête n\'est pas un JSON valide.', 'code' => 'malformed_json'])
+        ->assertHeader('X-Content-Type-Options', 'nosniff');
+    expect($user->fresh()->first_name)->toBe('Awa');
+
+    // Corps vide ou JSON valide : traitement normal.
+    $this->actingAs($user)->call('PATCH', '/api/v1/auth/profile', [], [], [], ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'], '')
+        ->assertOk();
+    $this->actingAs($user)->patchJson('/api/v1/auth/profile', ['first_name' => 'Koffi'])->assertOk();
+    expect($user->fresh()->first_name)->toBe('Koffi');
 });

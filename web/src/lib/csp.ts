@@ -17,6 +17,40 @@ export const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';
 
 export const OSM_TILES = 'https://tile.openstreetmap.org https://*.tile.openstreetmap.org';
 
+/** Serveur de tuiles par défaut (OSM public, usage limité : à remplacer en production, CLAUDE.md §3.1). */
+export const DEFAULT_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+/**
+ * Modèle d'URL de tuiles retenu (R38) : NEXT_PUBLIC_TILE_URL s'il s'agit d'un modèle https contenant
+ * {z}, {x} et {y} (ex. MapTiler, Stadia Maps), sinon le serveur OSM par défaut. `{s}` est accepté
+ * uniquement en tête de nom d'hôte (sous-domaines a/b/c).
+ */
+export function resolveTileUrl(raw = ''): string {
+  const v = raw.trim();
+  if (!v || /\s/.test(v)) return DEFAULT_TILE_URL;
+  if (!['{z}', '{x}', '{y}'].every((t) => v.includes(t))) return DEFAULT_TILE_URL;
+  return tileOrigin(v) ? v : DEFAULT_TILE_URL;
+}
+
+/** Origine CSP d'un modèle de tuiles (`{s}.` en tête d'hôte → joker `*.`), ou null si invalide. */
+function tileOrigin(template: string): string | null {
+  const m = /^https:\/\/((?:\{s\}\.)?)([a-z0-9.-]+(?::\d+)?)(?:[/?]|$)/i.exec(template);
+  if (!m) return null;
+  try {
+    const u = new URL(`https://${m[2]}`);
+    return `https://${m[1] ? '*.' : ''}${u.host}`;
+  } catch {
+    return null;
+  }
+}
+
+/** Origines CSP img-src des tuiles : celles d'OSM par défaut, sinon l'origine du fournisseur configuré. */
+export function tileOriginsFromEnv(raw = ''): string {
+  const url = resolveTileUrl(raw);
+  if (url === DEFAULT_TILE_URL) return OSM_TILES;
+  return tileOrigin(url) ?? OSM_TILES;
+}
+
 export function buildCsp({
   nonce,
   isDev,

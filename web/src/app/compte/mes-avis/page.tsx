@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { RequireAuth } from '@/components/establishment/RequireAuth';
+import { AccountGuard } from '@/components/account/AccountGuard';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { MyReviewsView } from '@/components/reviews/MyReviewsView';
 import { Container } from '@/components/ui/Container';
@@ -18,12 +18,12 @@ export default function MyReviewsPage() {
       />
       <Container className="py-section">
         <div className="max-w-[52rem]">
-          <RequireAuth
+          <AccountGuard
             redirectTo="/compte/mes-avis"
             intro="Connectez-vous pour consulter et gérer vos avis."
           >
             <MyReviewsView />
-          </RequireAuth>
+          </AccountGuard>
         </div>
       </Container>
     </>

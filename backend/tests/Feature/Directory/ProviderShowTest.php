@@ -17,7 +17,7 @@ it('renvoie la fiche détaillée au format du contrat', function () {
     $r = $this->getJson('/api/v1/providers/'.$p->slug)->assertOk();
     $d = $r->json('data');
 
-    expect(array_keys($d))->toEqualCanonicalizing([...SUMMARY_KEYS, 'description', 'address', 'geo_description', 'plus_code', 'email', 'website_url', 'emergency_phone', 'socials', 'company_types', 'legal', 'executives', 'gallery', 'views_count', 'is_favorite']);
+    expect(array_keys($d))->toEqualCanonicalizing([...SUMMARY_KEYS, 'description', 'address', 'geo_description', 'plus_code', 'email', 'website_url', 'emergency_phone', 'socials', 'company_types', 'legal', 'executives', 'branches', 'gallery', 'views_count', 'is_favorite', 'is_claimable']);
     expect(array_keys($d['socials']))->toBe(['facebook', 'instagram', 'twitter', 'linkedin', 'whatsapp']);
     expect($d['legal'])->toBe(['legal_form' => 'sarl', 'share_capital' => 1000000, 'rccm' => 'CI-ABJ-DEMO-0001', 'approval_number' => 'AGR-DEMO-0001', 'corporate_purpose' => 'Sécurité']);
     expect($d['executives'])->toHaveCount(1)->and($d['executives'][0]['full_name'])->toBe('Visible Dirigeant');

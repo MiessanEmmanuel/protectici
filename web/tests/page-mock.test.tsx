@@ -49,7 +49,7 @@ describe("page d'accueil en mode mock", () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       'La sécurité, entre de bonnes mains.',
     );
-    expect(screen.getByRole('heading', { name: 'Les plus consultés' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Les prestataires les mieux notés' })).toBeInTheDocument();
     expect(screen.queryByText('Bientôt disponible')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Actualités' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Police secours\s*110/ })).toHaveAttribute(

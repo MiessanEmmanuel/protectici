@@ -41,6 +41,8 @@ export interface ContentApi {
   listBlogCategories(): Promise<PostCategory[]>;
   listPosts(query?: PostQuery): Promise<Paginated<PostCard>>;
   getPost(slug: string): Promise<Post>;
+  /** Compte une vue (appel navigateur, une fois par affichage) ; 204. */
+  trackPostView(slug: string): Promise<void>;
   listPostComments(slug: string, page?: number): Promise<Paginated<BlogComment>>;
   createPostComment(
     slug: string,
@@ -60,7 +62,10 @@ export interface ContentApi {
   contentUpdatePost(id: number, input: Partial<ContentPostInput>): Promise<ContentPost>;
   contentDeletePost(id: number): Promise<void>;
   contentUploadMedia(file: File, alt: string): Promise<MediaUpload>;
-  contentListComments(query?: { status?: CommentStatus; page?: number }): Promise<Paginated<ContentComment>>;
+  contentListComments(query?: {
+    status?: CommentStatus;
+    page?: number;
+  }): Promise<Paginated<ContentComment>>;
   contentModerateComment(id: number, status: Exclude<CommentStatus, 'pending'>): Promise<void>;
   contentListCategories(): Promise<ContentCategory[]>;
   contentUpdateCategory(id: number, input: ContentCategoryInput): Promise<ContentCategory>;
@@ -99,6 +104,9 @@ export function buildContentApi(req: Requester): ContentApi {
     },
     async getPost(slug) {
       return (await req<{ data: Post }>('GET', `/blog/posts/${encodeURIComponent(slug)}`)).data;
+    },
+    async trackPostView(slug) {
+      await req('POST', `/blog/posts/${encodeURIComponent(slug)}/view`);
     },
     listPostComments(slug, page) {
       return req<Paginated<BlogComment>>(
@@ -188,11 +196,13 @@ export function buildContentApi(req: Requester): ContentApi {
       ).data;
     },
     async contentListPartners(type) {
-      return (await req<{ data: ContentPartner[] }>('GET', '/content/partners', { query: { type } }))
-        .data;
+      return (
+        await req<{ data: ContentPartner[] }>('GET', '/content/partners', { query: { type } })
+      ).data;
     },
     async contentCreatePartner(input) {
-      return (await req<{ data: ContentPartner }>('POST', '/content/partners', { body: input })).data;
+      return (await req<{ data: ContentPartner }>('POST', '/content/partners', { body: input }))
+        .data;
     },
     async contentUpdatePartner(id, input) {
       return (

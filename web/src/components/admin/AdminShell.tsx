@@ -1,11 +1,13 @@
 'use client';
 
 import {
+  BadgeCheck,
   Building2,
   Check,
   ExternalLink,
   FilePen,
   FileSignature,
+  FileSpreadsheet,
   FileText,
   Handshake,
   LayoutDashboard,
@@ -29,7 +31,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { adminHomeFor, adminNavFor, type AdminNavItem } from '@/lib/admin-access';
 import { persistAdminTheme, type AdminTheme } from '@/lib/admin-theme';
 import { useSession } from '../layout/SessionProvider';
@@ -43,10 +45,21 @@ function isActive(pathname: string, href: string, exact?: boolean) {
   return exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** Entrée active : la plus précise (ex. « Import Excel » plutôt que « Établissements » sur /admin/etablissements/import). */
+function activeHref(pathname: string, items: AdminNavItem[]): string | null {
+  let best: AdminNavItem | null = null;
+  for (const i of items) {
+    if (isActive(pathname, i.href, i.exact) && (!best || i.href.length > best.href.length)) best = i;
+  }
+  return best?.href ?? null;
+}
+
 /** Icône et rubrique de chaque entrée (présentation seulement : la liste vient de adminNavFor). */
 const NAV_META: Record<string, { icon: LucideIcon; group: string }> = {
   '/admin': { icon: LayoutDashboard, group: 'Pilotage' },
   '/admin/etablissements': { icon: Building2, group: 'Annuaire' },
+  '/admin/etablissements/import': { icon: FileSpreadsheet, group: 'Annuaire' },
+  '/admin/revendications': { icon: BadgeCheck, group: 'Annuaire' },
   '/admin/modifications': { icon: FilePen, group: 'Annuaire' },
   '/admin/avis': { icon: Star, group: 'Annuaire' },
   '/admin/dis-moi-tout': { icon: Megaphone, group: 'Demandes' },
@@ -122,12 +135,26 @@ function AdminFrame({
   const pathname = usePathname();
   const { user, logout } = useSession();
   const nav = adminNavFor(user?.role);
+  const current = activeHref(pathname, nav);
   const isAdmin = user?.role === 'admin';
   const counts = useAdminCounts(isAdmin, pathname);
   const perNav = navCounts(counts);
   // Le menu mobile se referme à chaque changement de page (état lié au chemin).
   const [openFor, setOpenFor] = useState<string | null>(null);
   const open = openFor === pathname;
+  const burgerRef = useRef<HTMLButtonElement>(null);
+  // Échap referme le menu mobile et rend le focus au bouton qui l'a ouvert.
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      // Une boîte de dialogue ouverte traite elle-même Échap.
+      if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('dialog[open]')) return;
+      setOpenFor(null);
+      burgerRef.current?.focus();
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
   const zone = user?.role === 'editor' ? 'Gestion du contenu' : 'Administration';
   const displayName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || 'Mon compte';
 
@@ -148,6 +175,7 @@ function AdminFrame({
             </span>
           </Link>
           <button
+            ref={burgerRef}
             type="button"
             className="admin-burger"
             aria-expanded={open}
@@ -170,7 +198,7 @@ function AdminFrame({
               </p>
               <ul>
                 {items.map((l) => {
-                  const active = isActive(pathname, l.href, l.exact);
+                  const active = l.href === current;
                   const Icon = NAV_META[l.href]?.icon;
                   const count = perNav[l.href] ?? 0;
                   return (
@@ -232,7 +260,8 @@ function AdminFrame({
               <span className="max-sm:sr-only">Voir le site</span>
             </Link>
             <AdminThemeToggle theme={theme} onToggle={onToggleTheme} />
-            <NotificationBell />
+            {/* Notifications d'administration : rôle admin seulement (l'API refuse l'éditeur). */}
+            {isAdmin ? <NotificationBell /> : null}
             <Link href="/compte" className="admin-avatar" title={displayName}>
               <span aria-hidden="true">
                 {initials(user?.first_name, user?.last_name)}

@@ -1,4 +1,4 @@
-import type { ExecutivePosition, ProviderDetail, Review } from '../api/types';
+import type { ExecutivePosition, ProviderBranch, ProviderDetail, Review } from '../api/types';
 import { cities, companyTypes, serviceTypes } from './reference';
 
 /**
@@ -33,6 +33,18 @@ interface Seed {
   purpose: string;
   execs: { name: string; pos: ExecutivePosition; label?: string }[];
   reviews: number;
+  branches?: BranchSeed[];
+}
+
+interface BranchSeed {
+  label: string;
+  city: string;
+  district: string | null;
+  address: string | null;
+  geo?: string;
+  phone?: string;
+  lat: number | null;
+  lng: number | null;
 }
 
 const seeds: Seed[] = [
@@ -67,6 +79,27 @@ const seeds: Seed[] = [
       { name: 'Aïcha Traoré', pos: 'operations_manager' },
     ],
     reviews: 6,
+    branches: [
+      {
+        label: 'Agence de Yopougon',
+        city: 'abidjan',
+        district: 'yopougon',
+        address: 'Carrefour Siporex, immeuble Les Palmiers, 1er étage',
+        geo: 'À côté de la pharmacie du carrefour, entrée par la rue latérale.',
+        phone: '+2252720000111',
+        lat: 5.3412,
+        lng: -4.0815,
+      },
+      {
+        label: 'Agence de Cocody',
+        city: 'abidjan',
+        district: 'angre',
+        address: 'Boulevard Latrille, villa 12',
+        phone: '+2252720000112',
+        lat: 5.3945,
+        lng: -3.9918,
+      },
+    ],
   },
   {
     slug: 'bouclier-ivoire-protection',
@@ -176,6 +209,16 @@ const seeds: Seed[] = [
     purpose: 'Gardiennage de chantiers et de résidences.',
     execs: [{ name: 'Moussa Sanogo', pos: 'general_manager' }],
     reviews: 2,
+    branches: [
+      {
+        label: 'Agence de Bouaké',
+        city: 'bouake',
+        district: 'centre-ville-de-bouake',
+        address: 'Avenue de la Paix, face à la grande mosquée',
+        lat: null,
+        lng: null,
+      },
+    ],
   },
   {
     slug: 'kalao-securite-evenementielle',
@@ -454,7 +497,27 @@ seeds.forEach((seed, index) => {
 const serviceBySlug = new Map(serviceTypes.map((s) => [s.slug, s]));
 const typeBySlug = new Map(companyTypes.map((t) => [t.slug, t]));
 
+let branchId = 0;
+function buildBranch(b: BranchSeed): ProviderBranch {
+  const city = cities.find((c) => c.slug === b.city);
+  if (!city) throw new Error(`Ville inconnue dans les fixtures : ${b.city}`);
+  const district = b.district ? city.districts.find((d) => d.slug === b.district) : undefined;
+  if (b.district && !district) throw new Error(`Quartier inconnu dans les fixtures : ${b.district}`);
+  return {
+    id: ++branchId,
+    label: b.label,
+    city: { name: city.name, slug: city.slug },
+    district: district ? { name: district.name, slug: district.slug } : null,
+    address: b.address,
+    geo_description: b.geo ?? null,
+    phone: b.phone ?? null,
+    lat: b.lat,
+    lng: b.lng,
+  };
+}
+
 function build(seed: Seed): ProviderDetail {
+  const branches = (seed.branches ?? []).map(buildBranch);
   const city = cities.find((c) => c.slug === seed.city)!;
   const district = seed.district ? city.districts.find((d) => d.slug === seed.district) : undefined;
   const reviews = reviewsBySlug[seed.slug] ?? [];
@@ -481,6 +544,9 @@ function build(seed: Seed): ProviderDetail {
     lat: seed.lat,
     lng: seed.lng,
     distance_m: null,
+    branches_count: branches.length,
+    nearest_branch: null,
+    branches,
     description: seed.description,
     address: seed.address,
     geo_description: seed.geo ?? null,

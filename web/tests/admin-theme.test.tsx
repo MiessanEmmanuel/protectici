@@ -143,11 +143,12 @@ describe('coquille d’administration', () => {
   });
 
   it('un editor ne voit que le contenu, sans compteurs du tableau de bord', () => {
-    session = { ...session, user: user('editor', false) };
+    // La 2FA est exigée pour l'éditeur aussi (R09) : sans elle, la coquille n'est pas affichée.
+    session = { ...session, user: user('editor', true) };
     render(<AdminShell><p>Contenu</p></AdminShell>);
     const nav = screen.getByRole('navigation', { name: 'Administration' });
     expect(within(nav).queryByRole('link', { name: /Établissements/ })).not.toBeInTheDocument();
-    expect(screen.queryByText('Double authentification active')).not.toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Indicateurs' })).not.toBeInTheDocument();
   });
 });
 

@@ -2,35 +2,32 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import { PageHeader } from '../layout/PageHeader';
 import { Container } from '../ui/Container';
-import { ErrorState } from '../ui/EmptyState';
 import { serverApi } from '@/lib/api/server';
 import { formatDate } from '@/lib/format';
 import { safe } from '@/lib/safe';
 import { notFound } from 'next/navigation';
 import { SanitizedHtml } from './SanitizedHtml';
 
-const loadPage = cache((slug: string) => safe(serverApi.getPage(slug), () => notFound()));
+/** 404 → page introuvable ; toute autre erreur d'API est levée (error boundary) plutôt qu'une page vide en 200. */
+const loadPage = cache(async (slug: string) => {
+  const [page, error] = await safe(serverApi.getPage(slug), () => notFound());
+  if (!page) throw new Error(`Page indisponible (${error.status})`);
+  return page;
+});
 
 /** Métadonnées d'une page institutionnelle (contenu fourni par l'API, repli sur un titre fixe). */
 export async function pageMetadata(slug: string, fallbackTitle: string): Promise<Metadata> {
-  const [page] = await loadPage(slug);
+  const page = await loadPage(slug);
   return {
-    title: page?.seo_title ?? page?.title ?? fallbackTitle,
-    ...(page?.seo_description ? { description: page.seo_description } : {}),
+    title: page.seo_title ?? page.title ?? fallbackTitle,
+    ...(page.seo_description ? { description: page.seo_description } : {}),
     alternates: { canonical: `/${slug}` },
   };
 }
 
 /** Page éditoriale (qui sommes-nous, mentions légales, etc.) dont le corps HTML est assaini par l'API. */
-export async function PageView({ slug, fallbackTitle }: { slug: string; fallbackTitle: string }) {
-  const [page, error] = await loadPage(slug);
-  if (!page) {
-    return (
-      <Container className="py-10">
-        <ErrorState title={`${fallbackTitle} indisponible`}>{error?.message}</ErrorState>
-      </Container>
-    );
-  }
+export async function PageView({ slug }: { slug: string; fallbackTitle: string }) {
+  const page = await loadPage(slug);
   return (
     <>
       <PageHeader eyebrow="ProtectIci" title={page.title} />

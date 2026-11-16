@@ -1,5 +1,9 @@
 /** Types fidèles à docs/api-contract.md §2. Noms de champs en snake_case, comme l'API. */
 
+import type { OpeningHours } from '../opening-hours';
+
+export type { OpeningHours } from '../opening-hours';
+
 export type Role = 'user' | 'provider' | 'editor' | 'admin';
 
 export interface User {
@@ -65,6 +69,10 @@ export interface ProviderSummary {
   lat: number | null;
   lng: number | null;
   distance_m: number | null;
+  /** Nombre d'agences en plus du siège. */
+  branches_count: number;
+  /** Agence la plus proche quand une recherche par proximité est active et qu'une agence bat le siège. */
+  nearest_branch: { id: number; label: string } | null;
 }
 
 export type ExecutivePosition =
@@ -74,6 +82,19 @@ export interface Executive {
   full_name: string;
   position: ExecutivePosition;
   position_label: string | null;
+}
+
+/** Agence (adresse secondaire) d'un prestataire ; l'adresse de la fiche reste le siège. */
+export interface ProviderBranch {
+  id: number;
+  label: string;
+  city: NamedSlug;
+  district: NamedSlug | null;
+  address: string | null;
+  geo_description: string | null;
+  phone: string | null;
+  lat: number | null;
+  lng: number | null;
 }
 
 export interface Socials {
@@ -102,9 +123,12 @@ export interface ProviderDetail extends ProviderSummary {
     corporate_purpose: string | null;
   };
   executives: Executive[];
+  branches: ProviderBranch[];
   gallery: { url: string; alt: string }[];
   views_count: number;
   is_favorite: boolean | null;
+  /** Fiche publiée sans propriétaire : revendicable (contrat §10.1). Absent = non revendicable. */
+  is_claimable?: boolean;
 }
 
 export interface StateForceSummary {
@@ -127,8 +151,11 @@ export interface StateForceDetail extends StateForceSummary {
   email: string | null;
   geo_description: string | null;
   plus_code: string | null;
-  opening_hours: string | null;
+  /** Horaires structurés `{ mon: [["08:00", "17:00"]] }` (jour absent = fermé), voir `lib/opening-hours`. */
+  opening_hours: OpeningHours | null;
   procedures: { slug: string; name: string; notes: string | null }[];
+  /** Fiche publiée sans propriétaire : revendicable (contrat §10.1). Absent = non revendicable. */
+  is_claimable?: boolean;
 }
 
 export interface Review {
@@ -162,6 +189,8 @@ export interface HomeData {
 export interface MapMarker {
   slug: string;
   name: string;
+  /** Nom de l'agence quand le point est une agence (null = siège). */
+  branch_label?: string | null;
   lat: number;
   lng: number;
 }
@@ -250,6 +279,32 @@ export interface OwnerExecutive {
   is_visible: boolean;
 }
 
+/** Agence vue par le propriétaire (identifiants de référentiel). */
+export interface OwnerBranch {
+  id: number;
+  label: string;
+  city_id: number;
+  district_id: number | null;
+  address: string | null;
+  geo_description: string | null;
+  phone: string | null;
+  lat: number | null;
+  lng: number | null;
+}
+
+/** Agence telle qu'envoyée à l'API (remplacement complet de la liste ; `id` pour conserver une agence existante). */
+export interface BranchInput {
+  id?: number;
+  label: string;
+  city_id: number;
+  district_id?: number | null;
+  address?: string | null;
+  geo_description?: string | null;
+  phone?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+}
+
 /** Dirigeant tel qu'envoyé à l'API (remplacement complet de la liste). */
 export interface ExecutiveInput {
   full_name: string;
@@ -302,7 +357,10 @@ export interface MyEstablishment extends MyEstablishmentSummary {
   lng: number | null;
   submitter_role: SubmitterRole | null;
   is_in_service: boolean;
-  executives: OwnerExecutive[];
+  /** Prestataire uniquement : absent de la réponse pour une force étatique. */
+  executives?: OwnerExecutive[];
+  /** Prestataire uniquement (liste vide pour une force étatique). */
+  branches: OwnerBranch[];
   media: EstablishmentMedia[];
   documents: EstablishmentDocument[];
   change_requests: ChangeRequest[];
@@ -325,7 +383,7 @@ export interface MyEstablishment extends MyEstablishmentSummary {
   // force étatique
   force_type_id?: number | null;
   procedure_type_ids?: number[];
-  opening_hours?: string | null;
+  opening_hours?: OpeningHours | null;
   is_open_24h?: boolean;
 }
 
@@ -342,6 +400,10 @@ export interface AdminEstablishmentRow {
   owner: { id: number; name: string; email: string } | null;
   submitted_at: string;
   reviewed_at: string | null;
+  /** Lot d'import Excel d'origine (contrat §10.1) ; absent des réponses antérieures. */
+  import_id?: number | null;
+  /** Sans coordonnées, téléphone, description ou services / démarches (contrat §10.1). */
+  is_incomplete?: boolean;
 }
 
 export interface AuditEntry {
@@ -357,14 +419,17 @@ export interface AdminEstablishment extends MyEstablishment {
   views_count: number;
   reviewed_by: { id: number; name: string } | null;
   audit: AuditEntry[];
+  /** Contrat §10.1. */
+  import_id?: number | null;
+  is_incomplete?: boolean;
 }
 
 export interface AdminAuditLog {
   id: number;
   event: string;
   user: { id: number; name: string } | null;
-  auditable_type: string;
-  auditable_id: number;
+  auditable_type: string | null;
+  auditable_id: number | null;
   old_values: Record<string, unknown> | null;
   new_values: Record<string, unknown> | null;
   ip_address: string | null;
@@ -384,6 +449,8 @@ export interface AdminDashboard {
   pending_providers: number;
   pending_state_forces: number;
   pending_change_requests: number;
+  // Revendications (contrat §10.3) ; absent tant que l'API ne l'expose pas.
+  pending_claims?: number;
   users_total: number;
   providers_approved: number;
   state_forces_approved: number;
@@ -449,12 +516,7 @@ export interface AdminNotification {
 }
 
 export type EstablishmentAction =
-  | 'approve'
-  | 'reject'
-  | 'suspend'
-  | 'restore'
-  | 'verify'
-  | 'unverify';
+  'approve' | 'reject' | 'suspend' | 'restore' | 'verify' | 'unverify';
 
 export interface ProviderCreateInput {
   type: 'provider';
@@ -489,6 +551,7 @@ export interface ProviderCreateInput {
   approval_number?: string;
   approval_expires_at?: string;
   executives?: ExecutiveInput[];
+  branches?: BranchInput[];
   consent: true;
 }
 
@@ -508,7 +571,7 @@ export interface StateForceCreateInput {
   plus_code?: string;
   lat?: number;
   lng?: number;
-  opening_hours?: string;
+  opening_hours?: OpeningHours;
   is_open_24h?: boolean;
   procedure_type_ids?: number[];
   consent: true;
@@ -523,6 +586,10 @@ export interface AdminEstablishmentQuery {
   sort?: '-submitted_at' | 'name';
   page?: number;
   per_page?: number;
+  /** Lot d'import (contrat §10.2). */
+  import_id?: number;
+  /** Fiches incomplètes seulement. */
+  incomplete?: boolean;
 }
 
 export interface AdminUserQuery {
@@ -540,7 +607,6 @@ export interface AuditLogQuery {
   to?: string;
   page?: number;
 }
-
 
 /* ================= Phase 3 — Vague B (contrat §8) ================= */
 
@@ -666,6 +732,23 @@ export interface FeedbackTracking {
   replies: { body: string; created_at: string }[];
 }
 
+/** Dossier « Dis-moi tout » vu par son auteur : réponses envoyées seulement, aucune note interne. */
+export interface MyFeedback {
+  id: number;
+  reference: string;
+  status: FeedbackStatus;
+  action_type: FeedbackActionType;
+  target_type: FeedbackTargetType;
+  provider: { slug: string; name: string } | null;
+  service_type: Option | null;
+  topic: Option | null;
+  comment: string | null;
+  has_voice: boolean;
+  created_at: string;
+  resolved_at: string | null;
+  replies: { body: string; created_at: string }[];
+}
+
 export interface AdminFeedbackRow {
   id: number;
   reference: string;
@@ -753,6 +836,28 @@ export interface ProviderQuote {
   replied_at: string | null;
   response_message: string | null;
   quoted_amount: number | null;
+}
+
+/** Demande de devis vue par son auteur (suivi), avec la réponse de chaque prestataire destinataire. */
+export interface SentQuote {
+  id: number;
+  reference: string;
+  service: Option;
+  city: { name: string };
+  district: { name: string } | null;
+  description: string;
+  desired_start_date: string | null;
+  budget_range: string | null;
+  status: QuoteStatus;
+  created_at: string;
+  recipients: {
+    provider: { slug: string; name: string };
+    status: QuoteRecipientStatus;
+    sent_at: string | null;
+    replied_at: string | null;
+    response_message: string | null;
+    quoted_amount: number | null;
+  }[];
 }
 
 export interface QuoteReplyInput {

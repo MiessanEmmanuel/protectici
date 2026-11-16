@@ -19,7 +19,8 @@ it('signale un avis publié : 204, idempotent, une seule ligne et une seule aler
     $user = User::factory()->create();
     $url = "/api/v1/reviews/{$review->id}/report";
 
-    $this->actingAs($user)->postJson($url, ['reason' => 'spam', 'details' => '<i>Publicité</i>'])->assertNoContent();
+    $this->actingAs($user)->postJson($url, ['reason' => 'spam', 'details' => '<i>Publicité</i>'])->assertUnprocessable()->assertJsonValidationErrors('details');
+    $this->actingAs($user)->postJson($url, ['reason' => 'spam', 'details' => ' Publicité '])->assertNoContent();
     $this->actingAs($user)->postJson($url, ['reason' => 'offensive'])->assertNoContent();
 
     expect(ReviewReport::where('review_id', $review->id)->count())->toBe(1);
@@ -54,6 +55,17 @@ it('valide et protège le signalement : 422, 401, 403, 404', function () {
     $deleted->delete();
     $this->actingAs($user)->postJson("/api/v1/reviews/{$deleted->id}/report", ['reason' => 'spam'])->assertNotFound();
     expect(ReviewReport::count())->toBe(0);
+});
+
+it('autorise le signalement avant de valider le corps : 404 et 403 priment sur 422', function () {
+    $user = User::factory()->create();
+    $review = Review::factory()->create();
+    $pending = Review::factory()->pending()->create();
+
+    $this->actingAs($user)->postJson('/api/v1/reviews/999999/report', [])->assertNotFound();
+    $this->actingAs($user)->postJson("/api/v1/reviews/{$pending->id}/report", ['reason' => 'bidon'])->assertNotFound();
+    $this->actingAs($review->user)->postJson("/api/v1/reviews/{$review->id}/report", [])->assertForbidden()
+        ->assertJsonPath('message', 'Vous ne pouvez pas signaler votre propre avis.');
 });
 
 function reviewsOwnerWithProvider(): array
@@ -99,7 +111,8 @@ it('répond une seule fois à un avis publié et prévient l\'auteur par e-mail'
     $review = Review::factory()->create(['provider_id' => $provider->id, 'user_id' => $author->id]);
     $url = "/api/v1/me/establishments/provider/{$provider->slug}/reviews/{$review->id}/reply";
 
-    $this->actingAs($owner)->postJson($url, ['body' => '<b>Merci</b> pour votre confiance.'])->assertOk()
+    $this->actingAs($owner)->postJson($url, ['body' => '<b>Merci</b> pour votre confiance.'])->assertUnprocessable()->assertJsonValidationErrors('body');
+    $this->actingAs($owner)->postJson($url, ['body' => ' Merci pour votre confiance.'])->assertOk()
         ->assertJsonPath('data.id', $review->id)->assertJsonPath('data.provider_reply', 'Merci pour votre confiance.');
 
     $review->refresh();

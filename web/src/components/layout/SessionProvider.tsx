@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { clientApi } from '@/lib/api/client';
 import type { User } from '@/lib/api/types';
+import { hasSessionHint, writeSessionHint } from '@/lib/session-hint';
 
 type Status = 'loading' | 'anonymous' | 'authenticated';
 
@@ -27,6 +28,8 @@ const SessionContext = createContext<SessionValue | null>(null);
 /**
  * État de session côté client. Le cookie de session est httpOnly : le JS ne voit jamais de jeton ;
  * il interroge /auth/user. Rien n'est stocké dans localStorage/sessionStorage.
+ * Un visiteur qui ne s'est jamais connecté depuis ce navigateur (pas d'indicateur `pi_signed_in`) est
+ * anonyme d'emblée : pas d'appel, donc pas de 401 en console (R14).
  */
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
@@ -35,6 +38,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const setUser = useCallback((u: User | null) => {
     setUserState(u);
     setStatus(u ? 'authenticated' : 'anonymous');
+    writeSessionHint(u !== null);
+  }, []);
+
+  // Erreur réseau ou 5xx : anonyme pour cet affichage, mais l'indicateur est conservé (seul un 401 l'efface).
+  const setUnknown = useCallback(() => {
+    setUserState(null);
+    setStatus('anonymous');
   }, []);
 
   const refresh = useCallback(async () => {
@@ -43,21 +53,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setUser(u);
       return u;
     } catch {
-      setUser(null);
+      setUnknown();
       return null;
     }
-  }, [setUser]);
+  }, [setUser, setUnknown]);
 
   useEffect(() => {
     let active = true;
-    clientApi
-      .getUser()
-      .then((u) => active && setUser(u))
-      .catch(() => active && setUser(null));
+    const load = hasSessionHint() ? clientApi.getUser() : Promise.resolve(null);
+    load.then((u) => active && setUser(u)).catch(() => active && setUnknown());
     return () => {
       active = false;
     };
-  }, [setUser]);
+  }, [setUser, setUnknown]);
 
   const logout = useCallback(async () => {
     try {

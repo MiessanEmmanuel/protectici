@@ -6,6 +6,8 @@ import {
   type EstablishmentDraft,
 } from '@/lib/establishment-schemas';
 import { formatFcfa } from '@/lib/format';
+import { legalFormLabel } from '@/lib/labels';
+import { normalizeOpeningHours, openingHoursPayload } from '@/lib/opening-hours';
 
 /** Champs que la liste blanche du PATCH interdit : seule une demande de modification les change. */
 export const SENSITIVE_FIELDS = {
@@ -13,7 +15,8 @@ export const SENSITIVE_FIELDS = {
   state_force: ['name', 'force_type_id'],
 } as const;
 
-const s = (v: string | number | null | undefined): string => (v === null || v === undefined ? '' : String(v));
+const s = (v: string | number | null | undefined): string =>
+  v === null || v === undefined ? '' : String(v);
 
 /** Fiche du propriétaire → brouillon de formulaire (pour réutiliser les schémas de validation). */
 export function toDraft(est: MyEstablishment): EstablishmentDraft {
@@ -46,9 +49,10 @@ export function toDraft(est: MyEstablishment): EstablishmentDraft {
     linkedin_url: s(est.linkedin_url),
     whatsapp_number: s(est.whatsapp_number),
     price_from: s(est.price_from),
-    opening_hours: s(est.opening_hours),
+    opening_hours: normalizeOpeningHours(est.opening_hours) ?? {},
     is_open_24h: est.is_open_24h ?? false,
-    executives: est.executives.map((e) => ({
+    // Absent de la réponse pour une force étatique (MyEstablishmentResource).
+    executives: (est.executives ?? []).map((e) => ({
       full_name: e.full_name,
       position: e.position,
       position_label: s(e.position_label),
@@ -86,7 +90,7 @@ export function buildInfoPatch(d: EstablishmentDraft): Record<string, unknown> {
   if (d.type === 'state_force') {
     return {
       ...common,
-      opening_hours: nz(d.opening_hours),
+      opening_hours: openingHoursPayload(d.opening_hours, d.is_open_24h),
       is_open_24h: d.is_open_24h,
       procedure_type_ids: d.procedure_type_ids,
     };
@@ -109,8 +113,11 @@ export function buildInfoPatch(d: EstablishmentDraft): Record<string, unknown> {
 export function displayFieldValue(field: string, value: unknown, reference: ReferenceData): string {
   if (value === null || value === undefined || value === '') return 'Non renseigné';
   if (field === 'force_type_id') {
-    return reference.state_force_types.find((t) => t.id === Number(value))?.name ?? 'Valeur inconnue';
+    return (
+      reference.state_force_types.find((t) => t.id === Number(value))?.name ?? 'Valeur inconnue'
+    );
   }
   if (field === 'share_capital' && !Number.isNaN(Number(value))) return formatFcfa(Number(value));
+  if (field === 'legal_form') return legalFormLabel(String(value));
   return String(value);
 }

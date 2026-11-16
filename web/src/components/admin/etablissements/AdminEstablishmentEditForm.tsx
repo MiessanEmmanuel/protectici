@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { clientApi } from '@/lib/api/client';
 import type { AdminEstablishment, ExecutivePosition, Option, ReferenceData } from '@/lib/api/types';
 import {
+  branchToDraft,
   buildCreateInput,
   emptyDraft,
   validateStep,
@@ -11,8 +12,11 @@ import {
   type StepId,
 } from '@/lib/establishment-schemas';
 import { LEGAL_FORMS, POSITIONS } from '@/lib/labels';
+import { normalizeOpeningHours } from '@/lib/opening-hours';
 import { useAsyncAction } from '@/lib/use-async';
+import { BranchesEditor } from '../../establishment/BranchesEditor';
 import { LocationFields } from '../../establishment/LocationFields';
+import { OpeningHoursEditor } from '../../establishment/OpeningHoursEditor';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
 import { Checkbox } from '../../ui/Checkbox';
@@ -50,12 +54,13 @@ export function toDraft(e: AdminEstablishment): EstablishmentDraft {
     corporate_purpose: text(e.corporate_purpose),
     approval_number: text(e.approval_number),
     approval_expires_at: text(e.approval_expires_at).slice(0, 10),
-    executives: e.executives.map((x) => ({
+    executives: (e.executives ?? []).map((x) => ({
       full_name: x.full_name,
       position: x.position,
       position_label: text(x.position_label),
       is_visible: x.is_visible,
     })),
+    branches: e.branches.map(branchToDraft),
     phone: text(e.phone),
     phone_alt: text(e.phone_alt),
     emergency_phone: text(e.emergency_phone),
@@ -67,7 +72,7 @@ export function toDraft(e: AdminEstablishment): EstablishmentDraft {
     linkedin_url: text(e.linkedin_url),
     whatsapp_number: text(e.whatsapp_number),
     price_from: text(e.price_from),
-    opening_hours: text(e.opening_hours),
+    opening_hours: normalizeOpeningHours(e.opening_hours) ?? {},
     is_open_24h: e.is_open_24h ?? false,
   };
 }
@@ -85,7 +90,7 @@ function payload(d: EstablishmentDraft): Record<string, unknown> {
   return rest;
 }
 
-const LIST_FIELDS = new Set(['executives', 'procedure_type_ids']);
+const LIST_FIELDS = new Set(['executives', 'branches', 'procedure_type_ids']);
 
 /**
  * Ne retient que les champs modifiés. Un champ vidé est envoyé à `null` (ou `[]` pour une liste),
@@ -181,7 +186,11 @@ export function AdminEstablishmentEditForm({
       if (!r.ok) Object.assign(found, r.errors);
     }
     setErrors(found);
-    if (Object.keys(found).length > 0) return;
+    if (Object.keys(found).length > 0) {
+      // Formulaire long : l'erreur peut être hors de l'écran au moment de l'envoi.
+      setInfo('Certains champs sont à corriger : voir les messages ci-dessus.');
+      return;
+    }
     const patch = computePatch(initial, draft, {
       initial: establishment.is_featured,
       current: featured,
@@ -299,6 +308,20 @@ export function AdminEstablishmentEditForm({
 
       {isProvider ? (
         <Card as="fieldset" className="flex flex-col gap-4">
+          <legend className="px-1 text-lg font-bold">Agences</legend>
+          <p className="text-sm text-muted">L’adresse ci-dessus reste celle du siège.</p>
+          <BranchesEditor
+            value={draft.branches}
+            onChange={(branches) => set({ branches })}
+            errors={{ ...apiErrors, ...errors }}
+            reference={reference}
+            disabled={action.busy}
+          />
+        </Card>
+      ) : null}
+
+      {isProvider ? (
+        <Card as="fieldset" className="flex flex-col gap-4">
           <legend className="px-1 text-lg font-bold">Informations légales</legend>
           <div className="grid gap-4 sm:grid-cols-2">
             <Input label="Numéro RCCM" {...str('rccm')} error={err('rccm')} />
@@ -339,7 +362,10 @@ export function AdminEstablishmentEditForm({
             <legend className="font-semibold">Dirigeants</legend>
             <FieldError id="executives-error" message={err('executives')} />
             {draft.executives.map((x, i) => (
-              <div key={i} className="grid gap-3 rounded-md border border-line bg-surface-alt p-3 sm:grid-cols-2 sm:p-4">
+              <div
+                key={i}
+                className="grid gap-3 rounded-md border border-line bg-surface-alt p-3 sm:grid-cols-2 sm:p-4"
+              >
                 <Input
                   label={`Nom du dirigeant ${i + 1}`}
                   required
@@ -481,14 +507,18 @@ export function AdminEstablishmentEditForm({
               />
             </>
           ) : (
-            <>
-              <Input label="Horaires" {...str('opening_hours')} error={err('opening_hours')} />
-              <Checkbox
-                label="Ouvert 24 h/24"
-                checked={draft.is_open_24h}
-                onChange={(e) => set({ is_open_24h: e.target.checked })}
+            <div className="sm:col-span-2">
+              <OpeningHoursEditor
+                idPrefix="admin-opening_hours"
+                legend="Horaires"
+                value={draft.opening_hours}
+                onChange={(opening_hours) => set({ opening_hours })}
+                isOpen24h={draft.is_open_24h}
+                onOpen24hChange={(is_open_24h) => set({ is_open_24h })}
+                errors={{ ...apiErrors, ...errors }}
+                disabled={action.busy}
               />
-            </>
+            </div>
           )}
         </div>
       </Card>

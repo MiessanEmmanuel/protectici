@@ -2,16 +2,16 @@
 
 namespace App\Http\Requests\Quotes;
 
+use App\Http\Requests\Concerns\RejectsMarkup;
+use App\Http\Requests\Quotes\Concerns\AuthorizesQuoteRecipient;
 use App\Support\PlainText;
 use Illuminate\Foundation\Http\FormRequest;
 
 /** Réponse d'un prestataire à une demande de devis : message (10–3000) et montant optionnel en FCFA. */
 class ReplyQuoteRequest extends FormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
+    use AuthorizesQuoteRecipient;
+    use RejectsMarkup;
 
     protected function prepareForValidation(): void
     {

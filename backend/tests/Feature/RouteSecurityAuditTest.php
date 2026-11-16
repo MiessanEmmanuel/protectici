@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Route as RouteFacade;
 
@@ -75,8 +76,32 @@ it('limite aux routes publiques connues celles qui ne demandent aucune session',
 it('met un limiteur sur toute route d\'authentification et de lecture publique de recherche', function () {
     foreach (apiV1Routes() as $route) {
         $uri = $route->uri();
-        if (str_starts_with($uri, 'api/v1/auth/') && $route->uri() !== 'api/v1/auth/verification/resend') {
+        if (str_starts_with($uri, 'api/v1/auth/')) {
             expect(collect(mw($route))->contains(fn ($m) => str_starts_with($m, 'throttle:')))->toBeTrue("Pas de limiteur : {$uri}");
         }
     }
+});
+
+it('borne tout paramètre {id} numérique à 18 chiffres (au-delà de PHP_INT_MAX : 404, jamais 500)', function () {
+    $routes = array_filter(apiV1Routes(), fn (Route $r) => str_contains($r->uri(), '{id}'));
+    expect($routes)->not->toBeEmpty();
+
+    foreach ($routes as $route) {
+        $pattern = $route->wheres['id'] ?? null;
+        expect($pattern)->not->toBeNull("{$route->uri()} : paramètre {id} sans contrainte");
+        if (str_ends_with($route->uri(), 'notifications/{id}/read')) {
+            continue; // UUID (notifications)
+        }
+        expect(preg_match('/^(?:'.$pattern.')$/', str_repeat('9', 18)))->toBe(1, $route->uri())
+            ->and(preg_match('/^(?:'.$pattern.')$/', '9223372036854775808'))->toBe(0, $route->uri());
+    }
+});
+
+it('répond 404 et non 500 à un identifiant supérieur à PHP_INT_MAX', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user)->getJson('/api/v1/me/feedbacks/99999999999999999999')->assertNotFound();
+    $this->actingAs($user)->getJson('/api/v1/me/feedbacks/999999999999999999')->assertNotFound();
+
+    $this->actingAs(makeAdmin())->getJson('/api/v1/admin/users/9223372036854775808')->assertNotFound();
+    $this->actingAs(makeAdmin())->postJson('/api/v1/admin/reviews/99999999999999999999/approve')->assertNotFound();
 });

@@ -21,7 +21,7 @@ function setup(responses: Response[], xsrf: { value: string | null } = { value: 
     return next;
   }) as unknown as typeof fetch;
   const req = createRequester({
-    baseUrl: 'http://api.test',
+    baseUrl: 'https://api.test',
     fetchImpl,
     readXsrfCookie: () => (xsrf.value ? decodeURIComponent(xsrf.value) : null),
   });
@@ -33,8 +33,8 @@ describe('client API : CSRF et cookies', () => {
     const { api, calls } = setup([jsonResponse(204), jsonResponse(200, { two_factor: true })]);
     const res = await api.login({ email: 'a@b.co', password: 'secret1234' });
     expect(res).toEqual({ kind: 'two_factor' });
-    expect(calls[0]!.url).toBe('http://api.test/sanctum/csrf-cookie');
-    expect(calls[1]!.url).toBe('http://api.test/api/v1/auth/login');
+    expect(calls[0]!.url).toBe('https://api.test/sanctum/csrf-cookie');
+    expect(calls[1]!.url).toBe('https://api.test/api/v1/auth/login');
     const headers = calls[1]!.init.headers as Record<string, string>;
     expect(headers['X-XSRF-TOKEN']).toBe('jeton csrf');
     expect(headers.Accept).toBe('application/json');
@@ -61,7 +61,7 @@ describe('client API : CSRF et cookies', () => {
       jsonResponse(204), // logout OK
     ]);
     await api.logout();
-    expect(calls.map((c) => c.url.replace('http://api.test', ''))).toEqual([
+    expect(calls.map((c) => c.url.replace('https://api.test', ''))).toEqual([
       '/sanctum/csrf-cookie',
       '/api/v1/auth/logout',
       '/sanctum/csrf-cookie',
@@ -146,7 +146,7 @@ describe('client API : gestion des erreurs', () => {
 
   it('erreur réseau → ApiError de statut 0', async () => {
     const req = createRequester({
-      baseUrl: 'http://api.test',
+      baseUrl: 'https://api.test',
       fetchImpl: (async () => {
         throw new TypeError('Failed to fetch');
       }) as unknown as typeof fetch,
@@ -208,7 +208,7 @@ describe('vérification e-mail et code d’erreur', () => {
   it('resendVerificationPublic envoie uniquement l’e-mail à /auth/verification/resend', async () => {
     const { api, calls } = setup([jsonResponse(204), jsonResponse(202, { message: 'Neutre.' })]);
     await expect(api.resendVerificationPublic('a@b.co')).resolves.toBe('Neutre.');
-    expect(calls[1]!.url).toBe('http://api.test/api/v1/auth/verification/resend');
+    expect(calls[1]!.url).toBe('https://api.test/api/v1/auth/verification/resend');
     expect(JSON.parse(String(calls[1]!.init.body))).toEqual({ email: 'a@b.co' });
   });
 

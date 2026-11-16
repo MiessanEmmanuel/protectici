@@ -20,7 +20,7 @@ function setup(responses: Response[]) {
     if (!next) throw new Error('plus de réponse');
     return next;
   }) as unknown as typeof fetch;
-  const req = createRequester({ baseUrl: 'http://api.test', fetchImpl, readXsrfCookie: () => xsrf.value });
+  const req = createRequester({ baseUrl: 'https://api.test', fetchImpl, readXsrfCookie: () => xsrf.value });
   return { api: buildApi(req), req, calls };
 }
 
@@ -33,7 +33,7 @@ describe('client API vague A : multipart et CSRF', () => {
     const file = new File(['abc'], 'a.pdf', { type: 'application/pdf' });
     await api.uploadDocument('provider', 'mon-slug', file, 'other');
     const call = calls[1]!;
-    expect(call.url).toBe('http://api.test/api/v1/me/establishments/provider/mon-slug/documents');
+    expect(call.url).toBe('https://api.test/api/v1/me/establishments/provider/mon-slug/documents');
     const headers = call.init.headers as Record<string, string>;
     expect(headers['X-XSRF-TOKEN']).toBe('tok');
     expect(headers['Content-Type']).toBeUndefined();

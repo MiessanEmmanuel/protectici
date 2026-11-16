@@ -212,10 +212,10 @@ it('clic sur le lien : vérifie, connecte automatiquement, usage unique', functi
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
     $this->assertAuthenticatedAs($user, 'web');
 
-    // Rejeu : refusé, sans nouvelle session.
+    // Rejeu : sans nouvelle session, renvoyé vers la connexion avec « adresse confirmée » (pas « lien invalide »).
     $this->app['auth']->forgetGuards();
     $this->flushSession();
-    $this->get($url)->assertRedirect('http://localhost:3000/connexion?verified=0');
+    $this->get($url)->assertRedirect('http://localhost:3000/connexion?verified=1');
     $this->assertGuest('web');
 });
 
@@ -289,6 +289,13 @@ it('renvoi public : 3 e-mails/heure/adresse et 10/heure/IP sans changer la répo
     }
     $this->postJson('/api/v1/auth/verification/resend', ['email' => 'autre@example.com'])->assertStatus(202)->assertExactJson(['message' => RESEND_MESSAGE]);
     Notification::assertNothingSentTo($other);
+
+    // Plafond dur par IP : 20 requêtes / heure, puis 429 générique.
+    foreach (range(12, 20) as $i) {
+        $this->postJson('/api/v1/auth/verification/resend', ['email' => 'inconnu'.$i.'@example.com'])->assertStatus(202);
+    }
+    $this->postJson('/api/v1/auth/verification/resend', ['email' => 'autre@example.com'])->assertStatus(429)->assertHeader('Retry-After');
+    $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.7'])->postJson('/api/v1/auth/verification/resend', ['email' => 'autre@example.com'])->assertStatus(202);
 });
 
 it('renvoi public : valide l\'e-mail et égalise la durée', function () {

@@ -12,7 +12,9 @@ import { LoadingBlock } from '../ui/Spinner';
 /**
  * Garde d'accès /admin — confort UX uniquement : chaque appel d'administration est de toute façon
  * autorisé (ou refusé) par l'API Laravel (Policies, rôle admin + 2FA), jamais par ce composant.
- * Le rôle `editor` n'accède qu'aux écrans de contenu (blog, commentaires, catégories, pages) ; la 2FA n'est exigée que pour `admin`.
+ * Le rôle `editor` n'accède qu'aux écrans de contenu (blog, commentaires, catégories, pages).
+ * La 2FA est exigée pour tout le personnel (`admin` et `editor`), comme côté API
+ * (`EnsureTwoFactorForStaff`, `User::isStaff()`).
  */
 export function AdminAccessGate({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -20,8 +22,9 @@ export function AdminAccessGate({ children }: { children: ReactNode }) {
   const { user, status } = useSession();
 
   useEffect(() => {
-    if (status === 'anonymous') router.replace(buildHref('/connexion', { redirect: '/admin' }));
-  }, [status, router]);
+    // On revient sur la page demandée après la connexion (et non sur /admin).
+    if (status === 'anonymous') router.replace(buildHref('/connexion', { redirect: pathname || '/admin' }));
+  }, [status, router, pathname]);
 
   if (status !== 'authenticated' || !user) {
     return (
@@ -50,7 +53,7 @@ export function AdminAccessGate({ children }: { children: ReactNode }) {
     );
   }
 
-  if (user.role === 'admin' && !user.two_factor_enabled) {
+  if ((user.role === 'admin' || user.role === 'editor') && !user.two_factor_enabled) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
         <ErrorState

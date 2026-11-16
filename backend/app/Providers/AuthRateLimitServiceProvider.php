@@ -82,6 +82,10 @@ class AuthRateLimitServiceProvider extends ServiceProvider
         // Création de compte : 5 / heure / IP.
         RateLimiter::for('register', fn (Request $request) => Limit::perHour(5)->by('register|'.$request->ip()));
 
+        // Renvoi public du lien de vérification : au-delà de 10 / heure / IP, plus aucun e-mail (réponse inchangée,
+        // VerificationMailer) ; à 20 / heure / IP, 429 pour borner le coût des requêtes à durée égalisée.
+        RateLimiter::for('verification-resend', fn (Request $request) => Limit::perHour(20)->by('verification-resend|'.$request->ip()));
+
         // Lien de vérification d'email : 10 / minute / IP.
         RateLimiter::for('verify-email', fn (Request $request) => Limit::perMinute(10)->by('verify|'.$request->ip()));
 

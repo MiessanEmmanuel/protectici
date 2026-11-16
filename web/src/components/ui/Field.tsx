@@ -16,7 +16,10 @@ export function describedBy(id: string, hint?: ReactNode, error?: string): strin
   return ids.length ? ids.join(' ') : undefined;
 }
 
-/** Étiquette + aide + erreur associées au contrôle (aria-describedby fourni via describedBy). */
+/**
+ * Étiquette + aide + erreur associées au contrôle (aria-describedby fourni via describedBy).
+ * L'aide est sous le contrôle : deux champs côte à côte restent alignés même si un seul en a une.
+ */
 export function Field({ id, label, hint, error, required, className, children }: FieldProps) {
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
@@ -29,12 +32,12 @@ export function Field({ id, label, hint, error, required, className, children }:
           </span>
         ) : null}
       </label>
+      {children}
       {hint ? (
         <p id={`${id}-hint`} className="text-sm text-muted">
           {hint}
         </p>
       ) : null}
-      {children}
       <FieldError id={`${id}-error`} message={error} />
     </div>
   );

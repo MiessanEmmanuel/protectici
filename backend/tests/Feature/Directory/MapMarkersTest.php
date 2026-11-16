@@ -13,7 +13,7 @@ it('renvoie les marqueurs des prestataires publiés', function () {
 
     $r = $this->getJson('/api/v1/map/markers?type=providers')->assertOk();
 
-    expect($r->json('data'))->toBe([['slug' => $p->slug, 'name' => $p->name, 'lat' => 5.32, 'lng' => -4.02]]);
+    expect($r->json('data'))->toBe([['slug' => $p->slug, 'name' => $p->name, 'branch_label' => null, 'lat' => 5.32, 'lng' => -4.02]]);
 });
 
 it('applique la bbox minLng,minLat,maxLng,maxLat', function () {

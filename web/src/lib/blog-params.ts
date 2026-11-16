@@ -10,7 +10,11 @@ function first(raw: RawSearchParams, key: string): string | undefined {
 }
 
 /** Paramètres d'URL du blog -> requête API (bornes strictes, l'URL est la source de vérité). */
-export function parseBlogParams(raw: RawSearchParams): { query: PostQuery; q?: string; page: number } {
+export function parseBlogParams(raw: RawSearchParams): {
+  query: PostQuery;
+  q?: string;
+  page: number;
+} {
   const q = first(raw, 'q')?.trim().slice(0, 100) || undefined;
   const n = Number(first(raw, 'page'));
   const page = Number.isInteger(n) && n >= 1 && n <= 10000 ? n : 1;

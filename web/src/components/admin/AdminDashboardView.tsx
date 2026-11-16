@@ -19,6 +19,7 @@ function otherQueues(d: AdminDashboard) {
   return [
     { label: 'Signalements d’avis ouverts', value: d.open_review_reports, href: '/admin/avis' },
     { label: 'Demandes de modification', value: d.pending_change_requests, href: '/admin/modifications' },
+    { label: 'Revendications en attente', value: d.pending_claims ?? 0, href: '/admin/revendications' },
     { label: 'Nouveaux devis', value: d.new_quote_requests, href: '/admin/devis' },
     { label: 'Nouveaux messages de contact', value: d.new_contact_messages, href: '/admin/messages' },
     { label: 'Commentaires du blog à modérer', value: d.pending_comments, href: '/admin/commentaires' },

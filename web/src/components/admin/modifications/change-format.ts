@@ -1,5 +1,6 @@
 import type { ReferenceData } from '@/lib/api/types';
 import { FIELD_LABELS } from '@/lib/labels';
+import { formatOpeningHours } from '@/lib/opening-hours';
 
 const EXTRA_FIELD_LABELS: Record<string, string> = {
   description: 'Description',
@@ -54,6 +55,7 @@ export function formatChangeValue(
   reference?: ReferenceData | null,
 ): string {
   if (value === null || value === undefined || value === '') return EMPTY_VALUE;
+  if (field === 'opening_hours') return formatOpeningHours(value);
   if (typeof value === 'boolean') return value ? 'Oui' : 'Non';
   if (Array.isArray(value)) {
     if (value.length === 0) return EMPTY_VALUE;

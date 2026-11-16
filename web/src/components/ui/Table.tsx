@@ -5,6 +5,8 @@ import { cn } from './cn';
  * Tableau de données v9 : cadre 2 px encre, en-têtes en petites capitales sur sable,
  * lignes internes au filet discret (line-soft). Légende obligatoire ; le défilement horizontal
  * reste contenu dans la zone du tableau (jamais dans la page) et la zone est focalisable.
+ * `relative` : les éléments `sr-only` (absolus) des cellules restent contenus dans la zone,
+ * sinon ils débordent du document à 375 px.
  */
 export function Table({
   caption,
@@ -17,7 +19,7 @@ export function Table({
 }) {
   return (
     <div
-      className="ui-table max-w-full scroll-x border-2 border-ink bg-white"
+      className="ui-table relative max-w-full scroll-x border-2 border-ink bg-white"
       tabIndex={0}
       role="region"
       aria-label={caption}

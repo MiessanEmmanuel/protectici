@@ -41,7 +41,7 @@ class ProviderController extends Controller
 
     public function show(Request $request, Provider $provider): ProviderDetailResource
     {
-        $provider->load(['city', 'district', 'serviceTypes', 'companyTypes', 'executives', 'gallery', 'logo']);
+        $provider->load(['city', 'district', 'serviceTypes', 'companyTypes', 'executives', 'branches.city', 'branches.district', 'gallery', 'logo'])->loadCount('branches');
 
         return new ProviderDetailResource($provider);
     }

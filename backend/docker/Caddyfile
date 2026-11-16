@@ -12,8 +12,19 @@
 	# Aucun en-tête révélant la pile technique.
 	header -Server
 	header -X-Powered-By
+	# Fichiers statiques compris : le navigateur ne devine jamais le type (security.md §16, §19).
+	header X-Content-Type-Options nosniff
 	# Seul public/ est la racine : .env, storage/ et vendor/ ne sont jamais servis.
-	php_server
+	# Médias téléversés (public/storage -> storage/app/public) : servis comme fichiers statiques, JAMAIS exécutés
+	# par PHP, même si un fichier .php s'y trouvait ; CSP « sandbox » contre un contenu actif (SVG, HTML).
+	@uploads path /storage/*
+	handle @uploads {
+		header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+		file_server
+	}
+	handle {
+		php_server
+	}
 	log {
 		output stderr
 		format console

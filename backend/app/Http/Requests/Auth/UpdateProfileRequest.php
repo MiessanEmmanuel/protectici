@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Http\Requests\Concerns\RejectsMarkup;
 use App\Rules\PhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 
 /** Liste blanche : prénom, nom, téléphone. Rôle, email, statut : jamais modifiables ici. */
 class UpdateProfileRequest extends FormRequest
 {
+    use RejectsMarkup;
+
     public function authorize(): bool
     {
         $user = $this->user();

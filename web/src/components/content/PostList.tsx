@@ -13,11 +13,14 @@ export function PostList({
   basePath,
   q,
   emptyTitle = 'Aucun article ne correspond à votre recherche',
+  narrow = false,
 }: {
   result: Paginated<PostCard>;
   basePath: string;
   q?: string;
   emptyTitle?: string;
+  /** Colonne étroite (2/3 de page) : deux cartes par ligne au maximum. */
+  narrow?: boolean;
 }) {
   if (result.data.length === 0) {
     return (
@@ -28,7 +31,7 @@ export function PostList({
   }
   return (
     <>
-      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className={`grid gap-6 sm:grid-cols-2 ${narrow ? '' : 'lg:grid-cols-3'}`}>
         {result.data.map((p, i) => (
           <li key={p.slug} className="flex">
             <PostCardItem post={p} tone={toneAt(TONES, i)} />

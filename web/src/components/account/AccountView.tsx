@@ -1,10 +1,8 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { errorMessage } from '@/lib/api/errors';
-import { buildHref } from '@/lib/search-params';
 import { useSession } from '../layout/SessionProvider';
 import { Button, ButtonLink } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -12,21 +10,19 @@ import { FormError, FormSuccess } from '../ui/Field';
 import { Badge } from '../ui/Tag';
 import { LoadingBlock } from '../ui/Spinner';
 import { useToast } from '../ui/Toast';
+import { useLoginRedirect } from './AccountGuard';
 import { FavoritesSection } from './FavoritesSection';
 import { PasswordForm } from './PasswordForm';
 import { ProfileForm } from './ProfileForm';
 import { TwoFactorSection } from './TwoFactorSection';
 
 export function AccountView({ justVerified }: { justVerified: boolean }) {
-  const router = useRouter();
   const { user, status, refresh } = useSession();
   const toast = useToast();
   const [resendError, setResendError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
 
-  useEffect(() => {
-    if (status === 'anonymous') router.replace(buildHref('/connexion', { redirect: '/compte' }));
-  }, [status, router]);
+  useLoginRedirect('/compte');
 
   useEffect(() => {
     if (justVerified && status === 'authenticated') void refresh();
@@ -129,6 +125,35 @@ export function AccountView({ justVerified }: { justVerified: boolean }) {
         <div className="mt-4">
           <ButtonLink href="/compte/mes-avis" variant="secondary">
             Voir mes avis
+          </ButtonLink>
+        </div>
+      </Card>
+
+      <Card as="section" aria-labelledby="mes-devis">
+        <h2 id="mes-devis" className="text-2xl heading-block">
+          Mes demandes de devis
+        </h2>
+        <p className="mt-1 text-muted">
+          Suivez les demandes envoyées depuis votre compte et les réponses des prestataires.
+        </p>
+        <div className="mt-4">
+          <ButtonLink href="/compte/mes-devis" variant="secondary">
+            Suivre mes demandes
+          </ButtonLink>
+        </div>
+      </Card>
+
+      <Card as="section" aria-labelledby="mes-dis-moi-tout">
+        <h2 id="mes-dis-moi-tout" className="text-2xl heading-block">
+          Mes dossiers « Dis-moi tout »
+        </h2>
+        <p className="mt-1 text-muted">
+          Suivez vos encouragements, questions, plaintes et suggestions, et les réponses de notre
+          équipe.
+        </p>
+        <div className="mt-4">
+          <ButtonLink href="/compte/mes-dis-moi-tout" variant="secondary">
+            Suivre mes dossiers
           </ButtonLink>
         </div>
       </Card>

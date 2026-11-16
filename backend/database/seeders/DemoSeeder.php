@@ -59,6 +59,7 @@ class DemoSeeder extends Seeder
             $this->stateForces();
         });
 
+        $this->call(DemoBranchesSeeder::class);
         $this->call(ContentSeeder::class);
     }
 
@@ -265,7 +266,7 @@ class DemoSeeder extends Seeder
             'address' => fake()->numberBetween(1, 120).' rue '.fake()->lastName().' (adresse fictive)',
             'city_id' => $d['city_id'],
             'district_id' => $district?->id,
-            'geo_description' => $district ? 'Situé dans la commune de '.($district->parent_id ? $this->districts->firstWhere('id', $district->parent_id)?->name : $district->name).', à proximité d\'un axe principal (description fictive).' : 'Description géographique fictive.',
+            'geo_description' => $district ? 'Situé dans la commune '.self::deCommune((string) ($district->parent_id ? $this->districts->firstWhere('id', $district->parent_id)?->name : $district->name)).', à proximité d\'un axe principal (description fictive).' : 'Description géographique fictive.',
             'plus_code' => strtoupper(fake()->bothify('####+??')),
             'latitude' => round($lat, 6),
             'longitude' => round($lng, 6),
@@ -385,7 +386,7 @@ class DemoSeeder extends Seeder
         ]));
 
         foreach (['new', 'in_progress', 'forwarded', 'resolved', 'closed'] as $i => $status) {
-            Feedback::factory()->create([
+            $feedback = Feedback::factory()->create([
                 'provider_id' => $public[$i]->id ?? null,
                 'action_type' => ['complaint', 'question', 'suggestion', 'encouragement', 'complaint'][$i],
                 'target_type' => 'service', 'service_type_id' => $service?->id, 'topic_id' => $topic?->id,
@@ -394,6 +395,10 @@ class DemoSeeder extends Seeder
                 'assigned_to' => $status === 'new' ? null : $admin->id,
                 'resolved_at' => in_array($status, ['resolved', 'closed'], true) ? now()->subDays(3) : null,
             ]);
+            // Deux dossiers rattachés au compte de démonstration (« Mes dossiers Dis-moi tout »).
+            if (in_array($status, ['in_progress', 'resolved'], true)) {
+                $feedback->forceFill(['user_id' => $user->id])->save();
+            }
         }
 
         foreach ([[1, 'sent'], [2, 'replied'], [0, 'new']] as $i => [$count, $status]) {
@@ -401,6 +406,10 @@ class DemoSeeder extends Seeder
                 'email' => "devis{$i}@demo.protectici.test", 'service_type_id' => $service?->id, 'city_id' => $city->id,
                 'status' => $status === 'replied' ? 'answered' : $status,
             ]);
+            // Les deux premières sont rattachées au compte de démonstration (« Mes demandes de devis »).
+            if ($i < 2) {
+                $quote->forceFill(['user_id' => $user->id])->save();
+            }
             foreach ($public->slice($i * 2, $count) as $n => $provider) {
                 DB::table('quote_request_recipients')->insert([
                     'quote_request_id' => $quote->id, 'provider_id' => $provider->id,
@@ -430,16 +439,16 @@ class DemoSeeder extends Seeder
 
         $entries = [];
         foreach (['plateau', 'adjame', 'treichville', 'marcory', 'koumassi', 'port-bouet', 'cocody', 'yopougon', 'abobo', 'attecoube'] as $i => $slug) {
-            $entries[] = ['Commissariat de police de '.$communeOf($slug)->name, $police, $slug, '110', true];
+            $entries[] = ['Commissariat de police '.self::deCommune($communeOf($slug)->name), $police, $slug, '110', true];
             if ($i < 4) {
-                $entries[] = ['Commissariat du '.($i + 2).'e arrondissement de '.$communeOf($slug)->name, $police, $slug, '110', true];
+                $entries[] = ['Commissariat du '.($i + 2).'e arrondissement '.self::deCommune($communeOf($slug)->name), $police, $slug, '110', true];
             }
         }
         foreach (['cocody', 'yopougon', 'abobo', 'bingerville', 'anyama', 'port-bouet', 'songon'] as $slug) {
-            $entries[] = ['Brigade de gendarmerie de '.$communeOf($slug)->name, $gendarmerie, $slug, '143', true];
+            $entries[] = ['Brigade de gendarmerie '.self::deCommune($communeOf($slug)->name), $gendarmerie, $slug, '143', true];
         }
         foreach (['plateau', 'cocody', 'yopougon', 'treichville', 'port-bouet', 'abobo'] as $slug) {
-            $entries[] = ['Caserne des sapeurs-pompiers de '.$communeOf($slug)->name, $pompiers, $slug, '180', true];
+            $entries[] = ['Caserne des sapeurs-pompiers '.self::deCommune($communeOf($slug)->name), $pompiers, $slug, '180', true];
         }
         $entries = array_slice($entries, 0, 28);
 
@@ -458,13 +467,32 @@ class DemoSeeder extends Seeder
         $this->saveStateForce('Poste de police masqué', $police, $abidjan->id, $communeOf('abobo'), '110', false, $serial++, [], false, 'approved', false);
     }
 
+    /**
+     * Complément « de + commune » avec élision et article : « d'Abobo », « d'Adjamé », « du Plateau », « de Cocody ».
+     * (CLAUDE.md §5.1-6 : contenu en français correct, y compris dans les slugs.)
+     */
+    private static function deCommune(string $name): string
+    {
+        if ($name === 'Plateau') {
+            return 'du Plateau';
+        }
+
+        return preg_match('/^[aeiouyhàâäéèêëîïôöùûüAEIOUYHÀÂÄÉÈÊËÎÏÔÖÙÛÜ]/u', $name) === 1 ? "d'".$name : 'de '.$name;
+    }
+
+    /** Slug lisible : l'apostrophe sépare les mots (« d'Adjamé » → « d-adjame », jamais « dadjame »). */
+    private static function slugOf(string $name): string
+    {
+        return Str::slug(str_replace(["'", '’'], ' ', $name));
+    }
+
     /** @param list<int> $procedureIds */
     private function saveStateForce(string $name, int $typeId, int $cityId, ?District $district, string $emergency, bool $open24, int $serial, array $procedureIds, bool $isGendarmerie, string $status = 'approved', bool $visible = true): void
     {
         $city = City::find($cityId);
         $lat = (float) (($district ? $district->latitude : null) ?? $city->latitude) + fake()->randomFloat(5, -0.006, 0.006);
         $lng = (float) (($district ? $district->longitude : null) ?? $city->longitude) + fake()->randomFloat(5, -0.006, 0.006);
-        $slug = Str::slug($name);
+        $slug = self::slugOf($name);
 
         $force = StateForce::withTrashed()->firstOrNew(['slug' => $slug]);
         $force->forceFill([

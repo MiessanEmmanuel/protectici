@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Http\Requests\Concerns\RejectsMarkup;
 use App\Models\User;
 use App\Rules\PhoneNumber;
 use App\Rules\StrongPassword;
@@ -11,6 +12,8 @@ use Illuminate\Support\Str;
 
 class RegisterRequest extends FormRequest
 {
+    use RejectsMarkup;
+
     public function authorize(): bool
     {
         return true;

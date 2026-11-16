@@ -21,8 +21,10 @@ final class EstablishmentSchema
 
     public const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
+    public const MAX_BRANCHES = 20;
+
     /** Relations (identifiants) : jamais copiées telles quelles dans les colonnes. */
-    public const RELATION_FIELDS = ['company_type_ids', 'service_type_ids', 'executives', 'procedure_type_ids', 'procedures'];
+    public const RELATION_FIELDS = ['company_type_ids', 'service_type_ids', 'executives', 'branches', 'procedure_type_ids', 'procedures'];
 
     /** Champs sensibles : modifiables uniquement par un admin ou via une demande de modification validée. */
     /** @return list<string> */
@@ -43,7 +45,7 @@ final class EstablishmentSchema
                 'description', 'phone', 'phone_alt', 'emergency_phone', 'email', 'website_url', 'facebook_url',
                 'instagram_url', 'twitter_url', 'linkedin_url', 'whatsapp_number', 'address', 'city_id',
                 'district_id', 'geo_description', 'plus_code', 'lat', 'lng', 'price_from', 'approval_expires_at',
-                'is_in_service', 'company_type_ids', 'service_type_ids', 'executives',
+                'is_in_service', 'company_type_ids', 'service_type_ids', 'executives', 'branches',
             ],
             EstablishmentType::StateForce => [
                 'description', 'phone', 'phone_alt', 'emergency_phone', 'email', 'address', 'city_id',
@@ -155,6 +157,16 @@ final class EstablishmentSchema
                 'executives.*.position' => ['required', 'string', Rule::in(self::EXECUTIVE_POSITIONS)],
                 'executives.*.position_label' => ['nullable', 'string', 'max:100'],
                 'executives.*.is_visible' => ['sometimes', 'boolean'],
+                'branches' => ['sometimes', 'array', 'max:'.self::MAX_BRANCHES],
+                'branches.*.id' => ['nullable', 'integer'],
+                'branches.*.label' => ['required', 'string', 'min:2', 'max:150'],
+                'branches.*.city_id' => ['required', 'integer', $visibleExists('cities')],
+                'branches.*.district_id' => ['nullable', 'integer', $visibleExists('districts')],
+                'branches.*.address' => ['nullable', 'string', 'max:255'],
+                'branches.*.geo_description' => ['nullable', 'string', 'max:2000'],
+                'branches.*.phone' => ['nullable', ...$phone],
+                'branches.*.lat' => ['nullable', 'numeric', 'between:-90,90', 'required_with:branches.*.lng'],
+                'branches.*.lng' => ['nullable', 'numeric', 'between:-180,180', 'required_with:branches.*.lat'],
             ];
         }
 

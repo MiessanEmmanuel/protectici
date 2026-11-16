@@ -12,22 +12,25 @@ export function useAsyncAction() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<SubmitError | null>(null);
 
-  const run = useCallback(async <T,>(fn: () => Promise<T>): Promise<{ ok: true; value: T } | { ok: false }> => {
-    if (running.current) return { ok: false };
-    running.current = true;
-    setBusy(true);
-    setError(null);
-    try {
-      const value = await fn();
-      return { ok: true, value };
-    } catch (e) {
-      setError(describeError(e));
-      return { ok: false };
-    } finally {
-      running.current = false;
-      setBusy(false);
-    }
-  }, []);
+  const run = useCallback(
+    async <T>(fn: () => Promise<T>): Promise<{ ok: true; value: T } | { ok: false }> => {
+      if (running.current) return { ok: false };
+      running.current = true;
+      setBusy(true);
+      setError(null);
+      try {
+        const value = await fn();
+        return { ok: true, value };
+      } catch (e) {
+        setError(describeError(e));
+        return { ok: false };
+      } finally {
+        running.current = false;
+        setBusy(false);
+      }
+    },
+    [],
+  );
 
   return { run, busy, error, clearError: () => setError(null) };
 }

@@ -3,12 +3,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
+import type { MyReview } from '@/lib/api/types';
+import { REVIEW_STATUS_LABELS } from '@/lib/labels';
 import { buildHref } from '@/lib/search-params';
 import { useSession } from '../layout/SessionProvider';
 import { ButtonLink } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { FormSuccess } from '../ui/Field';
 import { LoadingBlock } from '../ui/Spinner';
+import { invalidateMyReviews, loadMyReviews } from './my-reviews';
 import { ReviewEditor } from './ReviewEditor';
 
 type Outcome = 'success' | 'conflict' | null;
@@ -17,7 +20,23 @@ type Outcome = 'success' | 'conflict' | null;
 export function ReviewForm({ slug, providerName }: { slug: string; providerName: string }) {
   const { user, status } = useSession();
   const [outcome, setOutcome] = useState<Outcome>(null);
+  // Avis existant (R27) : `undefined` tant que la recherche n'a pas abouti.
+  const [existing, setExisting] = useState<MyReview | null | undefined>(undefined);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const canReview = status === 'authenticated' && user?.email_verified === true;
+  const userId = user?.id;
+
+  useEffect(() => {
+    if (!canReview) return;
+    let active = true;
+    loadMyReviews(userId)
+      .then((list) => active && setExisting(list.find((r) => r.provider.slug === slug) ?? null))
+      // En cas d'échec, on affiche le formulaire : l'API refusera un doublon (409).
+      .catch(() => active && setExisting(null));
+    return () => {
+      active = false;
+    };
+  }, [canReview, userId, slug]);
 
   useEffect(() => {
     if (outcome) titleRef.current?.focus();
@@ -58,6 +77,23 @@ export function ReviewForm({ slug, providerName }: { slug: string; providerName:
               Aller à mon compte
             </ButtonLink>
           </div>
+        ) : existing === undefined && outcome === null ? (
+          <LoadingBlock label="Recherche de votre avis…" />
+        ) : existing && outcome === null ? (
+          <div className="flex flex-col gap-3">
+            <div role="status" className="bg-white-alt border-2 border-ink p-3">
+              <p className="font-semibold">
+                Votre avis ({existing.rating}/5) · {REVIEW_STATUS_LABELS[existing.status]}
+              </p>
+              {existing.title ? <p className="mt-1 font-semibold">{existing.title}</p> : null}
+              <p className="mt-1 whitespace-pre-line">{existing.body}</p>
+            </div>
+            <div>
+              <ButtonLink href="/compte/mes-avis" variant="secondary">
+                Modifier mon avis
+              </ButtonLink>
+            </div>
+          </div>
         ) : outcome === 'success' ? (
           <div className="flex flex-col gap-3">
             <FormSuccess message="Merci ! Votre avis sera publié après modération." />
@@ -85,6 +121,7 @@ export function ReviewForm({ slug, providerName }: { slug: string; providerName:
             onSubmit={async (input) => {
               try {
                 await clientApi.createReview(slug, input);
+                invalidateMyReviews();
                 setOutcome('success');
               } catch (e) {
                 if (e instanceof ApiError && e.status === 409) {

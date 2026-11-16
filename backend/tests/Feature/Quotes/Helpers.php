@@ -19,7 +19,7 @@ if (! function_exists('quotePayload')) {
             'first_name' => 'Awa',
             'last_name' => 'Traoré',
             'email' => 'awa.traore@example.com',
-            'phone' => '07 09 44 51 11',
+            'phone' => '07 08 12 34 56',
             'service_type_id' => ServiceType::factory()->create()->id,
             'city_id' => City::factory()->create()->id,
             'description' => 'Nous cherchons un gardiennage de nuit pour un entrepôt de 2000 m².',
@@ -35,7 +35,7 @@ if (! function_exists('quotePayload')) {
 
         $quote = new QuoteRequest($attributes + [
             'first_name' => 'Awa', 'last_name' => 'Traoré', 'email' => 'awa.traore@example.com',
-            'phone' => '+2250709445111', 'company_name' => 'Entrepôts Traoré',
+            'phone' => '+2250708123456', 'company_name' => 'Entrepôts Traoré',
             'service_type_id' => ServiceType::factory()->create()->id,
             'city_id' => City::factory()->create()->id,
             'description' => 'Gardiennage de nuit pour un entrepôt de 2000 m².',

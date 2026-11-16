@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="fr" data-theme="a">
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; trusted-types default">
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ProtectIci — Maquette design (données factices)</title>
@@ -515,21 +517,6 @@ footer .nl input{flex:1;min-width:0;padding:11px 12px;border-radius:var(--radius
   </footer>
 </div>
 
-<script>
-(function(){
-  var root=document.documentElement, stage=document.getElementById('stage');
-  function setSeg(id,val,fn){document.querySelectorAll('#'+id+' button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.v===val))});fn(val)}
-  function theme(v){root.dataset.theme=v}
-  function page(v){document.querySelectorAll('.page').forEach(function(p){p.classList.toggle('on',p.id==='p-'+v)});window.scrollTo({top:0})}
-  function view(v){stage.dataset.view=v}
-  function save(){try{localStorage.setItem('pi-mq',JSON.stringify({t:root.dataset.theme,p:document.querySelector('.page.on').id.slice(2),v:stage.dataset.view}))}catch(e){}}
-  [['seg-theme',theme],['seg-page',page],['seg-view',view]].forEach(function(s){
-    document.querySelectorAll('#'+s[0]+' button').forEach(function(b){b.addEventListener('click',function(){setSeg(s[0],b.dataset.v,s[1]);save()})})
-  });
-  document.querySelectorAll('[data-go]').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();setSeg('seg-page',a.dataset.go,page);save()})});
-  document.addEventListener('keydown',function(e){var m={'1':'a','2':'b','3':'c'};if(m[e.key]&&!/INPUT|SELECT/.test(e.target.tagName)){setSeg('seg-theme',m[e.key],theme);save()}});
-  try{var s=JSON.parse(localStorage.getItem('pi-mq')||'null');if(s){setSeg('seg-theme',s.t,theme);setSeg('seg-page',s.p,page);setSeg('seg-view',s.v,view)}}catch(e){}
-})();
-</script>
+<script src="index.inline.js"></script>
 </body>
 </html>

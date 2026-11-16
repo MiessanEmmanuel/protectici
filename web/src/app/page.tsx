@@ -127,7 +127,7 @@ export default async function HomePage() {
           <div className="relative z-[1] px-4 py-12 text-on-c1 lg:py-16 lg:pr-14 lg:pl-[max(1rem,calc((100vw-75rem)/2))]">
             <Eyebrow>
               {home
-                ? `${pluralize(home.stats.providers, 'établissement vérifié', 'établissements vérifiés')} en Côte d’Ivoire`
+                ? `${pluralize(home.stats.providers, 'établissement référencé', 'établissements référencés')} en Côte d’Ivoire`
                 : 'Annuaire de la sécurité privée en Côte d’Ivoire'}
             </Eyebrow>
             <h1 id="titre-accueil" className="mt-4 mb-[22px] max-w-[12ch] text-hero heading-block">
@@ -263,13 +263,13 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {/* ---------- Les plus consultés 2/3 + forces proches 1/3 ---------- */}
+      {/* ---------- Les prestataires les mieux notés 2/3 + forces proches 1/3 ---------- */}
       <section aria-labelledby="titre-populaires" className="bg-c4 text-on-c4">
         <div className="wrap grid grid-cols-1 gap-10 py-section lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:gap-12">
           <div>
             <SectionHeader
               id="titre-populaires"
-              title="Les plus consultés"
+              title="Les prestataires les mieux notés"
               more={{ href: '/annuaire', label: 'Tout l’annuaire' }}
             />
             {popular.length > 0 ? (

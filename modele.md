@@ -79,6 +79,7 @@ erDiagram
     providers }o--o{ company_types : "provider_company_type"
     providers }o--o{ service_types : "provider_service_type"
     providers ||--o{ provider_executives : "dirigeants"
+    providers ||--o{ provider_branches : "agences"
     providers ||--o{ provider_documents : "justificatifs"
     providers ||--o{ provider_change_requests : "modifs sensibles"
     providers ||--o{ reviews : "reçoit"
@@ -299,7 +300,7 @@ Contraintes métier :
 - `CHECK (status <> 'rejected' OR rejection_reason IS NOT NULL)`.
 - `CHECK ((latitude IS NULL) = (longitude IS NULL))`.
 
-Relations : N-1 `users` (propriétaire), N-1 `cities`, N-1 `districts` ; N-N `company_types` et `service_types` ; 1-N `provider_executives`, `provider_documents`, `provider_change_requests`, `reviews`, `favorites`, `feedbacks`, `quote_request_recipients`. Médias via `media` (collections `logo`, `cover`, `gallery`).
+Relations : N-1 `users` (propriétaire), N-1 `cities`, N-1 `districts` ; N-N `company_types` et `service_types` ; 1-N `provider_executives`, `provider_branches`, `provider_documents`, `provider_change_requests`, `reviews`, `favorites`, `feedbacks`, `quote_request_recipients`. Médias via `media` (collections `logo`, `cover`, `gallery`).
 
 #### `provider_company_type` (jonction)
 | Colonne | Type | Null | Contraintes |
@@ -325,6 +326,25 @@ Relations : N-1 `users` (propriétaire), N-1 `cities`, N-1 `districts` ; N-N `co
 | position_label | varchar(100) | Null | | Libellé libre si `other` |
 | sort_order | smallint | NN | `0` | |
 | is_visible | boolean | NN | `false` | Consentement d'affichage du dirigeant |
+
+#### `provider_branches`
+Agences (adresses secondaires) d'un prestataire : l'adresse de la fiche reste le siège. 20 agences au maximum par fiche (contrôle API).
+
+| Colonne | Type | Null | Défaut | Contraintes |
+|---|---|---|---|---|
+| id | bigint identity | NN | | **PK** |
+| provider_id | bigint | NN | | FK → `providers.id` ON DELETE CASCADE, indexé |
+| label | varchar(150) | NN | | Nom de l'agence |
+| city_id | bigint | NN | | FK → `cities.id` ON DELETE RESTRICT, indexé |
+| district_id | bigint | Null | | FK → `districts.id` ON DELETE SET NULL, indexé ; doit appartenir à `city_id` (contrôle API) |
+| address | varchar(255) | Null | | |
+| geo_description | text | Null | | |
+| phone | varchar(30) | Null | | E.164 |
+| latitude / longitude / location | idem `providers` | Null | | Paire obligatoire ; `location` GENERATED STORED, index GiST `provider_branches_location_gist` |
+| sort_order | smallint | NN | 0 | |
+| created_at / updated_at | timestamptz | NN | now() | |
+
+Modifiable par le propriétaire sans demande de modification (champ non sensible). `fn_providers_nearby` calcule la distance minimale entre le point recherché et {siège, agences}.
 
 #### `provider_documents` (SD) — **privé**
 Justificatifs téléversés pour la validation (RG1).
@@ -693,7 +713,7 @@ Logo : `media` (collection `logo`).
 | `districts.city_id`, `districts.parent_id` | RESTRICT | Intégrité de la hiérarchie. |
 | Jonctions → parent métier (`provider_id`, `state_force_id`) | CASCADE | La liaison n'a aucun sens sans le parent. |
 | Jonctions → référentiel (`company_type_id`, `service_type_id`, `procedure_type_id`) | RESTRICT | Empêche de supprimer une valeur utilisée (utiliser `is_visible=false`). |
-| `provider_executives`, `provider_documents`, `provider_change_requests` → `providers` | CASCADE | Données dépendantes. |
+| `provider_executives`, `provider_branches`, `provider_documents`, `provider_change_requests` → `providers` | CASCADE | Données dépendantes. |
 | `reviews.provider_id` → `providers` | CASCADE | Avis dépendant (en pratique suppression logique). |
 | `reviews.user_id`, `*_by` (modérateurs/valideurs) → `users` | SET NULL | Conserver l'avis/l'historique en anonymisant l'auteur. |
 | `review_reports.review_id` → `reviews` | CASCADE | |
@@ -890,7 +910,7 @@ Les colonnes de recherche/jointure (`email`, `phone`) ne sont **pas** chiffrées
 3. `cities` → `districts`.
 4. Référentiels : `company_types`, `service_types`, `state_force_types`, `procedure_types`, `feedback_topics`, `post_categories`.
 5. `media`.
-6. `providers` → `provider_company_type`, `provider_service_type`, `provider_executives`, `provider_documents`, `provider_change_requests`.
+6. `providers` → `provider_company_type`, `provider_service_type`, `provider_executives`, `provider_branches`, `provider_documents`, `provider_change_requests`.
 7. `state_forces` → `state_force_procedure_type`.
 8. `reviews` → `review_reports` ; `favorites`.
 9. Séquences + fonction `fn_next_reference` ; `feedbacks` → `feedback_replies` ; `quote_requests` → `quote_request_recipients` ; `contact_messages`.

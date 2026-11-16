@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { errorMessage } from '@/lib/api/errors';
 import type { MapMarker, MarkerQuery } from '@/lib/api/types';
+import { pluralize } from '@/lib/format';
 import { EmptyState, ErrorState } from '../ui/EmptyState';
 import { Skeleton } from '../ui/Spinner';
 import { DynamicMap } from './DynamicMap';
@@ -12,6 +13,15 @@ interface DirectoryMapProps {
   query: MarkerQuery;
   hrefBase: string;
   label: string;
+}
+
+/** Légende : un prestataire peut avoir plusieurs points (siège et agences). */
+export function mapCaption(markers: MapMarker[]): string {
+  const branches = markers.filter((m) => m.branch_label).length;
+  if (branches === 0)
+    return `${pluralize(markers.length, 'résultat', 'résultats')} sur la carte.`;
+  const results = new Set(markers.map((m) => m.slug)).size;
+  return `${pluralize(results, 'résultat', 'résultats')} sur la carte (${pluralize(markers.length, 'emplacement', 'emplacements')}, dont ${pluralize(branches, 'agence', 'agences')}).`;
 }
 
 /** Carte des résultats : les marqueurs viennent de /map/markers avec les mêmes filtres que la liste. */
@@ -56,8 +66,7 @@ export function DirectoryMap({ query, hrefBase, label }: DirectoryMapProps) {
     <figure>
       <DynamicMap points={markers} hrefBase={hrefBase} label={label} />
       <figcaption className="mt-2 text-sm text-muted">
-        {markers.length} résultat{markers.length > 1 ? 's' : ''} sur la carte. Les mêmes résultats
-        sont listés ci-dessous.
+        {mapCaption(markers)} Les mêmes résultats sont listés ci-dessous.
       </figcaption>
     </figure>
   );

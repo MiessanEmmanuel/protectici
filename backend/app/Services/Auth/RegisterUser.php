@@ -124,7 +124,7 @@ class RegisterUser
 
     private function notifyAlreadyRegistered(User $user): void
     {
-        $key = 'verification-mail|'.sha1(mb_strtolower((string) $user->email));
+        $key = ''.sha1(mb_strtolower((string) $user->email));
         if (RateLimiter::tooManyAttempts($key, (int) config('auth.verification_mail_per_hour', 3))) {
             return;
         }

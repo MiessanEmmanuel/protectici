@@ -11,6 +11,7 @@ use App\Services\Content\BlogQueries;
 use App\Support\ApiPage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 /** Blog public (contrat §9.1). */
 class BlogController extends Controller
@@ -39,12 +40,21 @@ class BlogController extends Controller
         return ApiPage::response($page, $page->getCollection()->map(fn (Post $p) => BlogPresenter::card($p))->all());
     }
 
-    public function show(Request $request, string $slug): JsonResponse
+    /** Lecture sans effet de bord : le rendu serveur de Next.js arrive d'une seule IP, la vue est comptée par recordView. */
+    public function show(string $slug): JsonResponse
     {
         $post = $this->queries->published()->with(BlogPresenter::CARD_RELATIONS)->where('posts.slug', $slug)->firstOrFail();
-        $this->queries->countView($post, $request->ip());
 
         return response()->json(['data' => BlogPresenter::detail($post, $this->queries->related($post))]);
+    }
+
+    /** Compteur de vues appelé par le navigateur (comme les fiches prestataires) : dédoublonné par IP hachée, 30 min. */
+    public function recordView(Request $request, string $slug): Response
+    {
+        $post = $this->queries->published()->where('posts.slug', $slug)->firstOrFail(['posts.id', 'posts.views_count']);
+        $this->queries->countView($post, $request->ip());
+
+        return response()->noContent();
     }
 
     public function flash(): JsonResponse

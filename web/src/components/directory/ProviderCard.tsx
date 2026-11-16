@@ -2,7 +2,14 @@ import Link from 'next/link';
 import { Phone } from 'lucide-react';
 import type { ProviderSummary } from '@/lib/api/types';
 import { buildHref } from '@/lib/search-params';
-import { formatDistance, formatFcfa, formatPhone, formatRating, telHref } from '@/lib/format';
+import {
+  formatDistance,
+  formatFcfa,
+  formatPhone,
+  formatRating,
+  pluralize,
+  telHref,
+} from '@/lib/format';
 import { FicheCard, ficheActionClasses } from '../ui/FicheCard';
 import { Badge } from '../ui/Tag';
 
@@ -40,7 +47,11 @@ export function ProviderCard({ provider }: { provider: ProviderSummary }) {
             }
           : null
       }
-      distance={distance ? `à ${distance}` : null}
+      distance={
+        distance
+          ? `à ${distance}${provider.nearest_branch ? ` (${provider.nearest_branch.label})` : ''}`
+          : null
+      }
       extra={
         <p className="flex flex-wrap items-center gap-2 text-[0.85rem] font-bold">
           {provider.is_featured ? <Badge tone="accent">À la une</Badge> : null}
@@ -49,6 +60,11 @@ export function ProviderCard({ provider }: { provider: ProviderSummary }) {
               ? `À partir de ${formatFcfa(provider.price_from)}`
               : 'Tarif sur devis'}
           </span>
+          {provider.branches_count > 0 ? (
+            <span className="font-semibold">
+              + {pluralize(provider.branches_count, 'agence', 'agences')}
+            </span>
+          ) : null}
         </p>
       }
       actions={

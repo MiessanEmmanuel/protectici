@@ -8,6 +8,7 @@ const LINKS = [
   { href: '/espace-prestataire', label: 'Mes établissements' },
   { href: '/espace-prestataire/avis', label: 'Avis reçus' },
   { href: '/espace-prestataire/devis', label: 'Devis reçus' },
+  { href: '/espace-prestataire/devis-envoyes', label: 'Devis demandés' },
 ] as const;
 
 /** Navigation commune de l’espace prestataire (la page courante porte `aria-current`). */

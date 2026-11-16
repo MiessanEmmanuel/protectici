@@ -6,12 +6,13 @@ import { useRef, useState, type ReactNode } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { ApiError, errorMessage } from '@/lib/api/errors';
 import type {
+  AdminEstablishment,
   EstablishmentAction,
   EstablishmentDocument,
   EstablishmentType,
 } from '@/lib/api/types';
 import { formatBytes } from '@/lib/files';
-import { formatDateTime, formatFcfa } from '@/lib/format';
+import { formatDateTime, formatFcfa, formatPhone } from '@/lib/format';
 import {
   COLLECTION_LABELS,
   DOCUMENT_TYPE_LABELS,
@@ -21,6 +22,7 @@ import {
   SUBMITTER_LABELS,
   TYPE_LABELS,
 } from '@/lib/labels';
+import { formatOpeningHours } from '@/lib/opening-hours';
 import { useResource } from '@/lib/use-async';
 import { MiniMap } from '../../map/MiniMap';
 import { Button } from '../../ui/Button';
@@ -36,6 +38,7 @@ import { formatChangeValue } from '../modifications/change-format';
 import { ChangeDiff } from '../modifications/ChangeDiff';
 import { AdminEstablishmentEditForm } from './AdminEstablishmentEditForm';
 import { AdminPageHeader } from '../AdminPageHeader';
+import { AssignOwnerPanel } from '../revendications/AssignOwnerPanel';
 import { DefList, DefRow, insetClasses, Panel, PanelNote } from './panel';
 
 type Dialog = 'approve' | 'reject' | 'suspend' | 'delete';
@@ -362,15 +365,25 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                         </DefList>
                       </Section>
 
-                      <Section title="Propriétaire" id="s-proprietaire">
-                        <DefList>
-                          <Row label="Nom">
-                            {`${e.owner.first_name} ${e.owner.last_name}`.trim()}
-                          </Row>
-                          <Row label="Adresse e-mail">{e.owner.email}</Row>
-                          <Row label="Téléphone">{e.owner.phone}</Row>
-                        </DefList>
-                      </Section>
+                      {/* Fiche importée ou non revendiquée : `owner` vaut null (contrat §10). */}
+                      {(e.owner as AdminEstablishment['owner'] | null) ? (
+                        <Section title="Propriétaire" id="s-proprietaire">
+                          <DefList>
+                            <Row label="Nom">
+                              {`${e.owner.first_name} ${e.owner.last_name}`.trim()}
+                            </Row>
+                            <Row label="Adresse e-mail">{e.owner.email}</Row>
+                            <Row label="Téléphone">{e.owner.phone}</Row>
+                          </DefList>
+                        </Section>
+                      ) : (
+                        <AssignOwnerPanel
+                          type={e.type}
+                          id={e.id}
+                          name={e.name}
+                          onAssigned={(updated) => state.setData(updated)}
+                        />
+                      )}
 
                       {e.type === 'provider' ? (
                         <Section title="Informations légales" id="s-legal">
@@ -395,11 +408,11 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
 
                       {e.type === 'provider' ? (
                         <Section title="Dirigeants" id="s-dirigeants">
-                          {e.executives.length === 0 ? (
+                          {(e.executives ?? []).length === 0 ? (
                             <p className="text-muted">Aucun dirigeant renseigné.</p>
                           ) : (
                             <ul className="flex flex-col gap-2">
-                              {e.executives.map((x) => (
+                              {(e.executives ?? []).map((x) => (
                                 <li
                                   key={x.id}
                                   className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${insetClasses}`}
@@ -435,10 +448,56 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                             {e.lat !== null && e.lng !== null ? `${e.lat}, ${e.lng}` : null}
                           </Row>
                         </DefList>
-                        {e.lat !== null && e.lng !== null ? (
-                          <MiniMap name={e.name} lat={e.lat} lng={e.lng} address={e.address} />
-                        ) : null}
+                        <MiniMap
+                          name={e.name}
+                          lat={e.lat}
+                          lng={e.lng}
+                          address={e.address}
+                          branches={e.branches}
+                        />
                       </Section>
+
+                      {e.type === 'provider' ? (
+                        <Section title="Agences" id="s-agences" hint="En plus du siège.">
+                          {e.branches.length === 0 ? (
+                            <p className="text-muted">Aucune agence renseignée.</p>
+                          ) : (
+                            <ul className="flex flex-col gap-2">
+                              {e.branches.map((b) => {
+                                const branchCity = ref?.cities.find((c) => c.id === b.city_id);
+                                const branchDistrict = branchCity?.districts.find(
+                                  (d) => d.id === b.district_id,
+                                );
+                                return (
+                                  <li key={b.id} className={`break-words ${insetClasses}`}>
+                                    <p className="font-semibold">{b.label}</p>
+                                    <p className="text-muted">
+                                      {[
+                                        branchDistrict?.name,
+                                        branchCity?.name ?? `Ville n° ${b.city_id}`,
+                                      ]
+                                        .filter(Boolean)
+                                        .join(', ')}
+                                    </p>
+                                    {b.address ? <p className="mt-1">{b.address}</p> : null}
+                                    {b.geo_description ? (
+                                      <p className="text-sm text-muted">{b.geo_description}</p>
+                                    ) : null}
+                                    {b.phone ? (
+                                      <p className="mt-1">{formatPhone(b.phone)}</p>
+                                    ) : null}
+                                    <p className="mt-1 text-sm text-muted">
+                                      {b.lat !== null && b.lng !== null
+                                        ? `Coordonnées : ${b.lat}, ${b.lng}`
+                                        : 'Non géolocalisée'}
+                                    </p>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </Section>
+                      ) : null}
 
                       <Section title="Contacts" id="s-contacts">
                         <DefList>
@@ -474,7 +533,11 @@ export function AdminEstablishmentDetail({ type, id }: { type: EstablishmentType
                             </>
                           ) : (
                             <>
-                              <Row label="Horaires">{e.opening_hours}</Row>
+                              <Row label="Horaires">
+                                <span className="whitespace-pre-line">
+                                  {formatOpeningHours(e.opening_hours, e.is_open_24h)}
+                                </span>
+                              </Row>
                               <Row label="Ouvert 24 h/24">{yesNo(e.is_open_24h)}</Row>
                             </>
                           )}

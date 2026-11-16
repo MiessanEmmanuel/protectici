@@ -35,10 +35,14 @@ export function QuotesReceived() {
     () => clientApi.listMyQuotes({ status: status || undefined, page }),
     [status, page],
   );
+  // Compteurs lancés seulement après un premier succès de la liste : un compte sans fiche
+  // prestataire reçoit un 403 sur la liste, inutile de multiplier les appels refusés.
+  const listReady = list.data !== null;
   const counts = useResource(async () => {
+    if (!listReady) return null;
     const res = await Promise.all(STATUSES.map((s) => clientApi.listMyQuotes({ status: s })));
     return STATUSES.map((s, i) => [s, res[i]!.meta.total] as const);
-  }, []);
+  }, [listReady]);
 
   const forbidden = list.data === null && list.error?.status === 403;
 

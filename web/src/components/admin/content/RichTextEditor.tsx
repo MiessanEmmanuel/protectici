@@ -41,6 +41,8 @@ export function RichTextEditor({
   const id = useId();
   const initial = useRef(value);
 
+  // innerHTML (et non textContent) : le contenu est déjà filtré par la liste blanche de
+  // sanitizeEditorHtml ; textContent afficherait les balises brutes puis les ré-enregistrerait échappées.
   useEffect(() => {
     if (ref.current) ref.current.innerHTML = sanitizeEditorHtml(initial.current);
   }, []);

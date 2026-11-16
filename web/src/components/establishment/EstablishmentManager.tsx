@@ -12,6 +12,7 @@ import { QueryBoundary } from '../ui/QueryBoundary';
 import { StatusBadge } from '../ui/StatusBadge';
 import { Tabs, type TabDef } from '../ui/Tabs';
 import { useToast } from '../ui/Toast';
+import { BranchesTab } from './BranchesTab';
 import { ChangeRequestsTab } from './ChangeRequestsTab';
 import { DocumentsTab } from './DocumentsTab';
 import { ExecutivesTab } from './ExecutivesTab';
@@ -44,7 +45,10 @@ function Manager({ est, reference, onSaved, reload }: Omit<TabProps, 'readOnly'>
   const tabs: TabDef[] = [
     { id: 'info', label: 'Informations', content: <InfoTab {...props} /> },
     ...(est.type === 'provider'
-      ? [{ id: 'executives', label: 'Dirigeants', content: <ExecutivesTab {...props} /> }]
+      ? [
+          { id: 'branches', label: 'Agences', content: <BranchesTab {...props} /> },
+          { id: 'executives', label: 'Dirigeants', content: <ExecutivesTab {...props} /> },
+        ]
       : []),
     { id: 'media', label: 'Médias', content: <MediaTab {...props} /> },
     { id: 'documents', label: 'Justificatifs', content: <DocumentsTab {...props} /> },

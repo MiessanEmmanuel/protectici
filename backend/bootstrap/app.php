@@ -4,6 +4,7 @@ use App\Exceptions\ApiExceptionRenderer;
 use App\Http\Middleware\CachePublicResponse;
 use App\Http\Middleware\EnsureTwoFactorForStaff;
 use App\Http\Middleware\EnsureVerifiedEmail;
+use App\Http\Middleware\RejectMalformedJson;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\StaffSessionInactivity;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
@@ -33,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Global : couvre aussi les 404 et /sanctum/csrf-cookie.
         $middleware->append(SecurityHeaders::class);
+        $middleware->append(RejectMalformedJson::class);
 
         // Authentification : garde de session (inactivité admin/editor, comptes désactivés) sur tout le
         // groupe api, et 2FA obligatoire pour le staff sur les routes qui le demandent (security.md §12).

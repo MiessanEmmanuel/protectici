@@ -1,8 +1,11 @@
 'use client';
 
+import { FileSpreadsheet } from 'lucide-react';
 import Link from 'next/link';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { clientApi } from '@/lib/api/client';
+import { IMPORTS_ENABLED } from '@/lib/admin-access';
+import { importsApi, type AdminImport } from '@/lib/api/imports';
 import type {
   AdminEstablishmentQuery,
   EstablishmentStatus,
@@ -11,7 +14,8 @@ import type {
 import { formatDate } from '@/lib/format';
 import { STATUS_LABELS, TYPE_LABELS } from '@/lib/labels';
 import { useResource } from '@/lib/use-async';
-import { Button } from '../../ui/Button';
+import { Button, buttonClasses } from '../../ui/Button';
+import { Checkbox } from '../../ui/Checkbox';
 import { EmptyState } from '../../ui/EmptyState';
 import { Input } from '../../ui/Input';
 import { PagerButtons } from '../../ui/PagerButtons';
@@ -25,15 +29,48 @@ import { filterPanelClasses } from './panel';
 
 type Sort = '-submitted_at' | 'name';
 
+/** Lots d'import proposés dans le filtre (les plus récents ; contrat §10.2). Échec silencieux. */
+function useRecentImports(enabled: boolean): AdminImport[] {
+  const [items, setItems] = useState<AdminImport[]>([]);
+  useEffect(() => {
+    if (!enabled) return;
+    let active = true;
+    importsApi
+      .list({ page: 1 })
+      .then((res) => {
+        if (active) setItems(res.data);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [enabled]);
+  return items;
+}
+
 export function AdminEstablishmentsList({
   initialType = '',
   initialStatus = '',
+  initialImportId = null,
+  initialIncomplete = false,
+  importsEnabled = IMPORTS_ENABLED,
 }: {
   initialType?: EstablishmentType | '';
   initialStatus?: EstablishmentStatus | '';
+  /** Lot d'import (lien « Voir les fiches de cet import », paramètre `import_id` de l'URL). */
+  initialImportId?: number | null;
+  /** Fiches incomplètes seulement (`incomplete=1` dans l'URL). */
+  initialIncomplete?: boolean;
+  /** Import Excel disponible (bouton, filtre « Lot d'import ») ; voir IMPORTS_ENABLED. */
+  importsEnabled?: boolean;
 }) {
   const [type, setType] = useState<EstablishmentType | ''>(initialType);
   const [status, setStatus] = useState<EstablishmentStatus | ''>(initialStatus);
+  const [importId, setImportId] = useState<number | null>(
+    importsEnabled ? initialImportId : null,
+  );
+  const [incomplete, setIncomplete] = useState(initialIncomplete);
+  const imports = useRecentImports(importsEnabled);
   const [sort, setSort] = useState<Sort>('-submitted_at');
   const [draftQ, setDraftQ] = useState('');
   const [q, setQ] = useState('');
@@ -44,8 +81,10 @@ export function AdminEstablishmentsList({
     if (type) query.type = type;
     if (status) query.status = status;
     if (q) query.q = q;
+    if (importId) query.import_id = importId;
+    if (incomplete) query.incomplete = true;
     return clientApi.adminListEstablishments(query);
-  }, [type, status, q, sort, page]);
+  }, [type, status, q, sort, page, importId, incomplete]);
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -59,6 +98,14 @@ export function AdminEstablishmentsList({
         section="Annuaire"
         title="Établissements"
         description="Prestataires privés et forces étatiques : validation, vérification et mise en avant des fiches."
+        actions={
+          importsEnabled ? (
+            <Link href="/admin/etablissements/import" className={buttonClasses('primary', 'sm')}>
+              <FileSpreadsheet aria-hidden="true" />
+              Importer un fichier
+            </Link>
+          ) : undefined
+        }
       />
 
       <form
@@ -119,6 +166,38 @@ export function AdminEstablishmentsList({
           />
           <Button type="submit">Rechercher</Button>
         </div>
+        {importsEnabled ? (
+          <Select
+            label="Lot d’import"
+            value={importId ? String(importId) : ''}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setImportId(Number.isInteger(v) && v > 0 ? v : null);
+              setPage(1);
+            }}
+          >
+            <option value="">Tous les lots</option>
+            {importId && !imports.some((i) => i.id === importId) ? (
+              <option value={String(importId)}>Import n° {importId}</option>
+            ) : null}
+            {imports.map((i) => (
+              <option key={i.id} value={String(i.id)}>
+                {`N° ${i.id} · ${i.original_name}`}
+              </option>
+            ))}
+          </Select>
+        ) : null}
+        <div className="flex items-end">
+          <Checkbox
+            label="Fiches incomplètes seulement"
+            hint="Sans coordonnées, téléphone, description ou services / démarches."
+            checked={incomplete}
+            onChange={(e) => {
+              setIncomplete(e.target.checked);
+              setPage(1);
+            }}
+          />
+        </div>
       </form>
 
       <QueryBoundary state={state} loadingLabel="Chargement des établissements…">
@@ -168,6 +247,7 @@ export function AdminEstablishmentsList({
                           <StatusBadge status={row.status} />
                           {row.is_verified ? <Badge tone="success">Vérifié</Badge> : null}
                           {row.is_featured ? <Badge tone="accent">À la une</Badge> : null}
+                          {row.is_incomplete ? <Badge tone="danger">Incomplète</Badge> : null}
                         </div>
                       </Td>
                       <Td className="whitespace-nowrap text-muted">

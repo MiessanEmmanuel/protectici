@@ -16,6 +16,9 @@ vi.mock('@/lib/api/client', () => ({
   },
 }));
 
+const session = vi.hoisted(() => ({ user: null as unknown }));
+vi.mock('@/components/layout/SessionProvider', () => ({ useSession: () => session }));
+
 import { FeedbackForm } from '@/components/feedback/FeedbackForm';
 import { chooseOption } from './select-helpers';
 
@@ -29,7 +32,11 @@ const reference = {
   feedback_topics: [opt(10, 'Courtoisie'), opt(11, 'Ponctualité')],
 } as ReferenceData;
 
-const RECEIPT = { reference: 'DMT-2026-000123', status: 'new', message: 'Votre message a bien été reçu.' };
+const RECEIPT = {
+  reference: 'DMT-2026-000123',
+  status: 'new',
+  message: 'Votre message a bien été reçu.',
+};
 const COMMENT = 'Le gardien était très aimable et ponctuel.';
 
 type User = ReturnType<typeof userEvent.setup>;
@@ -185,8 +192,13 @@ describe('FeedbackForm', () => {
     });
     expect(body).not.toHaveProperty('product_type');
     expect(key).toMatch(/^[0-9a-f-]{36}$/);
-    expect(screen.getByText(/Conservez ce numéro, il vous permettra de suivre votre dossier/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Suivre mon dossier' })).toHaveAttribute('href', '/dis-moi-tout/suivi');
+    expect(
+      screen.getByText(/Conservez ce numéro, il vous permettra de suivre votre dossier/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Suivre mon dossier' })).toHaveAttribute(
+      'href',
+      '/dis-moi-tout/suivi',
+    );
     expect(document.body.textContent).not.toContain('awa@example.test');
 
     await u.click(screen.getByRole('button', { name: 'Copier la référence' }));
@@ -220,7 +232,9 @@ describe('FeedbackForm', () => {
 
   it('une erreur 422 ramène à l’étape du champ fautif', async () => {
     const u = userEvent.setup();
-    createFeedback.mockRejectedValueOnce(new ApiError(422, 'Invalide', { email: ['Cette adresse est refusée.'] }));
+    createFeedback.mockRejectedValueOnce(
+      new ApiError(422, 'Invalide', { email: ['Cette adresse est refusée.'] }),
+    );
     render(<FeedbackForm reference={reference} />);
     await toReview(u);
     await u.click(screen.getByLabelText(/J’accepte que ProtectIci/));
@@ -279,7 +293,9 @@ describe('FeedbackForm', () => {
       expect(screen.getByTestId('turnstile')).toBeInTheDocument();
       await u.click(screen.getByLabelText(/J’accepte que ProtectIci/));
       await send(u);
-      expect(await screen.findByText(/vérification anti-robot avant d’envoyer/)).toBeInTheDocument();
+      expect(
+        await screen.findByText(/vérification anti-robot avant d’envoyer/),
+      ).toBeInTheDocument();
       expect(createFeedback).not.toHaveBeenCalled();
       await act(async () => callback('jeton-ok'));
       await send(u);
@@ -292,7 +308,12 @@ describe('FeedbackForm', () => {
 
   it('préremplit le prestataire passé par la page et le retire sur demande', async () => {
     const u = userEvent.setup();
-    render(<FeedbackForm reference={reference} initialProvider={{ slug: 'dauphin', name: 'Dauphin Sécurité' }} />);
+    render(
+      <FeedbackForm
+        reference={reference}
+        initialProvider={{ slug: 'dauphin', name: 'Dauphin Sécurité' }}
+      />,
+    );
     await step1(u);
     const picked = screen.getByText('Prestataire choisi').parentElement!;
     expect(within(picked).getByText('Dauphin Sécurité')).toBeInTheDocument();
@@ -302,7 +323,12 @@ describe('FeedbackForm', () => {
 
   it('envoie provider_slug quand un prestataire est préchoisi', async () => {
     const u = userEvent.setup();
-    render(<FeedbackForm reference={reference} initialProvider={{ slug: 'dauphin', name: 'Dauphin Sécurité' }} />);
+    render(
+      <FeedbackForm
+        reference={reference}
+        initialProvider={{ slug: 'dauphin', name: 'Dauphin Sécurité' }}
+      />,
+    );
     await step1(u);
     await next(u);
     await step3(u, 'Un encouragement'.replace('Un ', 'Un '));
@@ -313,5 +339,18 @@ describe('FeedbackForm', () => {
     await screen.findByTestId('reference');
     expect(createFeedback.mock.calls[0]![0].provider_slug).toBe('dauphin');
     expect(createFeedback.mock.calls[0]![0].action_type).toBe('encouragement');
+  });
+
+  it('préremplit les coordonnées depuis la session (R28)', async () => {
+    session.user = { id: 1, first_name: 'Awa', last_name: 'Koné', email: 'awa@example.test', phone: '+2250700000000', role: 'user', email_verified: true, two_factor_enabled: false, created_at: '2026-01-01T00:00:00Z' };
+    try {
+      render(<FeedbackForm reference={reference} />);
+      await waitFor(() => expect(screen.getByLabelText(/^Nom/)).toHaveValue('Koné'));
+      expect(screen.getByLabelText(/^Prénoms/)).toHaveValue('Awa');
+      expect(screen.getByLabelText(/^Adresse e-mail/)).toHaveValue('awa@example.test');
+      expect(screen.getByLabelText(/^Téléphone/)).toHaveValue('+2250700000000');
+    } finally {
+      session.user = null;
+    }
   });
 });

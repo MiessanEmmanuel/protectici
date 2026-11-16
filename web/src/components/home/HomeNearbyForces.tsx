@@ -30,7 +30,11 @@ export function HomeNearbyForces({ initial }: { initial: StateForceSummary[] }) 
       const res = await clientApi.listStateForces({ ...pos, sort: 'distance', per_page: 4 });
       setGeo(pos);
       setForces(res.data);
-      setMessage(res.data.length ? 'Position utilisée.' : 'Aucune structure trouvée à proximité.');
+      setMessage(
+        res.data.length
+          ? 'Position utilisée : structures triées par distance.'
+          : 'Aucune structure trouvée à proximité.',
+      );
     } catch (e) {
       setMessage(e instanceof GeoError ? geoErrorMessage(e) : errorMessage(e));
     } finally {
@@ -51,7 +55,7 @@ export function HomeNearbyForces({ initial }: { initial: StateForceSummary[] }) 
         className="mb-3.5 inline-flex min-h-tap items-center gap-2 border-2 border-current px-3.5 text-[0.85rem] font-extrabold hover:bg-on-c1 hover:text-c1 disabled:opacity-70 [&_svg]:size-[1.15em]"
       >
         <LocateFixed aria-hidden="true" />
-        {geo ? 'Position utilisée' : busy ? 'Localisation…' : 'Utiliser ma position'}
+        {busy ? 'Localisation…' : geo ? 'Actualiser ma position' : 'Utiliser ma position'}
       </button>
       <p role="status" className="min-h-0 text-sm font-semibold empty:hidden">
         {message}

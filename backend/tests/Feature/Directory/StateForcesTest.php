@@ -85,7 +85,7 @@ it('renvoie la fiche détaillée avec démarches et notes', function () {
 
     $d = $this->getJson('/api/v1/state-forces/'.$f->slug)->assertOk()->json('data');
 
-    expect(array_keys($d))->toEqualCanonicalizing([...FORCE_KEYS, 'description', 'email', 'geo_description', 'plus_code', 'opening_hours', 'procedures']);
+    expect(array_keys($d))->toEqualCanonicalizing([...FORCE_KEYS, 'description', 'email', 'geo_description', 'plus_code', 'opening_hours', 'procedures', 'is_claimable']);
     expect($d['procedures'])->toBe([['slug' => 'perte', 'name' => 'Déclaration de perte', 'notes' => 'Pièce d\'identité']]);
     expect($d['opening_hours'])->toBe(['mon' => [['08:00', '17:00']]]);
 });

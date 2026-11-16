@@ -2,7 +2,12 @@
 
 import type { ReactNode } from 'react';
 import type { ReferenceData } from '@/lib/api/types';
-import { normalizePhone, type EstablishmentDraft, type StepId } from '@/lib/establishment-schemas';
+import {
+  MAX_BRANCHES,
+  normalizePhone,
+  type EstablishmentDraft,
+  type StepId,
+} from '@/lib/establishment-schemas';
 import { DOCUMENT_RULES, formatBytes, MAX_DOCUMENTS } from '@/lib/files';
 import {
   DOCUMENT_TYPE_LABELS,
@@ -13,6 +18,7 @@ import {
   TYPE_LABELS,
 } from '@/lib/labels';
 import { formatFcfa } from '@/lib/format';
+import { formatOpeningHours, openingHoursPayload } from '@/lib/opening-hours';
 import type { DocumentType } from '@/lib/api/types';
 import { useState } from 'react';
 import { Button } from '../ui/Button';
@@ -22,9 +28,11 @@ import { FileInput } from '../ui/FileInput';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { Textarea } from '../ui/Textarea';
+import { BranchesEditor } from './BranchesEditor';
 import { ExecutivesEditor } from './ExecutivesEditor';
 import { CheckboxGroup, RadioGroup } from './GroupControls';
 import { LocationFields } from './LocationFields';
+import { OpeningHoursEditor } from './OpeningHoursEditor';
 
 export interface StepProps {
   draft: EstablishmentDraft;
@@ -172,7 +180,7 @@ function IdentityStep(p: StepProps) {
 }
 
 function LocationStep(p: StepProps) {
-  return (
+  const fields = (
     <LocationFields
       values={p.draft}
       onChange={(patch) => p.set(patch)}
@@ -180,6 +188,33 @@ function LocationStep(p: StepProps) {
       reference={p.reference}
       disabled={p.disabled}
     />
+  );
+  if (p.draft.type !== 'provider') return fields;
+  return (
+    <div className="flex flex-col gap-6">
+      <section aria-labelledby="hq-title" className="flex flex-col gap-3">
+        <h3 id="hq-title" className="text-xl heading-block">
+          Siège
+        </h3>
+        {fields}
+      </section>
+      <section aria-labelledby="branches-title" className="flex flex-col gap-3">
+        <h3 id="branches-title" className="text-xl heading-block">
+          Vous avez d’autres agences ?
+        </h3>
+        <p className="text-sm text-muted">
+          Facultatif. Ajoutez vos autres adresses (jusqu’à {MAX_BRANCHES}) pour que les visiteurs
+          trouvent l’agence la plus proche. L’adresse ci-dessus reste celle du siège.
+        </p>
+        <BranchesEditor
+          value={p.draft.branches}
+          onChange={(branches) => p.set({ branches })}
+          errors={p.errors}
+          reference={p.reference}
+          disabled={p.disabled}
+        />
+      </section>
+    </div>
   );
 }
 
@@ -202,10 +237,7 @@ function LegalStep(p: StepProps) {
         </Select>
         <Input {...bind(p, 'share_capital')} label="Capital social (FCFA)" inputMode="numeric" />
         <Input {...bind(p, 'approval_number')} label="Numéro d’agrément" maxLength={50} />
-        <DateField
-          {...bind(p, 'approval_expires_at')}
-          label="Date d’expiration de l’agrément"
-        />
+        <DateField {...bind(p, 'approval_expires_at')} label="Date d’expiration de l’agrément" />
       </div>
       <Textarea {...bind(p, 'corporate_purpose')} label="Objet social" rows={3} maxLength={1000} />
       <section aria-labelledby="executives-title" className="flex flex-col gap-3">
@@ -242,17 +274,13 @@ function ContactsStep(p: StepProps) {
       </div>
       {force ? (
         <>
-          <Input
-            {...bind(p, 'opening_hours')}
-            label="Horaires d’ouverture"
-            hint="Par exemple : lundi au vendredi, 8 h - 17 h."
-            maxLength={255}
-          />
-          <Checkbox
-            id="f-is_open_24h"
-            label="Ouvert 24 h sur 24"
-            checked={p.draft.is_open_24h}
-            onChange={(e) => p.set({ is_open_24h: e.target.checked })}
+          <OpeningHoursEditor
+            value={p.draft.opening_hours}
+            onChange={(opening_hours) => p.set({ opening_hours })}
+            isOpen24h={p.draft.is_open_24h}
+            onOpen24hChange={(is_open_24h) => p.set({ is_open_24h })}
+            errors={p.errors}
+            disabled={p.disabled}
           />
         </>
       ) : (
@@ -411,6 +439,25 @@ function ReviewStep(p: StepProps) {
         <Row label="Position sur la carte">{d.lat && d.lng ? `${d.lat} ; ${d.lng}` : ''}</Row>
         {!force ? (
           <>
+            <Row label="Agences">
+              {d.branches.length ? (
+                <ul>
+                  {d.branches.map((b) => {
+                    const bc = p.reference.cities.find((c) => String(c.id) === b.city_id);
+                    const bd = bc?.districts.find((x) => String(x.id) === b.district_id);
+                    return (
+                      <li key={b.uid}>
+                        {b.label}
+                        {bc ? ` : ${[bc.name, bd?.name].filter(Boolean).join(', ')}` : ''}
+                        {b.phone.trim() ? ` (${normalizePhone(b.phone)})` : ''}
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                'Aucune'
+              )}
+            </Row>
             <Row label="Numéro RCCM">{d.rccm}</Row>
             <Row label="Forme juridique">{legalFormLabel(d.legal_form)}</Row>
             <Row label="Capital social">
@@ -442,7 +489,11 @@ function ReviewStep(p: StepProps) {
         <Row label="E-mail">{d.email}</Row>
         {force ? (
           <>
-            <Row label="Horaires">{d.is_open_24h ? 'Ouvert 24 h sur 24' : d.opening_hours}</Row>
+            <Row label="Horaires">
+              <span className="whitespace-pre-line">
+                {formatOpeningHours(openingHoursPayload(d.opening_hours, false), d.is_open_24h)}
+              </span>
+            </Row>
           </>
         ) : (
           <>

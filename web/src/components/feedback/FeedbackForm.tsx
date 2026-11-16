@@ -14,6 +14,7 @@ import { AntiSpamFields } from '../security/AntiSpamFields';
 import { TURNSTILE_REQUIRED_MESSAGE, useAntiSpam } from '../security/use-anti-spam';
 import { ProviderPicker, type PickedProvider } from '../directory/ProviderPicker';
 import { ErrorSummary } from '../establishment/ErrorSummary';
+import { useSession } from '../layout/SessionProvider';
 import { Button, ButtonLink } from '../ui/Button';
 import { FormError } from '../ui/Field';
 import { Checkbox } from '../ui/Checkbox';
@@ -68,6 +69,8 @@ export function FeedbackForm({
   const [summarySignal, setSummarySignal] = useState(0);
   const [formError, setFormError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<FeedbackReceipt | null>(null);
+  const { user } = useSession();
+  const signedIn = user !== null;
   const { run, busy } = useAsyncAction();
   const spam = useAntiSpam();
   const keyRef = useRef<{ key: string; sig: string }>({ key: newIdempotencyKey(), sig: '' });
@@ -80,6 +83,19 @@ export function FeedbackForm({
   const last = index === FEEDBACK_STEPS.length - 1;
   const announced = useDebounced(draft.comment.length, 700);
   const uid = useId();
+
+  // Préremplit les coordonnées depuis la session (R28), une fois par compte, sans écraser une saisie.
+  const [prefilledFor, setPrefilledFor] = useState<number | null>(null);
+  if (user && prefilledFor !== user.id) {
+    setPrefilledFor(user.id);
+    setDraft((d) => ({
+      ...d,
+      last_name: d.last_name || user.last_name,
+      first_name: d.first_name || user.first_name,
+      email: d.email || user.email,
+      phone: d.phone || (user.phone ?? ''),
+    }));
+  }
 
   useEffect(() => {
     if (focusHeading.current) {
@@ -213,7 +229,9 @@ export function FeedbackForm({
           Un accusé de réception vous a été envoyé par e-mail avec cette référence.
         </p>
         <div className="flex flex-wrap gap-3">
-          <ButtonLink href="/dis-moi-tout/suivi">Suivre mon dossier</ButtonLink>
+          <ButtonLink href={signedIn ? '/compte/mes-dis-moi-tout' : '/dis-moi-tout/suivi'}>
+            Suivre mon dossier
+          </ButtonLink>
           <Button variant="secondary" onClick={restart}>
             Envoyer un autre message
           </Button>

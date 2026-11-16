@@ -14,6 +14,7 @@ import { Textarea } from '../ui/Textarea';
 import { ErrorSummary } from './ErrorSummary';
 import { CheckboxGroup } from './GroupControls';
 import { LocationFields } from './LocationFields';
+import { OpeningHoursEditor } from './OpeningHoursEditor';
 import { buildInfoPatch, toDraft } from './manager-utils';
 import type { TabProps } from './manager-types';
 
@@ -78,7 +79,8 @@ export function InfoTab({ est, reference, readOnly, onSaved }: TabProps) {
   const summary = { ...errors };
 
   return (
-    <form method="post"
+    <form
+      method="post"
       className="flex max-w-3xl flex-col gap-5"
       noValidate
       onSubmit={(e) => {
@@ -147,14 +149,15 @@ export function InfoTab({ est, reference, readOnly, onSaved }: TabProps) {
           <Input label="Adresse e-mail publique" type="email" maxLength={255} {...text('email')} />
         </div>
         {force ? (
-          <>
-            <Input label="Horaires d’ouverture" maxLength={255} {...text('opening_hours')} />
-            <Checkbox
-              label="Ouvert 24 h sur 24"
-              checked={draft.is_open_24h}
-              onChange={(e) => set({ is_open_24h: e.target.checked })}
-            />
-          </>
+          <OpeningHoursEditor
+            idPrefix="info-opening_hours"
+            value={draft.opening_hours}
+            onChange={(opening_hours) => set({ opening_hours })}
+            isOpen24h={draft.is_open_24h}
+            onOpen24hChange={(is_open_24h) => set({ is_open_24h })}
+            errors={errors}
+            disabled={readOnly || busy}
+          />
         ) : (
           <>
             <Input label="Numéro WhatsApp" type="tel" {...text('whatsapp_number')} />

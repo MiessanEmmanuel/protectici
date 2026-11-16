@@ -13,6 +13,8 @@ Contrat **partagé** entre `backend/` (Laravel) et `web/` (Next.js). Source de v
 - Dates : ISO 8601 UTC (`2026-10-07T14:30:00Z`). Montants : entiers FCFA. Distances : mètres (`distance_m`). Coordonnées : `lat`, `lng` (nombres décimaux).
 - Réponse objet : `{ "data": { … } }`. Réponse liste paginée : `{ "data": [ … ], "meta": { "current_page", "last_page", "per_page", "total" }, "links": { "next", "prev" } }`. `per_page` par défaut 12, **max 50**.
 - Erreurs (toutes) : `{ "message": "Texte français générique", "errors": { "champ": ["message"] } }` — `errors` seulement pour 422. Codes : 401 non authentifié, 403 interdit, 404, 419 CSRF, 422 validation, 429 trop de requêtes (en-tête `Retry-After`), 500 générique (jamais de trace). Voir `security.md` §14, §20.
+- Corps JSON non décodable : **400** `{ "message": …, "code": "malformed_json" }`.
+- Champs texte libres des formulaires (contact, Dis-moi tout, devis, établissement, avis, profil, commentaires, revendication) : toute balise HTML est **rejetée en 422** (« Le champ … ne doit pas contenir de balises HTML. ») ; un « < » isolé reste accepté.
 - Messages utilisateur en **français**. Noms de champs JSON en **snake_case anglais**.
 - Filtres : `filter[clé]=valeur`. Tri : `sort=champ` ou `sort=-champ` (décroissant). Valeurs multiples : séparées par des virgules (`filter[service]=gardiennage-arme,videosurveillance`).
 
@@ -25,10 +27,10 @@ Contrat **partagé** entre `backend/` (Laravel) et `web/` (Next.js). Source de v
 `City { id, name, slug, lat|null, lng|null, districts: [District] }` · `District { id, name, slug, parent_id|null }` · `Option { id, slug, name }` (types d'entreprise, de service, de force, de démarche).
 
 ### ProviderSummary
-`{ slug, name, logo_url|null, city: {name, slug}, district: {name, slug}|null, phone, services: [{slug, name}], price_from|null, rating_avg (0–5, 1 décimale), rating_count, is_verified, is_featured, lat|null, lng|null, distance_m|null (si lat/lng fournis) }`
+`{ slug, name, logo_url|null, city: {name, slug}, district: {name, slug}|null, phone, services: [{slug, name}], price_from|null, rating_avg (0–5, 1 décimale), rating_count, is_verified, is_featured, lat|null, lng|null, distance_m|null (si lat/lng fournis ; distance minimale siège/agences), branches_count (agences en plus du siège), nearest_branch: {id, label}|null (agence la plus proche quand elle bat le siège) }`
 
 ### ProviderDetail
-`ProviderSummary` + `{ description, address|null, geo_description|null, plus_code|null, email|null, website_url|null, emergency_phone|null, socials: { facebook, instagram, twitter, linkedin, whatsapp } (valeurs ou null), company_types: [Option], legal: { legal_form|null, share_capital|null, rccm|null, approval_number|null, corporate_purpose|null }, executives: [{ full_name, position: "general_manager"|"commercial_manager"|"operations_manager"|"other", position_label|null }] (uniquement `is_visible`), gallery: [{ url, alt }], views_count, is_favorite: bool|null (null si anonyme) }`
+`ProviderSummary` + `{ description, address|null, geo_description|null, plus_code|null, email|null, website_url|null, emergency_phone|null, socials: { facebook, instagram, twitter, linkedin, whatsapp } (valeurs ou null), company_types: [Option], legal: { legal_form|null, share_capital|null, rccm|null, approval_number|null, corporate_purpose|null }, executives: [{ full_name, position: "general_manager"|"commercial_manager"|"operations_manager"|"other", position_label|null }], branches: [{ id, label, city: {name, slug}, district: {name, slug}|null, address|null, geo_description|null, phone|null, lat|null, lng|null }] (uniquement `is_visible`), gallery: [{ url, alt }], views_count, is_favorite: bool|null (null si anonyme) }`
 
 ### StateForceSummary
 `{ slug, name, force_type: Option, phone|null, emergency_phone|null, city: {name, slug}, district|null, address|null, is_open_24h, lat|null, lng|null, distance_m|null }`
@@ -74,7 +76,7 @@ Limiteurs : voir `security.md` §18. Turnstile : vérifié côté serveur si act
 | GET | `/providers/{slug}/reviews` | `page`, `per_page` | liste paginée de `Review` publiés |
 | GET | `/state-forces` | `filter[q]`, `filter[city]`, `filter[district]`, `filter[type]` (slugs), `filter[procedure]` (slugs), `lat`, `lng`, `radius_km`, `sort` ∈ `name`, `distance`, `page`, `per_page` | liste paginée de `StateForceSummary` |
 | GET | `/state-forces/{slug}` | — | `{data: StateForceDetail}` |
-| GET | `/map/markers` | `type` ∈ `providers`\|`state_forces`, `bbox=minLng,minLat,maxLng,maxLat`, mêmes filtres que les listes | `{data: [{ slug, name, lat, lng }]}` (max 500) |
+| GET | `/map/markers` | `type` ∈ `providers`\|`state_forces`, `bbox=minLng,minLat,maxLng,maxLat`, mêmes filtres que les listes | `{data: [{ slug, name, branch_label (providers ; null = siège), lat, lng }]}` : un point par siège et par agence géolocalisés (max 500) |
 | GET | `/geocode` | `q` (3–100 caractères) | `{data: [{ label, lat, lng }]}` (Nominatim, en cache, 1 req/s côté serveur, limiteur 30/min/IP) |
 | GET | `/me/favorites` | (auth) `page` | liste paginée de `ProviderSummary` |
 | PUT | `/providers/{slug}/favorite` | (auth, email vérifié) | 204 |
@@ -113,7 +115,7 @@ Décisions : (1) l'inscription d'établissement **exige un compte connecté et v
 
 **MyEstablishmentSummary** : `{ type, slug, name, status: "draft"|"pending"|"approved"|"rejected"|"suspended", rejection_reason|null, is_visible, is_verified (providers), submitted_at, reviewed_at|null, pending_change_requests: int }`
 
-**MyEstablishment** (propriétaire ; champs privés inclus) = `MyEstablishmentSummary` + tous les champs éditables du `ProviderDetail`/`StateForceDetail` (contrat §2) **sous forme d'identifiants** pour les relations (`city_id`, `district_id`, `company_type_ids[]`, `service_type_ids[]`, `force_type_id`, `procedure_type_ids[]` ou `procedures:[{procedure_type_id, notes}]`), plus `submitter_role: "manager"|"employee"|"other"|null`, `is_in_service`, `executives: [{ id, full_name, position, position_label|null, is_visible }]`, `media: [{ id, collection: "logo"|"cover"|"gallery", url, alt }]`, `documents: [{ id, type, original_name, size_bytes, uploaded_at, verified_at|null }]` (jamais d'URL publique), `change_requests: [ChangeRequest]`.
+**MyEstablishment** (propriétaire ; champs privés inclus) = `MyEstablishmentSummary` + tous les champs éditables du `ProviderDetail`/`StateForceDetail` (contrat §2) **sous forme d'identifiants** pour les relations (`city_id`, `district_id`, `company_type_ids[]`, `service_type_ids[]`, `force_type_id`, `procedure_type_ids[]` ou `procedures:[{procedure_type_id, notes}]`, `branches:[{id, label, city_id, district_id|null, address|null, geo_description|null, phone|null, lat|null, lng|null}]`, liste vide pour une force étatique), plus `submitter_role: "manager"|"employee"|"other"|null`, `is_in_service`, `executives: [{ id, full_name, position, position_label|null, is_visible }]`, `media: [{ id, collection: "logo"|"cover"|"gallery", url, alt }]`, `documents: [{ id, type, original_name, size_bytes, uploaded_at, verified_at|null }]` (jamais d'URL publique), `change_requests: [ChangeRequest]`.
 
 **ChangeRequest** : `{ id, changes: { champ: { old, new } }, status: "pending"|"approved"|"rejected", rejection_reason|null, created_at, reviewed_at|null }`
 
@@ -126,10 +128,10 @@ Décisions : (1) l'inscription d'établissement **exige un compte connecté et v
 
 | Méthode | Chemin | Corps / paramètres | Réponse |
 |---|---|---|---|
-| POST | `/establishments` | `type`; **provider** : `name, company_type_ids[] (≥1), service_type_ids[] (≥1), phone, city_id, submitter_role, is_in_service` + optionnels (`description, phone_alt, emergency_phone, email, website_url, facebook_url, instagram_url, twitter_url, linkedin_url, whatsapp_number, address, district_id, geo_description, plus_code, lat, lng, price_from, rccm, legal_form, share_capital, corporate_purpose, approval_number, approval_expires_at, executives[]`) ; **state_force** : `force_type_id, name, city_id` + optionnels (`description, phone, phone_alt, emergency_phone, email, address, district_id, geo_description, plus_code, lat, lng, opening_hours, is_open_24h, procedure_type_ids[]`) ; `consent` (true obligatoire). En-tête `Idempotency-Key` supporté (2 envois = 1 fiche). | 201 `{data: MyEstablishment}` ; statut `pending`, `is_visible=false`, `user_id` = demandeur. Limite : 3/jour/IP et 5/jour/utilisateur. |
+| POST | `/establishments` | `type`; **provider** : `name, company_type_ids[] (≥1), service_type_ids[] (≥1), phone, city_id, submitter_role, is_in_service` + optionnels (`description, phone_alt, emergency_phone, email, website_url, facebook_url, instagram_url, twitter_url, linkedin_url, whatsapp_number, address, district_id, geo_description, plus_code, lat, lng, price_from, rccm, legal_form, share_capital, corporate_purpose, approval_number, approval_expires_at, executives[], branches[]`) ; **state_force** : `force_type_id, name, city_id` + optionnels (`description, phone, phone_alt, emergency_phone, email, address, district_id, geo_description, plus_code, lat, lng, opening_hours, is_open_24h, procedure_type_ids[]`) ; `consent` (true obligatoire). En-tête `Idempotency-Key` supporté (2 envois = 1 fiche). | 201 `{data: MyEstablishment}` ; statut `pending`, `is_visible=false`, `user_id` = demandeur. Limite : 3/jour/IP et 5/jour/utilisateur. |
 | GET | `/me/establishments` | `page` | liste paginée de `MyEstablishmentSummary` |
 | GET | `/me/establishments/{type}/{slug}` | — | `{data: MyEstablishment}` / 404 si pas propriétaire |
-| PATCH | `/me/establishments/{type}/{slug}` | champs **non sensibles** (liste blanche) + `executives[]` (remplacement) | 200 `{data: MyEstablishment}` ; une tentative d'envoyer un champ sensible ⇒ 422 « Ce champ nécessite une demande de modification. » Provider sensibles : `name, rccm, legal_form, share_capital, corporate_purpose, approval_number`. State force sensibles : `name, force_type_id`. |
+| PATCH | `/me/establishments/{type}/{slug}` | champs **non sensibles** (liste blanche) + `executives[]` (remplacement) + `branches[]` (remplacement, 20 max ; `id` pour conserver une agence, liste vide pour tout supprimer, champ absent = inchangé) | 200 `{data: MyEstablishment}` ; une tentative d'envoyer un champ sensible ⇒ 422 « Ce champ nécessite une demande de modification. » Provider sensibles : `name, rccm, legal_form, share_capital, corporate_purpose, approval_number`. State force sensibles : `name, force_type_id`. |
 | POST | `/me/establishments/{type}/{slug}/change-requests` | `changes: { champ: nouvelleValeur }` (champs sensibles uniquement) | 201 `{data: ChangeRequest}` ; 409 s'il en existe déjà une `pending` |
 | DELETE | `/me/establishments/{type}/{slug}/change-requests/{id}` | — | 204 (annulation tant que `pending`) |
 | POST | `/me/establishments/{type}/{slug}/documents` | multipart : `file` (PDF/JPEG/PNG, ≤ 10 Mo, 5 max/fiche), `type` ∈ `approval_certificate\|rccm_extract\|id_document\|other` | 201 `{data: {id,type,original_name,size_bytes,uploaded_at}}` ; stockage **privé**, type réel vérifié par contenu, nom aléatoire |
@@ -218,6 +220,8 @@ Mêmes conventions que §1 et §7. Les formulaires **publics** (feedbacks, devis
 |---|---|---|---|
 | POST | `/feedbacks` | `civility?` ∈ `M.\|Mme\|Mlle`, `last_name`, `first_name`, `email`, `phone?`, `provider_slug?`, `action_type` ∈ `encouragement\|question\|complaint\|suggestion`, `target_type` ∈ `employee\|product\|service`, `service_type_id?`, `topic_id?`, `product_type?`, `location?`, `comment` (10–3000), `consent`, + antispam §8.0. Règles : `topic_id` requis si `target_type` ≠ `product` ; `service_type_id` requis si `service`. | 201 `{data: { reference: "DMT-2026-000123", status: "new", message: "Votre message a bien été reçu. Conservez ce numéro de suivi." }}` ; accusé e-mail (avec la référence) |
 | POST | `/feedbacks/track` | `reference`, `email` (**POST**, jamais en URL) | 200 `{data: { reference, status, created_at, provider_name|null, replies: [{ body, created_at }] (réponses NON internes seulement) }}` ; **404 générique** « Aucun dossier ne correspond à ces informations. » que la référence soit inconnue ou l'e-mail faux |
+| GET | `/me/feedbacks` | `status?` ∈ `new\|in_progress\|forwarded\|resolved\|closed`, `page` — tout utilisateur vérifié | liste paginée de `MyFeedback` : dossiers **envoyés depuis son compte** (rattachés à l'envoi, `user_id`) |
+| GET | `/me/feedbacks/{id}` | — | `{data: MyFeedback}` ; 404 si le dossier n'est pas le sien ou a été envoyé sans compte |
 | GET | `/admin/feedbacks` | `status?`, `action_type?`, `provider?`, `assigned_to?`, `q?` (référence/nom/e-mail), `sort` ∈ `-created_at\|status`, `page` | liste paginée `AdminFeedbackRow` |
 | GET | `/admin/feedbacks/{id}` | — | `{data: AdminFeedback}` |
 | PATCH | `/admin/feedbacks/{id}` | `status?` ∈ `new\|in_progress\|forwarded\|resolved\|closed`, `assigned_to?` (id admin ou null) | 200 ; `resolved_at` posé à la résolution ; audit |
@@ -236,6 +240,7 @@ La personne choisit **un commentaire écrit OU un message vocal** (les deux sont
 - Colonnes `feedbacks` : `voice_disk`, `voice_path`, `voice_mime`, `voice_size_bytes`, `voice_duration_seconds` (toutes nullables). Échec d'écriture → aucune ligne créée (fichier supprimé si l'insert échoue).
 - Accusé de réception e-mail : ligne « Votre message vocal a bien été reçu. » si vocal.
 - Suivi public (`/feedbacks/track`) : **aucune** information sur le vocal.
+- **MyFeedback** : `{ id, reference, status, action_type, target_type, provider: {slug, name}|null, service_type: Option|null, topic: Option|null, comment|null, has_voice, created_at, resolved_at|null, replies: [{ body, created_at }] }` : réponses non internes seulement, aucune coordonnée ; le vocal n'est signalé que par `has_voice` (pas de lecture). Disparaît à l'anonymisation, qui retire `user_id`.
 - `AdminFeedback` (et `AdminFeedbackRow`) : `voice: { duration_seconds, mime, size_bytes } | null`.
 - `GET /admin/feedbacks/{id}/voice` (admin, 2FA comme le reste de `/admin`) : renvoie le binaire, `Content-Type` = `voice_mime` enregistré, `Content-Disposition: inline; filename="DMT-…​.ext"`, `Cache-Control: private, no-store`, `X-Content-Type-Options: nosniff`, prise en charge de `Range` facultative. 404 si pas de vocal. Accès journalisé (`feedback_voice_accessed`, sans donnée personnelle). Le front le récupère avec `fetch` (cookies) puis le lit via une URL `blob:`.
 - Rétention : l'anonymisation (> 36 mois) **supprime le fichier vocal** et met les colonnes `voice_*` à null (la voix est une donnée personnelle). Idem si un dossier est supprimé définitivement.
@@ -248,6 +253,8 @@ La personne choisit **un commentaire écrit OU un message vocal** (les deux sont
 | POST | `/quote-requests` | `first_name`, `last_name`, `email`, `phone`, `company_name?`, `service_type_id`, `city_id`, `district_id?`, `description` (20–3000), `desired_start_date?` (≥ aujourd'hui), `budget_range?` (≤50), `provider_slugs?` (≤ 5 prestataires publiés), `consent`, + antispam | 201 `{data: { reference: "DEV-2026-000123", message }}` ; accusé e-mail ; si `provider_slugs` fourni : un destinataire par prestataire (`sent`) + e-mail à chacun + statut `sent` ; sinon statut `new` (à acheminer par l'admin) |
 | GET | `/me/quote-requests` | `status?`, `page` — propriétaire d'au moins une fiche | liste paginée de `ProviderQuote` (devis **adressés à ses fiches** uniquement) |
 | GET | `/me/quote-requests/{id}` | — | `{data: ProviderQuote}` ; passe le destinataire à `viewed` (idempotent) ; 404 si non destinataire |
+| GET | `/me/sent-quote-requests` | `status?` ∈ `new\|sent\|answered\|closed\|cancelled`, `page` — tout utilisateur vérifié | liste paginée de `SentQuote` : demandes **envoyées depuis son compte** (rattachées à l'envoi, `user_id`) |
+| GET | `/me/sent-quote-requests/{id}` | — | `{data: SentQuote}` ; 404 si la demande n'est pas la sienne ou a été envoyée sans compte ; ne modifie aucun statut |
 | POST | `/me/quote-requests/{id}/reply` | `message` (10–3000), `quoted_amount?` (entier FCFA ≥ 0) | 200 ; destinataire `replied` ; e-mail au demandeur ; une seule réponse (409 ensuite) |
 | POST | `/me/quote-requests/{id}/decline` | `reason?` | 200 ; destinataire `declined` |
 | GET | `/admin/quote-requests` | `status?`, `q?`, `page` | liste paginée `AdminQuoteRow` |
@@ -256,6 +263,7 @@ La personne choisit **un commentaire écrit OU un message vocal** (les deux sont
 | PATCH | `/admin/quote-requests/{id}` | `status` ∈ `new\|sent\|answered\|closed\|cancelled` | 200 ; audit |
 
 **ProviderQuote** : `{ id, reference, requester: { name, email, phone, company_name|null }, service: Option, city: {name}, district: {name}|null, description, desired_start_date|null, budget_range|null, status: "sent"|"viewed"|"replied"|"declined", sent_at, viewed_at|null, replied_at|null, response_message|null, quoted_amount|null }` (les coordonnées du demandeur ne sont visibles que du prestataire destinataire et de l'admin).
+**SentQuote** : `{ id, reference, service: Option, city: {name}, district: {name}|null, description, desired_start_date|null, budget_range|null, status, created_at, recipients: [{ provider: {slug, name}, status, sent_at|null, replied_at|null, response_message|null, quoted_amount|null }] }` (aucune coordonnée du demandeur ; disparaît à l'anonymisation, qui retire `user_id`).
 **AdminQuoteRow** : `{ id, reference, requester_name, requester_email, service: Option, city: {name}, status, recipients_count, created_at }` · **AdminQuote** = row + `{ phone, company_name|null, description, desired_start_date|null, budget_range|null, recipients: [{ id, provider: {id, name}, status, sent_at, viewed_at|null, replied_at|null, response_message|null, quoted_amount|null }] }`.
 
 ## 8.4 Contact
@@ -291,7 +299,8 @@ Mêmes conventions que §1. Les tables existent déjà (`post_categories`, `post
 |---|---|---|---|
 | GET | `/blog/categories` | — | `{data: [{slug, name, description\|null, posts_count}]}` (7 catégories visibles) |
 | GET | `/blog/posts` | `category?` (slug), `q?` (plein texte, ≤100), `featured?`, `sort?` (`recent`\|`popular`), `page`, `per_page` (≤24) | liste paginée `PostCard` |
-| GET | `/blog/posts/{slug}` | — | `{data: Post}` ; 404 si non publié ; **incrémente `views_count`** au plus 1 fois / 30 min / (IP hachée + article) |
+| GET | `/blog/posts/{slug}` | — | `{data: Post}` ; 404 si non publié ; ne compte plus la vue (voir ligne suivante) |
+| POST | `/blog/posts/{slug}/view` | — | 204 ; incrémente `views_count` au plus 1 fois / 30 min / (IP hachée + article) ; 404 si non publié ; limiteur `blog-view` 30/min/IP (429) |
 | GET | `/blog/posts/{slug}/comments` | `page` | commentaires approuvés (racines + 1 niveau de réponses) |
 | POST | `/blog/posts/{slug}/comments` | `body` (2–2000), `parent_id?` ; **auth + e-mail vérifié** | 201 `{data:{status:"pending"}}` ; modérés ; 5/h/utilisateur ; antispam §8.0 |
 | GET | `/blog/flash` | — | `{data: [{slug, title, published_at}]}` (≤10 articles `is_flash`, récents) |
@@ -334,3 +343,71 @@ Admin (`editor` + `admin`, navigation filtrée par rôle) : `/admin/blog` (liste
 ## 9.4 Seeders (français, factices)
 
 7 catégories (noms exacts de `modele.md`), ≥ 18 articles réalistes (sécurité privée, incendie, cybercriminalité, emploi, formation…) répartis, dont publiés/brouillon/planifié, à la une, flash ; quelques commentaires en attente/approuvés ; pages légales complètes (RCCM/agrément fictifs, aucune donnée réelle) ; partenaires et clients fictifs ; paramètres publics ; abonnés fictifs `*.test`. Remplace tout reste de contenu anglais de démonstration.
+
+---
+
+# 10. Import Excel des fiches et revendication (2026-10-24)
+
+Plan fonctionnel : `plan_import_etablissements.md`. Tables : `establishment_imports`, `establishment_claims`, colonnes `providers.import_id` / `state_forces.import_id` (migration `2026_10_24_100002`). `{type}` ∈ `provider|state_force` partout.
+
+## 10.1 Objets
+
+**AdminImport** : `{ id, type, status: "uploaded"|"analyzing"|"ready"|"importing"|"done"|"failed"|"cancelled", publish_mode: "publish"|"pending", original_name, rows_total, rows_valid, rows_invalid, rows_duplicate, rows_created, failure_message|null, created_by: {id, name}|null, created_at, confirmed_at|null, finished_at|null, cancelled_at|null, can_confirm: bool, can_cancel: bool }`
+- `can_confirm` : `status = ready` et au moins une ligne à créer. `can_cancel` : `status ∈ ready|failed` (rien n'a été créé) ou `status = done` et `cancelled_at = null`.
+
+**AdminImportRow** : `{ line (n° de ligne Excel, en-tête = 1), name|null, city|null, status: "valid"|"invalid"|"duplicate", errors: [{ column (libellé français de la colonne), message }], duplicate_of: { type, id, name, city, reason: "name_city"|"phone"|"email"|"rccm"|"approval_number"|"file" }|null, decision: "skip"|"create"|null }`
+- `decision` ne concerne que les doublons (défaut `skip`). `reason = "file"` : doublon d'une ligne précédente du même fichier (`duplicate_of.id` = n° de cette ligne, `type` = `"row"`).
+- Le rapport ne contient **jamais** RCCM, n° d'agrément, téléphone ni e-mail en clair.
+
+**MyClaim** : `{ id, status: "pending"|"approved"|"rejected", establishment: { type, slug, name }, rejection_reason|null, created_at, reviewed_at|null }`
+
+**AdminClaim** : `{ id, status, establishment: { type, id, slug, name, city: {name} }, user: { id, name, email }|null, submitter_role: "manager"|"employee"|"other", phone, message|null, document: { name, mime_type, size_bytes }|null, rejection_reason|null, reviewer: {id, name}|null, created_at, reviewed_at|null }`
+
+**SimilarEstablishment** : `{ type, slug, name, city: {name}, is_claimable }`
+
+Ajouts aux objets existants :
+- `ProviderDetail` et `StateForceDetail` (public) : `is_claimable: bool` (fiche publiée **sans propriétaire**).
+- `AdminEstablishmentRow` et `AdminEstablishment` : `import_id|null`, `is_incomplete: bool` (sans coordonnées, ou sans téléphone, ou sans description, ou sans services / démarches).
+
+## 10.2 Import (admin, rôle `admin` + 2FA, comme §7.3)
+
+| Méthode | Chemin | Corps / paramètres | Réponse |
+|---|---|---|---|
+| GET | `/admin/establishment-imports/template/{type}` | — | 200 fichier `.xlsx` (`Content-Disposition: attachment; filename="modele-import-forces-etatiques.xlsx"` ou `…-prestataires.xlsx`) ; listes déroulantes à jour |
+| POST | `/admin/establishment-imports` | multipart : `type`, `publish_mode` (défaut `publish`), `file` (`.xlsx`, ≤ 5 Mo, ≤ 2 000 lignes de données) | 202 `{data: AdminImport}` (`status = analyzing`) ; analyse en file. 422 : type de fichier, taille, fichier vide, en-têtes obligatoires absents, > 2 000 lignes |
+| GET | `/admin/establishment-imports` | `type?`, `page` | liste paginée `AdminImport` (plus récents d'abord) |
+| GET | `/admin/establishment-imports/{id}` | — | `{data: AdminImport}` (le front rafraîchit toutes les 2 s tant que `analyzing` ou `importing`) |
+| GET | `/admin/establishment-imports/{id}/rows` | `filter[status]?` ∈ `valid\|invalid\|duplicate`, `page`, `per_page` (max 100) | liste paginée `AdminImportRow` |
+| PATCH | `/admin/establishment-imports/{id}/rows` | `{ decisions: [{ line, decision: "skip"\|"create" }] }` (doublons uniquement, `status = ready`) | 200 `{data: AdminImport}` ; 409 si l'import n'est plus `ready` |
+| POST | `/admin/establishment-imports/{id}/confirm` | — | 202 `{data: AdminImport}` (`importing`) ; **idempotent** : déjà `importing`/`done` → 200 sans rien recréer ; 409 si `analyzing`, `failed`, `cancelled` ou aucune ligne à créer |
+| GET | `/admin/establishment-imports/{id}/report` | — | 200 `.xlsx` : lignes du fichier d'origine + colonne « Erreurs » (cellules neutralisées contre l'injection de formules) ; 410 si le fichier a été purgé |
+| POST | `/admin/establishment-imports/{id}/cancel` | — | 200 `{data: AdminImport, meta: { deleted_count }}` : `ready`/`failed` → `cancelled` ; `done` → suppression logique des fiches du lot **encore sans propriétaire et sans avis**, `cancelled_at` posé ; 409 sinon |
+| GET | `/admin/establishments` | ajout de `import_id?`, `incomplete?=1` | inchangé |
+
+Création : `status`/`is_visible` = `approved`/`true` (`publish`) ou `pending`/`false` (`pending`), `reviewed_by`/`reviewed_at` = l'admin en mode `publish`, `user_id = null`, `is_verified = false`, `import_id` posé, slug unique. Les lignes sans coordonnées sont géocodées en file (adresse + commune + ville, 1 req/s). Audit : `establishment_import_uploaded`, `establishment_import_confirmed`, `establishment_import_cancelled` (un événement par lot). Fichier stocké sur le disque `private` sous `imports/{uuid}.xlsx`, purgé après **30 jours** (commande planifiée), `file_path` passé à null.
+
+Colonnes des modèles (en-têtes reconnus sans tenir compte de la casse, des accents ni de l'astérisque ; `*` = obligatoire ; valeurs multiples séparées par `;`) :
+- **Forces étatiques** : `Nom de la structure*`, `Type de force*`, `Ville*`, `Commune / quartier`, `Adresse`, `Description géographique`, `Téléphone`, `Téléphone 2`, `Numéro d'urgence`, `E-mail`, `Démarches possibles`, `Ouvert 24 h/24` (Oui/Non), `Latitude`, `Longitude`, `Description`.
+- **Prestataires** : `Raison sociale*`, `Téléphone*`, `Ville*`, `Commune / quartier`, `Adresse`, `Description géographique`, `Téléphone 2`, `Numéro d'urgence`, `WhatsApp`, `E-mail`, `Site web`, `Types d'entreprise`, `Services proposés`, `Tarif de départ (FCFA)`, `Latitude`, `Longitude`, `Description`, `RCCM`, `N° d'agrément`, `Forme juridique`.
+
+## 10.3 Revendication
+
+| Méthode | Chemin | Corps / paramètres | Réponse |
+|---|---|---|---|
+| POST | `/establishments/{type}/{slug}/claims` | auth + e-mail vérifié ; multipart : `submitter_role`, `phone`, `message?` (≤ 1 000), `document` (PDF/JPEG/PNG, ≤ 5 Mo, type réel vérifié), `consent` (accepted) | 201 `{data: MyClaim}` ; 404 si fiche non publiée ; 409 « Cette fiche est déjà gérée par un compte. » ; 409 « Vous avez déjà une demande en cours pour cette fiche. » ; 429 (5/jour/utilisateur) |
+| GET | `/me/claims` | auth | `{data: [MyClaim]}` |
+| GET | `/establishments/similar` | auth + vérifié ; `type`, `name` (≥ 3), `city_id?`, `phone?` | `{data: [SimilarEstablishment]}` (5 max, fiches publiées) ; throttle 30/min |
+| GET | `/admin/claims` | `status?` (défaut `pending`), `page` | liste paginée `AdminClaim` |
+| GET | `/admin/claims/{id}` | — | `{data: AdminClaim}` |
+| GET | `/admin/claims/{id}/document` | — | flux du justificatif privé (`attachment`), accès journalisé |
+| POST | `/admin/claims/{id}/approve` | — | 200 `{data: AdminClaim}` ; transaction : `user_id` de la fiche = demandeur (409 si la fiche a entre-temps un propriétaire), rôle `user` → `provider`, autres demandes en attente sur la fiche refusées avec le motif « Fiche attribuée à un autre compte. », e-mails, audit ; **idempotent** |
+| POST | `/admin/claims/{id}/reject` | `reason` (≥ 10) | 200 ; e-mail au demandeur, audit ; idempotent |
+| POST | `/admin/establishments/{type}/{id}/owner` | `email` | 200 `{data: AdminEstablishment}` ; 422 « Aucun compte actif avec cet e-mail. » ; 409 si la fiche a déjà un propriétaire ; rôle `user` → `provider`, audit `establishment_owner_assigned`, e-mail au compte |
+| GET | `/admin/dashboard` | — | ajout de `pending_claims` |
+
+E-mails (`ClaimMail`, gabarit commun) : demande reçue (au demandeur), acceptée (lien vers l'espace établissement), refusée (motif) ; attribution par l'admin (même e-mail qu'« acceptée »). Alerte admin interne `claim_received`.
+
+## 10.4 Pages Next.js
+
+- Admin : `/admin/etablissements/import` (choix du type, téléchargement du modèle, téléversement, historique) · `/admin/etablissements/import/[id]` (état en direct, compteurs, onglets valides / erreurs / doublons avec décision, rapport, confirmer, annuler) · filtres « Lot d'import » et « Fiches incomplètes » sur `/admin/etablissements` · `/admin/revendications` (liste + détail, justificatif, accepter / refuser) · bouton « Attribuer à un compte » sur la fiche admin · compteur `pending_claims` au tableau de bord.
+- Public : bloc « C'est votre établissement ? Revendiquez cette fiche » sur les fiches `is_claimable` (prestataires et forces) → `/revendiquer/[type]/[slug]` (connexion exigée, formulaire) · « Mes revendications » dans l'espace établissement · avertissement « Cette fiche existe peut-être déjà » dans `/inscription-etablissement` (appel à `/establishments/similar`, lien de revendication).

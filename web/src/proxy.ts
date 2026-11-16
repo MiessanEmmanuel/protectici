@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { buildCsp, mediaOriginsFromEnv } from '@/lib/csp';
+import { buildCsp, mediaOriginsFromEnv, tileOriginsFromEnv } from '@/lib/csp';
 import { turnstileSiteKey } from '@/lib/env';
 import { safeRedirect } from '@/lib/safe-redirect';
 
@@ -46,6 +46,7 @@ export function proxy(request: NextRequest) {
       process.env.NEXT_PUBLIC_MEDIA_ORIGINS,
       process.env.NEXT_PUBLIC_HERO_IMAGE_URL,
     ),
+    tileOrigins: tileOriginsFromEnv(process.env.NEXT_PUBLIC_TILE_URL),
     turnstile: turnstileSiteKey() !== '',
     upgradeInsecure: !(process.env.NEXT_PUBLIC_SITE_URL ?? '').startsWith('http:'),
   });

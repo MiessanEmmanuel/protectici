@@ -225,3 +225,15 @@ it('purge les entrées de cache expirées en base', function () {
     expect(DB::table('cache')->where('key', 'expire-1')->exists())->toBeFalse()
         ->and(DB::table('cache')->where('key', 'vivant-1')->exists())->toBeTrue();
 });
+
+it('ne sert jamais une réponse « public » portant un cookie (origine stateful : private)', function () {
+    makeProvider(['name' => 'Alpha'], City::factory()->create());
+
+    $anonymous = $this->getJson('/api/v1/providers')->assertOk();
+    expect($anonymous->headers->getCookies())->toBe([])
+        ->and($anonymous->headers->get('Cache-Control'))->toContain('public');
+
+    $stateful = $this->withHeaders($this->spaHeaders())->getJson('/api/v1/providers')->assertOk();
+    expect($stateful->headers->getCookies())->not->toBe([])
+        ->and($stateful->headers->get('Cache-Control'))->not->toContain('public')->toContain('private')->toContain('max-age=60');
+});

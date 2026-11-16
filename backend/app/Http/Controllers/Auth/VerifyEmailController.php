@@ -11,9 +11,9 @@ class VerifyEmailController extends Controller
 {
     public function __invoke(Request $request, string $id, string $hash, EmailVerification $verification): RedirectResponse
     {
-        $verified = $verification->verify($request, $id, $hash);
+        $result = $verification->verify($request, $id, $hash);
 
         // Destination fixe issue de la configuration : jamais de redirection ouverte.
-        return redirect()->away($verification->redirectUrl($verified));
+        return redirect()->away($verification->redirectUrl($result));
     }
 }

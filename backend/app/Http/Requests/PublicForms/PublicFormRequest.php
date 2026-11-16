@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\PublicForms;
 
+use App\Http\Requests\Concerns\RejectsMarkup;
 use App\Models\User;
 use App\Rules\ValidTurnstileToken;
 use Illuminate\Foundation\Http\FormRequest;
@@ -16,6 +17,8 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 abstract class PublicFormRequest extends FormRequest
 {
+    use RejectsMarkup;
+
     public function authorize(): bool
     {
         return true;

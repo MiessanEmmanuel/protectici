@@ -2,16 +2,16 @@
 
 namespace App\Http\Requests\Quotes;
 
+use App\Http\Requests\Concerns\RejectsMarkup;
+use App\Http\Requests\Quotes\Concerns\AuthorizesQuoteRecipient;
 use App\Support\PlainText;
 use Illuminate\Foundation\Http\FormRequest;
 
 /** Refus d'un prestataire : motif facultatif (500 caractères). */
 class DeclineQuoteRequest extends FormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
+    use AuthorizesQuoteRecipient;
+    use RejectsMarkup;
 
     protected function prepareForValidation(): void
     {

@@ -30,7 +30,8 @@ import {
  */
 
 const notFound = () => new ApiError(404, 'Cette page ou cette ressource est introuvable.');
-const forbidden = () => new ApiError(403, "Vous n'avez pas l'autorisation d'effectuer cette action.");
+const forbidden = () =>
+  new ApiError(403, "Vous n'avez pas l'autorisation d'effectuer cette action.");
 const invalid = (field: string, message: string) =>
   new ApiError(422, 'Certaines informations sont invalides.', { [field]: [message] });
 
@@ -40,7 +41,9 @@ function escapeHtml(s: string): string {
 
 function toBody(paras: string[]): string {
   return paras
-    .map((t) => (t.startsWith('## ') ? `<h2>${escapeHtml(t.slice(3))}</h2>` : `<p>${escapeHtml(t)}</p>`))
+    .map((t) =>
+      t.startsWith('## ') ? `<h2>${escapeHtml(t.slice(3))}</h2>` : `<p>${escapeHtml(t)}</p>`,
+    )
     .join('');
 }
 
@@ -54,8 +57,13 @@ export function slugify(s: string): string {
     .slice(0, 80);
 }
 
-const stripTags = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-const readingMinutes = (html: string) => Math.max(1, Math.round(stripTags(html).split(' ').length / 200));
+const stripTags = (html: string) =>
+  html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+const readingMinutes = (html: string) =>
+  Math.max(1, Math.round(stripTags(html).split(' ').length / 200));
 const daysFrom = (days: number) => new Date(Date.parse(NOW_ISO) - days * 86_400_000).toISOString();
 
 interface PostRec {
@@ -134,11 +142,51 @@ export function createContentMocks(
   });
 
   const comments: CommentRec[] = [
-    { id: 1, postId: 1, parentId: null, author: 'Kouassi A.', body: 'Merci pour ces conseils, très utiles avant de signer mon contrat.', status: 'approved', created_at: daysFrom(1) },
-    { id: 2, postId: 1, parentId: 1, author: 'Rédaction ProtectIci', body: 'Avec plaisir. N’hésitez pas à consulter les avis sur les fiches de l’annuaire.', status: 'approved', created_at: daysFrom(1) },
-    { id: 3, postId: 3, parentId: null, author: 'Fatou D.', body: 'J’ai reçu ce type de message hier, je l’ai signalé à mon opérateur.', status: 'approved', created_at: daysFrom(2) },
-    { id: 4, postId: 3, parentId: null, author: 'Yao B.', body: 'Est-ce que le signalement est gratuit auprès des autorités ?', status: 'pending', created_at: daysFrom(0.2) },
-    { id: 5, postId: 2, parentId: null, author: 'Aminata S.', body: 'Pensez à organiser un exercice d’évacuation dans votre immeuble.', status: 'pending', created_at: daysFrom(0.1) },
+    {
+      id: 1,
+      postId: 1,
+      parentId: null,
+      author: 'Kouassi A.',
+      body: 'Merci pour ces conseils, très utiles avant de signer mon contrat.',
+      status: 'approved',
+      created_at: daysFrom(1),
+    },
+    {
+      id: 2,
+      postId: 1,
+      parentId: 1,
+      author: 'Rédaction ProtectIci',
+      body: 'Avec plaisir. N’hésitez pas à consulter les avis sur les fiches de l’annuaire.',
+      status: 'approved',
+      created_at: daysFrom(1),
+    },
+    {
+      id: 3,
+      postId: 3,
+      parentId: null,
+      author: 'Fatou D.',
+      body: 'J’ai reçu ce type de message hier, je l’ai signalé à mon opérateur.',
+      status: 'approved',
+      created_at: daysFrom(2),
+    },
+    {
+      id: 4,
+      postId: 3,
+      parentId: null,
+      author: 'Yao B.',
+      body: 'Est-ce que le signalement est gratuit auprès des autorités ?',
+      status: 'pending',
+      created_at: daysFrom(0.2),
+    },
+    {
+      id: 5,
+      postId: 2,
+      parentId: null,
+      author: 'Aminata S.',
+      body: 'Pensez à organiser un exercice d’évacuation dans votre immeuble.',
+      status: 'pending',
+      created_at: daysFrom(0.1),
+    },
   ];
 
   const partners: ContentPartner[] = partnerSeed.map((p, i) => ({
@@ -166,10 +214,42 @@ export function createContentMocks(
   const settings: AdminSetting[] = settingsSeed.map((s) => ({ ...s }));
 
   const subscribers: NewsletterSubscriber[] = [
-    { id: 1, email: 'lecteur1@exemple.test', status: 'confirmed', source: 'footer', created_at: daysFrom(20), confirmed_at: daysFrom(20), unsubscribed_at: null },
-    { id: 2, email: 'lecteur2@exemple.test', status: 'confirmed', source: 'footer', created_at: daysFrom(12), confirmed_at: daysFrom(12), unsubscribed_at: null },
-    { id: 3, email: 'lecteur3@exemple.test', status: 'pending', source: 'footer', created_at: daysFrom(1), confirmed_at: null, unsubscribed_at: null },
-    { id: 4, email: 'lecteur4@exemple.test', status: 'unsubscribed', source: 'blog', created_at: daysFrom(60), confirmed_at: daysFrom(60), unsubscribed_at: daysFrom(5) },
+    {
+      id: 1,
+      email: 'lecteur1@exemple.test',
+      status: 'confirmed',
+      source: 'footer',
+      created_at: daysFrom(20),
+      confirmed_at: daysFrom(20),
+      unsubscribed_at: null,
+    },
+    {
+      id: 2,
+      email: 'lecteur2@exemple.test',
+      status: 'confirmed',
+      source: 'footer',
+      created_at: daysFrom(12),
+      confirmed_at: daysFrom(12),
+      unsubscribed_at: null,
+    },
+    {
+      id: 3,
+      email: 'lecteur3@exemple.test',
+      status: 'pending',
+      source: 'footer',
+      created_at: daysFrom(1),
+      confirmed_at: null,
+      unsubscribed_at: null,
+    },
+    {
+      id: 4,
+      email: 'lecteur4@exemple.test',
+      status: 'unsubscribed',
+      source: 'blog',
+      created_at: daysFrom(60),
+      confirmed_at: daysFrom(60),
+      unsubscribed_at: daysFrom(5),
+    },
   ];
 
   /* ---------- Aides ---------- */
@@ -235,7 +315,13 @@ export function createContentMocks(
     return s;
   };
 
-  function between(field: string, v: string | undefined | null, min: number, max: number, label: string) {
+  function between(
+    field: string,
+    v: string | undefined | null,
+    min: number,
+    max: number,
+    label: string,
+  ) {
     const t = (v ?? '').trim();
     if (t.length < min) throw invalid(field, `${label} doit comporter au moins ${min} caractères.`);
     if (t.length > max) throw invalid(field, `${label} ne doit pas dépasser ${max} caractères.`);
@@ -254,13 +340,17 @@ export function createContentMocks(
     return roots.sort((a, b) => a.created_at.localeCompare(b.created_at)).map(map);
   }
 
-  function applyPostInput(p: PostRec, input: Partial<Parameters<ContentApi['contentCreatePost']>[0]>) {
+  function applyPostInput(
+    p: PostRec,
+    input: Partial<Parameters<ContentApi['contentCreatePost']>[0]>,
+  ) {
     if (input.title !== undefined) {
       between('title', input.title, 3, 160, 'Le titre');
       p.title = input.title.trim();
     }
     if (input.category_id !== undefined) {
-      if (!catById(input.category_id)) throw invalid('category_id', 'Cette catégorie est introuvable.');
+      if (!catById(input.category_id))
+        throw invalid('category_id', 'Cette catégorie est introuvable.');
       p.categoryId = input.category_id;
     }
     if (input.excerpt !== undefined) p.excerpt = input.excerpt?.trim() || null;
@@ -275,12 +365,16 @@ export function createContentMocks(
     }
     if (input.published_at !== undefined) p.published_at = input.published_at;
     if (p.status === 'scheduled' && !p.published_at)
-      throw invalid('published_at', 'La date de publication est obligatoire pour une planification.');
+      throw invalid(
+        'published_at',
+        'La date de publication est obligatoire pour une planification.',
+      );
     if (p.status === 'published' && !p.published_at) p.published_at = NOW_ISO;
     if (input.is_featured !== undefined) p.is_featured = input.is_featured;
     if (input.is_flash !== undefined) p.is_flash = input.is_flash;
     if (input.seo_title !== undefined) p.seo_title = input.seo_title?.trim() || null;
-    if (input.seo_description !== undefined) p.seo_description = input.seo_description?.trim() || null;
+    if (input.seo_description !== undefined)
+      p.seo_description = input.seo_description?.trim() || null;
     if (input.cover_media_id === null) p.cover = null;
     p.updated_at = new Date().toISOString();
   }
@@ -313,7 +407,9 @@ export function createContentMocks(
       if (query.category) list = list.filter((p) => catById(p.categoryId)?.slug === query.category);
       if (query.featured) list = list.filter((p) => p.is_featured);
       if (q)
-        list = list.filter((p) => `${p.title} ${p.excerpt ?? ''} ${stripTags(p.body)}`.toLowerCase().includes(q));
+        list = list.filter((p) =>
+          `${p.title} ${p.excerpt ?? ''} ${stripTags(p.body)}`.toLowerCase().includes(q),
+        );
       list = [...list].sort((a, b) =>
         query.sort === 'popular'
           ? b.views - a.views
@@ -321,11 +417,15 @@ export function createContentMocks(
       );
       return ctx.paginate(list.map(toCard), query.page, Math.min(query.per_page ?? 12, 24));
     },
+    async trackPostView(slug) {
+      const p = posts.find((x) => x.slug === slug);
+      if (!p || !isLive(p)) throw notFound();
+      p.views += 1;
+    },
     async getPost(slug) {
       await ctx.delay();
       const p = posts.find((x) => x.slug === slug);
       if (!p || !isLive(p)) throw notFound();
-      p.views += 1;
       const related = posts
         .filter((x) => isLive(x) && x.id !== p.id && x.categoryId === p.categoryId)
         .slice(0, 3)
@@ -405,7 +505,8 @@ export function createContentMocks(
     async subscribeNewsletter(input) {
       await ctx.delay();
       if (input.company_website) return NEWSLETTER_NEUTRAL_MESSAGE;
-      if (!input.consent) throw invalid('consent', 'Votre accord est nécessaire pour vous abonner.');
+      if (!input.consent)
+        throw invalid('consent', 'Votre accord est nécessaire pour vous abonner.');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email))
         throw invalid('email', "L'adresse e-mail n'est pas valide.");
       const email = input.email.trim().toLowerCase();
@@ -501,7 +602,8 @@ export function createContentMocks(
     async contentUploadMedia(file, alt) {
       requireContent();
       await ctx.delay();
-      if (!file.type.startsWith('image/')) throw invalid('file', 'Ce type de fichier n’est pas accepté.');
+      if (!file.type.startsWith('image/'))
+        throw invalid('file', 'Ce type de fichier n’est pas accepté.');
       return { id: next(), url: '/logo-protectici.webp', alt: alt || null };
     },
     async contentListComments(query = {}) {
@@ -530,7 +632,8 @@ export function createContentMocks(
       await ctx.delay();
       const c = comments.find((x) => x.id === id);
       if (!c) throw notFound();
-      if (!['approved', 'rejected', 'spam'].includes(status)) throw invalid('status', 'Statut inconnu.');
+      if (!['approved', 'rejected', 'spam'].includes(status))
+        throw invalid('status', 'Statut inconnu.');
       c.status = status;
     },
     async contentListCategories() {
@@ -576,7 +679,9 @@ export function createContentMocks(
     async contentListPartners(type) {
       requireAdmin();
       await ctx.delay();
-      return partners.filter((p) => !type || p.type === type).sort((a, b) => a.sort_order - b.sort_order);
+      return partners
+        .filter((p) => !type || p.type === type)
+        .sort((a, b) => a.sort_order - b.sort_order);
     },
     async contentCreatePartner(input) {
       requireAdmin();

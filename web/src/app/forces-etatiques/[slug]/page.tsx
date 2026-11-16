@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { ShareLinks } from '@/components/directory/ShareLinks';
+import { ClaimCallout } from '@/components/claims/ClaimCallout';
 import { MiniMap } from '@/components/map/MiniMap';
+import { DirectionsItem } from '@/components/directory/DirectionsLink';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { ButtonLink } from '@/components/ui/Button';
 import { Mail, MapPin, Phone, Siren } from 'lucide-react';
@@ -13,6 +15,12 @@ import { Badge } from '@/components/ui/Tag';
 import { serverApi } from '@/lib/api/server';
 import { SITE_URL } from '@/lib/env';
 import { formatPhone, telHref } from '@/lib/format';
+import {
+  formatOpeningHours,
+  hasOpeningHours,
+  openingHoursLines,
+  schemaOrgOpeningHours,
+} from '@/lib/opening-hours';
 import { safe } from '@/lib/safe';
 
 type Props = { params: Promise<{ slug: string }> };
@@ -70,8 +78,10 @@ export default async function ForcePage({ params }: Props) {
   if (force.phone) jsonLd.telephone = force.phone;
   if (force.lat !== null && force.lng !== null)
     jsonLd.geo = { '@type': 'GeoCoordinates', latitude: force.lat, longitude: force.lng };
-  if (force.opening_hours)
-    jsonLd.openingHours = force.is_open_24h ? 'Mo-Su 00:00-24:00' : undefined;
+  const schemaHours = schemaOrgOpeningHours(force.opening_hours, force.is_open_24h);
+  if (schemaHours) jsonLd.openingHours = schemaHours;
+  const hoursLines = openingHoursLines(force.opening_hours);
+  const hoursKnown = hasOpeningHours(force.opening_hours, force.is_open_24h);
 
   return (
     <>
@@ -89,9 +99,9 @@ export default async function ForcePage({ params }: Props) {
             <Badge tone="accent">{force.force_type.name}</Badge>
             {force.is_open_24h ? (
               <Badge tone="night">Ouvert 24 h/24</Badge>
-            ) : (
+            ) : hoursKnown ? (
               <Badge tone="neutral">Horaires limités</Badge>
-            )}
+            ) : null}
           </div>
           <h1 className="mt-4 max-w-[22ch] text-section heading-block break-words">{force.name}</h1>
           <p className="mt-3 flex items-center gap-2 text-lg opacity-90 [&_svg]:size-[1.1em]">
@@ -151,9 +161,20 @@ export default async function ForcePage({ params }: Props) {
             <h2 id="horaires" className="text-[2rem] heading-block">
               Horaires
             </h2>
-            <p className="mt-4 border-l-4 border-c1 bg-c4 p-4 text-lg font-semibold whitespace-pre-line">
-              {force.opening_hours ?? 'Horaires non communiqués.'}
-            </p>
+            {!force.is_open_24h && hoursLines.length > 0 ? (
+              <dl className="mt-4 border-l-4 border-c1 bg-c4 p-4 text-lg">
+                {hoursLines.map((l) => (
+                  <div key={l.days} className="flex flex-wrap gap-x-2 py-1">
+                    <dt className="font-semibold">{l.days} :</dt>
+                    <dd>{l.hours}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="mt-4 border-l-4 border-c1 bg-c4 p-4 text-lg font-semibold">
+                {formatOpeningHours(force.opening_hours, force.is_open_24h)}.
+              </p>
+            )}
           </section>
         </div>
         <aside className="flex flex-col gap-6" aria-label="Coordonnées et partage">
@@ -184,6 +205,13 @@ export default async function ForcePage({ params }: Props) {
                   </a>
                 </li>
               ) : null}
+              <DirectionsItem
+                name={force.name}
+                lat={force.lat}
+                lng={force.lng}
+                address={force.address}
+                place={place}
+              />
               {!force.address && !force.geo_description && !force.email ? (
                 <li className="border-t-2 border-current py-3">Coordonnées non communiquées.</li>
               ) : null}
@@ -195,6 +223,7 @@ export default async function ForcePage({ params }: Props) {
           <div className="border-2 border-ink p-5">
             <ShareLinks url={pageUrl} title={force.name} />
           </div>
+          <ClaimCallout type="state_force" slug={force.slug} claimable={force.is_claimable} />
         </aside>
       </Container>
     </>

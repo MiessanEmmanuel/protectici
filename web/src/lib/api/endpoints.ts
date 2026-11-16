@@ -22,6 +22,8 @@ import type {
   MyReview,
   OwnerReview,
   ProviderQuote,
+  MyFeedback,
+  SentQuote,
   QuoteReceipt,
   QuoteReplyInput,
   QuoteRequestInput,
@@ -252,6 +254,11 @@ export interface Api extends ContentApi {
   ): Promise<FeedbackReceipt>;
   /** POST (jamais d'URL) ; 404 générique si référence inconnue OU e-mail faux. */
   trackFeedback(input: { reference: string; email: string }): Promise<FeedbackTracking>;
+  /** Dossiers envoyés par l'utilisateur connecté (rattachés à son compte à l'envoi). */
+  listMyFeedbacks(query?: {
+    status?: FeedbackStatus;
+    page?: number;
+  }): Promise<Paginated<MyFeedback>>;
   adminListFeedbacks(query?: AdminFeedbackQuery): Promise<Paginated<AdminFeedbackRow>>;
   adminGetFeedback(id: number): Promise<AdminFeedback>;
   /** Binaire du message vocal (cookies de session) ; 404 si le dossier n'en a pas. */
@@ -274,6 +281,8 @@ export interface Api extends ContentApi {
   }): Promise<Paginated<ProviderQuote>>;
   /** Passe le destinataire à `viewed` (idempotent). */
   getMyQuote(id: number): Promise<ProviderQuote>;
+  /** Demandes envoyées par l'utilisateur connecté (rattachées à son compte à l'envoi). */
+  listSentQuotes(query?: { status?: QuoteStatus; page?: number }): Promise<Paginated<SentQuote>>;
   /** Une seule réponse (409 ensuite). */
   replyToQuote(id: number, input: QuoteReplyInput): Promise<void>;
   declineQuote(id: number, reason?: string): Promise<void>;
@@ -533,9 +542,13 @@ export function buildApi(req: Requester): Api {
       return res.data;
     },
     async createChangeRequest(type, slug, changes) {
-      const res = await req<{ data: ChangeRequest }>('POST', `${mine(type, slug)}/change-requests`, {
-        body: { changes },
-      });
+      const res = await req<{ data: ChangeRequest }>(
+        'POST',
+        `${mine(type, slug)}/change-requests`,
+        {
+          body: { changes },
+        },
+      );
       return res.data;
     },
     async cancelChangeRequest(type, slug, id) {
@@ -585,6 +598,8 @@ export function buildApi(req: Requester): Api {
           sort: query.sort,
           page: query.page,
           per_page: query.per_page,
+          import_id: query.import_id,
+          incomplete: query.incomplete ? 1 : undefined,
         },
       });
     },
@@ -739,6 +754,11 @@ export function buildApi(req: Requester): Api {
       );
       return res.data;
     },
+    listMyFeedbacks(query = {}) {
+      return req<Paginated<MyFeedback>>('GET', '/me/feedbacks', {
+        query: { status: query.status, page: query.page },
+      });
+    },
     async trackFeedback(input) {
       const res = await req<{ data: FeedbackTracking }>('POST', '/feedbacks/track', {
         body: input,
@@ -794,6 +814,11 @@ export function buildApi(req: Requester): Api {
     async getMyQuote(id) {
       const res = await req<{ data: ProviderQuote }>('GET', `/me/quote-requests/${id}`);
       return res.data;
+    },
+    listSentQuotes(query = {}) {
+      return req<Paginated<SentQuote>>('GET', '/me/sent-quote-requests', {
+        query: { status: query.status, page: query.page },
+      });
     },
     async replyToQuote(id, input) {
       await req('POST', `/me/quote-requests/${id}/reply`, { body: input });

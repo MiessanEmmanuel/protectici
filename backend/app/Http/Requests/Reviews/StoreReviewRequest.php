@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Reviews;
 
+use App\Http\Requests\Concerns\RejectsMarkup;
 use App\Support\PlainText;
 use Illuminate\Foundation\Http\FormRequest;
 
 /** Création d'un avis (contrat §8.1). Liste blanche : rating, title, body ; le reste est ignoré. */
 class StoreReviewRequest extends FormRequest
 {
+    use RejectsMarkup;
+
     public function authorize(): bool
     {
         return $this->user() !== null;

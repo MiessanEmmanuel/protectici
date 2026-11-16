@@ -5,8 +5,10 @@ import { FavoriteButton } from '@/components/directory/FavoriteButton';
 import { ReviewsList } from '@/components/directory/ReviewsList';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ShareLinks } from '@/components/directory/ShareLinks';
+import { ClaimCallout } from '@/components/claims/ClaimCallout';
 import { ViewTracker } from '@/components/directory/ViewTracker';
 import { MiniMap } from '@/components/map/MiniMap';
+import { DirectionsItem } from '@/components/directory/DirectionsLink';
 import { BadgeCheck, Mail, MapPin, Phone, Share2, Siren, Star } from 'lucide-react';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { ButtonLink, buttonClasses } from '@/components/ui/Button';
@@ -271,6 +273,40 @@ export default async function ProviderPage({ params, searchParams }: Props) {
             ) : null}
           </section>
 
+          {provider.branches.length > 0 ? (
+            <section aria-labelledby="agences">
+              <h2 id="agences" className="text-[2rem] heading-block">
+                Agences
+              </h2>
+              <p className="mt-2 text-ink-2">En plus du siège, indiqué dans les coordonnées.</p>
+              <ul className="mt-5 grid grid-cols-1 grid-ruled sm:grid-cols-2">
+                {provider.branches.map((b) => (
+                  <li key={b.id} className="min-w-0 p-4 break-words">
+                    <strong className="block text-lg font-extrabold">{b.label}</strong>
+                    <span className="block text-ink-2">
+                      {[b.district?.name, b.city.name].filter(Boolean).join(', ')}
+                    </span>
+                    {b.address ? <span className="mt-2 block">{b.address}</span> : null}
+                    {/* Repères saisis par le prestataire : texte brut (échappé par React). */}
+                    {b.geo_description ? (
+                      <span className="block text-sm text-ink-2">{b.geo_description}</span>
+                    ) : null}
+                    {b.phone ? (
+                      <a
+                        href={telHref(b.phone)}
+                        aria-label={`Appeler ${b.label} au ${formatPhone(b.phone)}`}
+                        className="mt-1 inline-flex min-h-tap items-center gap-2 font-extrabold [&_svg]:size-[1.15em]"
+                      >
+                        <Phone aria-hidden="true" />
+                        {formatPhone(b.phone)}
+                      </a>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           <section aria-labelledby="legal">
             <h2 id="legal" className="text-[2rem] heading-block">
               Informations légales
@@ -393,6 +429,13 @@ export default async function ProviderPage({ params, searchParams }: Props) {
                   ) : null}
                 </li>
               ) : null}
+              <DirectionsItem
+                name={provider.name}
+                lat={provider.lat}
+                lng={provider.lng}
+                address={provider.address}
+                place={place}
+              />
             </ul>
             {socials.length > 0 ? (
               <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t-2 border-current pt-3 text-sm font-bold">
@@ -404,17 +447,18 @@ export default async function ProviderPage({ params, searchParams }: Props) {
               </ul>
             ) : null}
           </section>
-          {provider.lat !== null && provider.lng !== null ? (
-            <MiniMap
-              name={provider.name}
-              lat={provider.lat}
-              lng={provider.lng}
-              address={provider.address}
-            />
-          ) : null}
+          {/* Rien n'est affiché si ni le siège ni les agences ne sont géolocalisés. */}
+          <MiniMap
+            name={provider.name}
+            lat={provider.lat}
+            lng={provider.lng}
+            address={provider.address}
+            branches={provider.branches}
+          />
           <div id="partager" className="scroll-mt-header border-2 border-ink p-5">
             <ShareLinks url={pageUrl} title={provider.name} />
           </div>
+          <ClaimCallout type="provider" slug={provider.slug} claimable={provider.is_claimable} />
           <div className="flex flex-col gap-3 bg-c2 p-6 text-on-c2">
             <p className="eyebrow">Dis-moi tout</p>
             <p className="text-xl heading-block">Une remarque sur ce prestataire&nbsp;?</p>

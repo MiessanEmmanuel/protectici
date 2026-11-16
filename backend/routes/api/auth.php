@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('register', RegisterController::class)->middleware('throttle:register')->name('register');
-    Route::post('verification/resend', PublicVerificationResendController::class)->name('verification.resend');
+    Route::post('verification/resend', PublicVerificationResendController::class)->middleware('throttle:verification-resend')->name('verification.resend');
     Route::post('login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login')->name('login');
     Route::post('two-factor-challenge', TwoFactorChallengeController::class)->middleware('throttle:two-factor')->name('two-factor.challenge');
     Route::post('forgot-password', PasswordResetLinkController::class)->middleware('throttle:password-reset')->name('password.email');
@@ -38,7 +38,7 @@ Route::prefix('auth')->name('auth.')->group(function () {
             AddQueuedCookiesToResponse::class,
             StartSession::class,
         ])
-        ->where(['id' => '[0-9]+', 'hash' => '[A-Fa-f0-9]{40}'])
+        ->where(['id' => '[0-9]{1,18}', 'hash' => '[A-Fa-f0-9]{40}'])
         ->name('verification.verify');
 
     Route::middleware(['auth:sanctum', 'throttle:api-authenticated'])->group(function () {

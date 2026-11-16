@@ -110,7 +110,7 @@ export function QuoteDetail({
           </div>
 
           <Select
-            label="Statut de la demande"
+            label="Changer le statut de la demande"
             value={q.status}
             disabled={update.busy}
             wrapperClassName="max-w-xs"

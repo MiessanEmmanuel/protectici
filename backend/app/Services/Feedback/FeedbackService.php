@@ -119,7 +119,8 @@ class FeedbackService
     /** @param array{status?: string, assigned_to?: int|null} $changes */
     public function update(Feedback $feedback, array $changes): Feedback
     {
-        return DB::transaction(function () use ($feedback, $changes) {
+        $statusChanged = false;
+        $updated = DB::transaction(function () use ($feedback, $changes, &$statusChanged) {
             $locked = Feedback::query()->whereKey($feedback->id)->lockForUpdate()->firstOrFail();
 
             if (array_key_exists('status', $changes) && $changes['status'] !== $locked->status) {
@@ -131,6 +132,7 @@ class FeedbackService
                     $locked->resolved_at = null; // dossier rouvert
                 }
                 $this->audit->record('feedback_status_changed', $locked, ['status' => $old], ['status' => $changes['status']]);
+                $statusChanged = true;
             }
 
             if (array_key_exists('assigned_to', $changes) && $changes['assigned_to'] !== $locked->assigned_to) {
@@ -143,6 +145,13 @@ class FeedbackService
 
             return $locked;
         });
+
+        // Prévient l'auteur à chaque changement réel de statut (rien si le dossier est anonymisé).
+        if ($statusChanged) {
+            $this->notifier->toAddress($updated->email, new FeedbackMail(FeedbackMail::STATUS_CHANGED, $updated->reference, $updated->first_name, $updated->status), 'feedback_status_changed');
+        }
+
+        return $updated;
     }
 
     /**

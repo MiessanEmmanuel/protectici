@@ -7,6 +7,7 @@ import type {
   AdminNotification,
   AdminReferenceItem,
   AdminUser,
+  BranchInput,
   ChangeRequest,
   EstablishmentDocument,
   EstablishmentMedia,
@@ -18,7 +19,14 @@ import type {
 } from '../api/types';
 import { stateForces } from './forces';
 import { providers } from './providers';
-import { cities, companyTypes, procedureTypes, serviceTypes, slugify, stateForceTypes } from './reference';
+import {
+  cities,
+  companyTypes,
+  procedureTypes,
+  serviceTypes,
+  slugify,
+  stateForceTypes,
+} from './reference';
 
 /**
  * Données et logique FICTIVES de la vague A (établissements, espace prestataire, administration).
@@ -139,6 +147,7 @@ function baseRec(
     submitter_role: 'manager',
     is_in_service: true,
     executives: [],
+    branches: [],
     media: [],
     documents: [],
     change_requests: [],
@@ -182,7 +191,10 @@ function seedRecords(): Rec[] {
       is_featured: p.is_featured,
       views_count: p.views_count,
       company_type_ids: p.company_types.map((c) => c.id),
-      service_type_ids: ids(serviceTypes, p.services.map((s) => s.slug)),
+      service_type_ids: ids(
+        serviceTypes,
+        p.services.map((s) => s.slug),
+      ),
       rccm: p.legal.rccm,
       legal_form: p.legal.legal_form,
       share_capital: p.legal.share_capital,
@@ -194,6 +206,17 @@ function seedRecords(): Rec[] {
         position: e.position,
         position_label: e.position_label,
         is_visible: true,
+      })),
+      branches: p.branches.map((b) => ({
+        id: b.id,
+        label: b.label,
+        city_id: cityIds(b.city.slug, null).city_id ?? 0,
+        district_id: cityIds(b.city.slug, b.district?.slug ?? null).district_id,
+        address: b.address,
+        geo_description: b.geo_description,
+        phone: b.phone,
+        lat: b.lat,
+        lng: b.lng,
       })),
     });
     r.audit = [{ event: 'establishment.approved', user: { name: 'Admin Démo' }, created_at: NOW }];
@@ -218,7 +241,10 @@ function seedRecords(): Rec[] {
       lat: f.lat,
       lng: f.lng,
       force_type_id: f.force_type.id,
-      procedure_type_ids: ids(procedureTypes, f.procedures.map((p) => p.slug)),
+      procedure_type_ids: ids(
+        procedureTypes,
+        f.procedures.map((p) => p.slug),
+      ),
       opening_hours: f.opening_hours,
       is_open_24h: f.is_open_24h,
     });
@@ -258,7 +284,13 @@ function seedRecords(): Rec[] {
     submitted_at: '2026-10-05T10:00:00Z',
     pending_change_requests: 0,
     executives: [
-      { id: 901, full_name: 'Yao Prestataire', position: 'general_manager', position_label: null, is_visible: true },
+      {
+        id: 901,
+        full_name: 'Yao Prestataire',
+        position: 'general_manager',
+        position_label: null,
+        is_visible: true,
+      },
     ],
     documents: [
       {
@@ -272,7 +304,11 @@ function seedRecords(): Rec[] {
     ],
   });
   pending.audit = [
-    { event: 'establishment.submitted', user: { name: 'Yao Prestataire' }, created_at: '2026-10-05T10:00:00Z' },
+    {
+      event: 'establishment.submitted',
+      user: { name: 'Yao Prestataire' },
+      created_at: '2026-10-05T10:00:00Z',
+    },
   ];
   const rejected = baseRec(
     'provider',
@@ -301,7 +337,11 @@ function seedRecords(): Rec[] {
     corporate_purpose: 'Protection de sites industriels.',
   });
   rejected.audit = [
-    { event: 'establishment.rejected', user: { name: 'Admin Démo' }, created_at: '2026-10-03T08:00:00Z' },
+    {
+      event: 'establishment.rejected',
+      user: { name: 'Admin Démo' },
+      created_at: '2026-10-03T08:00:00Z',
+    },
   ];
   out.push(pending, rejected);
 
@@ -312,7 +352,15 @@ function seedRecords(): Rec[] {
     email: 'fatou.diabate@example.test',
     phone: null,
   };
-  const p3 = baseRec('provider', 103, 'cobra-gardiennage', 'Cobra Gardiennage', 'pending', other.email, other);
+  const p3 = baseRec(
+    'provider',
+    103,
+    'cobra-gardiennage',
+    'Cobra Gardiennage',
+    'pending',
+    other.email,
+    other,
+  );
   Object.assign(p3, {
     ...cityIds('yamoussoukro', null),
     phone: '+2252720000303',
@@ -320,7 +368,15 @@ function seedRecords(): Rec[] {
     service_type_ids: ids(serviceTypes, ['gardiennage-non-arme']),
     submitted_at: '2026-10-06T14:00:00Z',
   });
-  const s2 = baseRec('state_force', 101, 'poste-de-police-de-koumassi', 'Poste de police de Koumassi', 'pending', other.email, other);
+  const s2 = baseRec(
+    'state_force',
+    101,
+    'poste-de-police-de-koumassi',
+    'Poste de police de Koumassi',
+    'pending',
+    other.email,
+    other,
+  );
   Object.assign(s2, {
     ...cityIds('abidjan', 'koumassi'),
     phone: '+2252720000304',
@@ -381,9 +437,21 @@ const REF_LABELS: Record<ReferenceResource, string> = {
 
 function seedReference(): Record<ReferenceResource, AdminReferenceItem[]> {
   const opts = (list: { id: number; name: string; slug: string }[]): AdminReferenceItem[] =>
-    list.map((o, i) => ({ id: o.id, name: o.name, slug: o.slug, sort_order: i + 1, is_visible: true }));
+    list.map((o, i) => ({
+      id: o.id,
+      name: o.name,
+      slug: o.slug,
+      sort_order: i + 1,
+      is_visible: true,
+    }));
   const named = (names: string[]): AdminReferenceItem[] =>
-    names.map((name, i) => ({ id: i + 1, name, slug: slugify(name), sort_order: i + 1, is_visible: true }));
+    names.map((name, i) => ({
+      id: i + 1,
+      name,
+      slug: slugify(name),
+      sort_order: i + 1,
+      is_visible: true,
+    }));
   const districts = cities.flatMap((c) =>
     c.districts.map((d) => ({
       id: d.id,
@@ -467,9 +535,27 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
   const reference = seedReference();
   const audit: AdminAuditLog[] = seedAudit();
   const notifications: AdminNotification[] = [
-    { id: 1, type: 'establishment.submitted', message: 'Nouvelle inscription : Cobra Gardiennage', read_at: null, created_at: '2026-10-06T14:00:00Z' },
-    { id: 2, type: 'establishment.submitted', message: 'Nouvelle inscription : Poste de police de Koumassi', read_at: null, created_at: '2026-10-06T15:00:00Z' },
-    { id: 3, type: 'document.uploaded', message: 'Nouveau justificatif : Garde Lagune Sécurité', read_at: '2026-10-06T16:00:00Z', created_at: '2026-10-05T10:05:00Z' },
+    {
+      id: 1,
+      type: 'establishment.submitted',
+      message: 'Nouvelle inscription : Cobra Gardiennage',
+      read_at: null,
+      created_at: '2026-10-06T14:00:00Z',
+    },
+    {
+      id: 2,
+      type: 'establishment.submitted',
+      message: 'Nouvelle inscription : Poste de police de Koumassi',
+      read_at: null,
+      created_at: '2026-10-06T15:00:00Z',
+    },
+    {
+      id: 3,
+      type: 'document.uploaded',
+      message: 'Nouveau justificatif : Garde Lagune Sécurité',
+      read_at: '2026-10-06T16:00:00Z',
+      created_at: '2026-10-05T10:05:00Z',
+    },
   ];
   const idempotent = new Map<string, Rec>();
   let seq = 1000;
@@ -527,6 +613,14 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
     void ownerKey;
     return rest;
   };
+  /** Contrat §10.1 : sans coordonnées, sans téléphone, sans description ou sans services / démarches. */
+  const isIncomplete = (r: Rec): boolean => {
+    const v = r as unknown as Record<string, unknown>;
+    const ids = (v.service_type_ids ?? v.procedure_type_ids) as unknown[] | undefined;
+    return (
+      r.lat === null || r.lng === null || !r.phone || !r.description || !ids || ids.length === 0
+    );
+  };
   const toRow = (r: Rec): AdminEstablishmentRow => ({
     type: r.type,
     id: r.id,
@@ -537,9 +631,15 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
     is_verified: r.is_verified,
     is_featured: r.is_featured,
     city: { name: cities.find((c) => c.id === r.city_id)?.name ?? '—' },
-    owner: { id: r.owner.id, name: `${r.owner.first_name} ${r.owner.last_name}`, email: r.owner.email },
+    owner: {
+      id: r.owner.id,
+      name: `${r.owner.first_name} ${r.owner.last_name}`,
+      email: r.owner.email,
+    },
     submitted_at: r.submitted_at,
     reviewed_at: r.reviewed_at,
+    import_id: null,
+    is_incomplete: isIncomplete(r),
   });
 
   function applyPatch(r: Rec, patch: Record<string, unknown>) {
@@ -549,9 +649,23 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
         r.executives = value.map((e, i) => ({
           id: next() + i,
           full_name: String((e as { full_name?: string }).full_name ?? ''),
-          position: (e as { position: Rec['executives'][number]['position'] }).position,
-          position_label: ((e as { position_label?: string | null }).position_label ?? null) as string | null,
+          position: (e as { position: NonNullable<Rec['executives']>[number]['position'] })
+            .position,
+          position_label: ((e as { position_label?: string | null }).position_label ?? null) as
+            string | null,
           is_visible: Boolean((e as { is_visible?: boolean }).is_visible),
+        }));
+      } else if (key === 'branches' && Array.isArray(value)) {
+        r.branches = (value as BranchInput[]).map((b) => ({
+          id: b.id ?? next(),
+          label: b.label,
+          city_id: b.city_id,
+          district_id: b.district_id ?? null,
+          address: b.address ?? null,
+          geo_description: b.geo_description ?? null,
+          phone: b.phone ?? null,
+          lat: b.lat ?? null,
+          lng: b.lng ?? null,
         }));
       } else if (key !== 'id' && key !== 'status') {
         target[key] = value;
@@ -568,7 +682,13 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
           throw invalid(f, 'La coordonnée est hors limites.');
       }
     }
-    for (const f of ['website_url', 'facebook_url', 'instagram_url', 'twitter_url', 'linkedin_url']) {
+    for (const f of [
+      'website_url',
+      'facebook_url',
+      'instagram_url',
+      'twitter_url',
+      'linkedin_url',
+    ]) {
       const v = patch[f];
       if (typeof v === 'string' && v !== '' && !/^https?:\/\//i.test(v))
         throw invalid(f, "L'adresse doit commencer par http:// ou https://.");
@@ -580,7 +700,9 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
       const s = ctx.requireSession();
       await ctx.delay(200);
       if (!s.verified)
-        throw forbidden('Veuillez vérifier votre adresse e-mail avant d’inscrire un établissement.');
+        throw forbidden(
+          'Veuillez vérifier votre adresse e-mail avant d’inscrire un établissement.',
+        );
       const known = idempotent.get(`${s.email}:${key}`);
       if (known) return toMine(known);
       if (!input.name?.trim()) throw invalid('name', 'Le nom est obligatoire.');
@@ -606,8 +728,18 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
         email: s.email,
         phone: null,
       };
-      const rec = baseRec(input.type, id, slug, input.name.trim(), 'pending', isDemoUser(s) ? DEMO_OWNER : s.email, owner);
-      const { type, consent, executives, ...fields } = input as typeof input & { executives?: unknown };
+      const rec = baseRec(
+        input.type,
+        id,
+        slug,
+        input.name.trim(),
+        'pending',
+        isDemoUser(s) ? DEMO_OWNER : s.email,
+        owner,
+      );
+      const { type, consent, executives, ...fields } = input as typeof input & {
+        executives?: unknown;
+      };
       void type;
       void consent;
       applyPatch(rec, fields as Record<string, unknown>);
@@ -673,7 +805,8 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
       const entries = Object.entries(changes);
       if (!entries.length) throw invalid('changes', 'Indiquez au moins un champ à modifier.');
       for (const [f] of entries) {
-        if (!SENSITIVE[type].includes(f)) throw invalid(`changes.${f}`, 'Ce champ ne nécessite pas de demande.');
+        if (!SENSITIVE[type].includes(f))
+          throw invalid(`changes.${f}`, 'Ce champ ne nécessite pas de demande.');
       }
       if (r.change_requests.some((c) => c.status === 'pending'))
         throw new ApiError(409, 'Une demande de modification est déjà en attente.');
@@ -739,8 +872,18 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
       const count = r.media.filter((m) => m.collection === collection).length;
       const max = collection === 'gallery' ? 10 : 1;
       if (count >= max)
-        throw invalid('collection', collection === 'gallery' ? 'Maximum 10 images de galerie.' : 'Une seule image est autorisée : supprimez l’existante.');
-      const m: EstablishmentMedia = { id: next(), collection, url: placeholderImage(collection), alt };
+        throw invalid(
+          'collection',
+          collection === 'gallery'
+            ? 'Maximum 10 images de galerie.'
+            : 'Une seule image est autorisée : supprimez l’existante.',
+        );
+      const m: EstablishmentMedia = {
+        id: next(),
+        collection,
+        url: placeholderImage(collection),
+        alt,
+      };
       r.media.push(m);
       return { ...m };
     },
@@ -756,7 +899,8 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
       await ctx.delay();
       const r = findMine(type, slug, s);
       if (r.status === 'pending') return; // rejeu : sans effet
-      if (r.status !== 'rejected') throw new ApiError(409, 'Seule une fiche rejetée peut être soumise à nouveau.');
+      if (r.status !== 'rejected')
+        throw new ApiError(409, 'Seule une fiche rejetée peut être soumise à nouveau.');
       r.status = 'pending';
       r.rejection_reason = null;
       r.submitted_at = new Date().toISOString();
@@ -775,12 +919,21 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
         new_contact_messages: 0,
         pending_comments: 0,
         confirmed_subscribers: 0,
-        pending_providers: records.filter((r) => r.type === 'provider' && r.status === 'pending').length,
-        pending_state_forces: records.filter((r) => r.type === 'state_force' && r.status === 'pending').length,
-        pending_change_requests: records.reduce((n, r) => n + r.change_requests.filter((c) => c.status === 'pending').length, 0),
+        pending_providers: records.filter((r) => r.type === 'provider' && r.status === 'pending')
+          .length,
+        pending_state_forces: records.filter(
+          (r) => r.type === 'state_force' && r.status === 'pending',
+        ).length,
+        pending_change_requests: records.reduce(
+          (n, r) => n + r.change_requests.filter((c) => c.status === 'pending').length,
+          0,
+        ),
         users_total: users.length,
-        providers_approved: records.filter((r) => r.type === 'provider' && r.status === 'approved').length,
-        state_forces_approved: records.filter((r) => r.type === 'state_force' && r.status === 'approved').length,
+        providers_approved: records.filter((r) => r.type === 'provider' && r.status === 'approved')
+          .length,
+        state_forces_approved: records.filter(
+          (r) => r.type === 'state_force' && r.status === 'approved',
+        ).length,
         recent_audit: audit.slice(0, 10),
       };
     },
@@ -791,9 +944,16 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
       let list = records
         .filter((r) => !query.type || r.type === query.type)
         .filter((r) => !query.status || r.status === query.status)
-        .filter((r) => !q || r.name.toLowerCase().includes(q) || r.owner.email.toLowerCase().includes(q));
+        // Les fiches de démonstration ne viennent d'aucun import (contrat §10.2).
+        .filter(() => !query.import_id)
+        .filter((r) => !query.incomplete || isIncomplete(r))
+        .filter(
+          (r) => !q || r.name.toLowerCase().includes(q) || r.owner.email.toLowerCase().includes(q),
+        );
       list = list.sort((a, b) =>
-        query.sort === 'name' ? a.name.localeCompare(b.name, 'fr') : b.submitted_at.localeCompare(a.submitted_at),
+        query.sort === 'name'
+          ? a.name.localeCompare(b.name, 'fr')
+          : b.submitted_at.localeCompare(a.submitted_at),
       );
       return ctx.paginate(list.map(toRow), query.page, query.per_page ?? 15);
     },
@@ -809,7 +969,8 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
       await ctx.delay();
       const r = findAdmin(type, id);
       validateCommon(patch);
-      if (typeof patch.name === 'string' && !patch.name.trim()) throw invalid('name', 'Le nom est obligatoire.');
+      if (typeof patch.name === 'string' && !patch.name.trim())
+        throw invalid('name', 'Le nom est obligatoire.');
       applyPatch(r, patch);
       log('establishment.updated', r, 'Admin Démo');
       return toMine(r);
@@ -857,7 +1018,8 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
           return;
         case 'verify':
         case 'unverify':
-          if (r.type !== 'provider') throw invalid('type', 'Seuls les prestataires peuvent être vérifiés.');
+          if (r.type !== 'provider')
+            throw invalid('type', 'Seuls les prestataires peuvent être vérifiés.');
           if (r.is_verified === (action === 'verify')) return;
           r.is_verified = action === 'verify';
           log(`establishment.${action === 'verify' ? 'verified' : 'unverified'}`, r, who);
@@ -916,7 +1078,8 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
       const r = records.find((x) => x.change_requests.some((c) => c.id === id));
       const cr = r?.change_requests.find((c) => c.id === id);
       if (!r || !cr) throw notFound();
-      if (reason.trim().length < 10) throw invalid('reason', 'Le motif doit contenir au moins 10 caractères.');
+      if (reason.trim().length < 10)
+        throw invalid('reason', 'Le motif doit contenir au moins 10 caractères.');
       if (cr.status === 'rejected') return;
       if (cr.status === 'approved') throw new ApiError(409, 'Cette demande a déjà été approuvée.');
       cr.status = 'rejected';
@@ -929,14 +1092,14 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
       await ctx.delay();
       const q = query.q?.trim().toLowerCase();
       const list = users
-        .map((u) => (u.id === 1 ? { ...u, email: s.email, first_name: s.first_name, last_name: s.last_name } : u))
+        .map((u) =>
+          u.id === 1
+            ? { ...u, email: s.email, first_name: s.first_name, last_name: s.last_name }
+            : u,
+        )
         .filter((u) => !query.role || u.role === query.role)
         .filter((u) => query.is_active === undefined || u.is_active === query.is_active)
-        .filter(
-          (u) =>
-            !q ||
-            `${u.first_name} ${u.last_name} ${u.email}`.toLowerCase().includes(q),
-        );
+        .filter((u) => !q || `${u.first_name} ${u.last_name} ${u.email}`.toLowerCase().includes(q));
       return ctx.paginate(structuredClone(list), query.page, 15);
     },
     async adminUpdateUser(id, patch) {
@@ -945,7 +1108,10 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
       const u = users.find((x) => x.id === id);
       if (!u) throw notFound();
       if (id === 1 && ((patch.role && patch.role !== 'admin') || patch.is_active === false))
-        throw invalid('role', 'Vous ne pouvez pas modifier votre propre rôle ni désactiver votre compte.');
+        throw invalid(
+          'role',
+          'Vous ne pouvez pas modifier votre propre rôle ni désactiver votre compte.',
+        );
       if (
         u.role === 'admin' &&
         ((patch.role && patch.role !== 'admin') || patch.is_active === false) &&
@@ -965,7 +1131,8 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
           created_at: new Date().toISOString(),
         });
         u.role = patch.role;
-        u.two_factor_enabled = u.role === 'admin' || u.role === 'editor' ? true : u.two_factor_enabled;
+        u.two_factor_enabled =
+          u.role === 'admin' || u.role === 'editor' ? true : u.two_factor_enabled;
       }
       if (patch.is_active !== undefined) u.is_active = patch.is_active;
       return structuredClone(u);
@@ -975,9 +1142,11 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
       await ctx.delay();
       const u = users.find((x) => x.id === id);
       if (!u) throw notFound();
-      if (id === 1) throw invalid('confirm_email', 'Vous ne pouvez pas anonymiser votre propre compte.');
+      if (id === 1)
+        throw invalid('confirm_email', 'Vous ne pouvez pas anonymiser votre propre compte.');
       const email = u.id === 1 ? s.email : u.email;
-      if (confirmEmail !== email) throw invalid('confirm_email', 'L’adresse saisie ne correspond pas.');
+      if (confirmEmail !== email)
+        throw invalid('confirm_email', 'L’adresse saisie ne correspond pas.');
       u.first_name = 'Anonyme';
       u.last_name = '';
       u.email = `anonyme-${u.id}@anonyme.invalid`;
@@ -997,7 +1166,8 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
       const list = reference[resource];
       if (!list) throw notFound();
       if (!input.name?.trim()) throw invalid('name', 'Le nom est obligatoire.');
-      if (resource === 'districts' && !input.city_id) throw invalid('city_id', 'La ville est obligatoire.');
+      if (resource === 'districts' && !input.city_id)
+        throw invalid('city_id', 'La ville est obligatoire.');
       const item: AdminReferenceItem = {
         ...input,
         id: Math.max(0, ...list.map((x) => x.id)) + 1,
@@ -1006,7 +1176,8 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
         sort_order: input.sort_order ?? list.length + 1,
         is_visible: input.is_visible ?? true,
       };
-      if (list.some((x) => x.slug === item.slug)) throw invalid('name', 'Cette valeur existe déjà.');
+      if (list.some((x) => x.slug === item.slug))
+        throw invalid('name', 'Cette valeur existe déjà.');
       list.push(item);
       return { ...item };
     },
@@ -1015,7 +1186,8 @@ export function createWaveAMocks(ctx: MockContext): WaveAApi {
       await ctx.delay();
       const item = reference[resource]?.find((x) => x.id === id);
       if (!item) throw notFound();
-      if (input.name !== undefined && !input.name.trim()) throw invalid('name', 'Le nom est obligatoire.');
+      if (input.name !== undefined && !input.name.trim())
+        throw invalid('name', 'Le nom est obligatoire.');
       Object.assign(item, input, input.name ? { name: input.name.trim() } : {});
       return { ...item };
     },

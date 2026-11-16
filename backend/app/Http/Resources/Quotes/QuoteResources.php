@@ -9,7 +9,7 @@ use App\Support\ApiPage;
 
 /**
  * Sérialisation des devis (contrat §8.3). Les coordonnées du demandeur n'apparaissent que dans ProviderQuote
- * (prestataire destinataire) et dans AdminQuote / AdminQuoteRow (administration).
+ * (prestataire destinataire) et dans AdminQuote / AdminQuoteRow (administration) ; SentQuote est la vue du demandeur.
  */
 final class QuoteResources
 {
@@ -45,6 +45,37 @@ final class QuoteResources
             'replied_at' => ApiPage::iso($recipient->replied_at),
             'response_message' => $recipient->response_message,
             'quoted_amount' => $recipient->quoted_amount,
+        ];
+    }
+
+    /**
+     * SentQuote : demande vue par son auteur. Ses propres coordonnées ne sont pas renvoyées ; chaque prestataire
+     * destinataire apparaît avec l'état de sa réponse. `serviceType`, `city`, `district` et `recipients.provider`
+     * doivent être chargés.
+     *
+     * @return array<string, mixed>
+     */
+    public static function sentQuote(QuoteRequest $quote): array
+    {
+        return [
+            'id' => $quote->id,
+            'reference' => $quote->reference,
+            'service' => (new OptionResource($quote->serviceType))->resolve(),
+            'city' => ['name' => $quote->city->name],
+            'district' => $quote->district === null ? null : ['name' => $quote->district->name],
+            'description' => $quote->description,
+            'desired_start_date' => $quote->desired_start_date?->format('Y-m-d'),
+            'budget_range' => $quote->budget_range,
+            'status' => $quote->status,
+            'created_at' => ApiPage::iso($quote->created_at),
+            'recipients' => $quote->recipients->sortBy('id')->map(fn (QuoteRequestRecipient $r) => [
+                'provider' => ['slug' => $r->provider->slug, 'name' => $r->provider->name],
+                'status' => $r->status,
+                'sent_at' => ApiPage::iso($r->sent_at),
+                'replied_at' => ApiPage::iso($r->replied_at),
+                'response_message' => $r->response_message,
+                'quoted_amount' => $r->quoted_amount,
+            ])->values()->all(),
         ];
     }
 

@@ -27,7 +27,11 @@ export function ReviewsList({ reviews, redirectTo }: { reviews: Review[]; redire
             </div>
           ) : null}
           <div className="mt-2 flex justify-end">
-            <ReportReviewButton reviewId={r.id} redirectTo={redirectTo} />
+            <ReportReviewButton
+              reviewId={r.id}
+              redirectTo={redirectTo}
+              label={`l’avis de ${r.author} du ${formatDate(r.created_at)}`}
+            />
           </div>
         </li>
       ))}

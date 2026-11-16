@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import { clusterPoints, type Point } from '@/lib/cluster';
+import { tileAttribution, tileUrl } from '@/lib/env';
 
 export const DEFAULT_CENTER: [number, number] = [5.3364, -4.0267]; // Abidjan
-export const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-export const ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>';
+/** Tuiles configurables (NEXT_PUBLIC_TILE_URL, défaut OSM) ; attribution OSM toujours affichée. */
+export const TILE_URL = tileUrl();
+export const ATTRIBUTION = tileAttribution();
 
 /** Icônes servies localement (/public/map) : aucun appel CDN. */
 export const markerIcon = L.icon({
@@ -31,23 +32,38 @@ function clusterIcon(count: number): L.DivIcon {
   });
 }
 
-function FitBounds({ points }: { points: Point[] }) {
+/** Point affiché : un établissement, ou l'une de ses agences quand `branch_label` est renseigné. */
+export interface MapPoint extends Point {
+  branch_label?: string | null;
+}
+
+/** Libellé d'un marqueur : « Nom » ou « Nom — Agence de X ». */
+export function pointLabel(p: MapPoint): string {
+  return p.branch_label ? `${p.name} — ${p.branch_label}` : p.name;
+}
+
+/** Clé unique : plusieurs points (siège, agences) peuvent partager le même slug. */
+export function pointKey(p: MapPoint): string {
+  return `${p.slug}|${p.branch_label ?? ''}@${p.lat},${p.lng}`;
+}
+
+function FitBounds({ points, singleZoom = 14 }: { points: Point[]; singleZoom?: number }) {
   const map = useMap();
   useEffect(() => {
     if (points.length === 0) return;
     if (points.length === 1) {
-      map.setView([points[0]!.lat, points[0]!.lng], 14);
+      map.setView([points[0]!.lat, points[0]!.lng], singleZoom);
       return;
     }
     map.fitBounds(
       points.map((p) => [p.lat, p.lng] as [number, number]),
       { padding: [32, 32], maxZoom: 15 },
     );
-  }, [map, points]);
+  }, [map, points, singleZoom]);
   return null;
 }
 
-function Markers({ points, hrefBase }: { points: Point[]; hrefBase: string }) {
+function Markers({ points, hrefBase }: { points: MapPoint[]; hrefBase: string }) {
   const map = useMap();
   const [zoom, setZoom] = useState(map.getZoom());
   useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
@@ -55,47 +71,59 @@ function Markers({ points, hrefBase }: { points: Point[]; hrefBase: string }) {
 
   return (
     <>
-      {clusters.map((c) =>
-        c.count === 1 ? (
+      {clusters.map((c) => {
+        if (c.count > 1)
+          return (
+            <Marker
+              key={`cluster-${c.key}`}
+              position={[c.lat, c.lng]}
+              icon={clusterIcon(c.count)}
+              title={`${c.count} résultats regroupés`}
+              alt={`${c.count} résultats regroupés`}
+              eventHandlers={{
+                click: () =>
+                  map.fitBounds(
+                    c.members.map((m) => [m.lat, m.lng] as [number, number]),
+                    { padding: [40, 40], maxZoom: 17 },
+                  ),
+              }}
+            />
+          );
+        // Les membres sont les points passés en entrée : ils portent `branch_label`.
+        const p = c.members[0] as MapPoint;
+        return (
           <Marker
-            key={c.members[0]!.slug}
+            key={pointKey(p)}
             position={[c.lat, c.lng]}
             icon={markerIcon}
-            title={c.members[0]!.name}
-            alt={c.members[0]!.name}
+            title={pointLabel(p)}
+            alt={pointLabel(p)}
           >
             <Popup>
-              <strong>{c.members[0]!.name}</strong>
+              <strong>{p.name}</strong>
+              {p.branch_label ? (
+                <>
+                  <br />
+                  {p.branch_label}
+                </>
+              ) : null}
               <br />
-              <Link href={`${hrefBase}/${c.members[0]!.slug}`}>Voir la fiche</Link>
+              <Link href={`${hrefBase}/${p.slug}`}>
+                Voir la fiche<span className="sr-only"> de {p.name}</span>
+              </Link>
             </Popup>
           </Marker>
-        ) : (
-          <Marker
-            key={`cluster-${c.key}`}
-            position={[c.lat, c.lng]}
-            icon={clusterIcon(c.count)}
-            title={`${c.count} résultats regroupés`}
-            alt={`${c.count} résultats regroupés`}
-            eventHandlers={{
-              click: () =>
-                map.fitBounds(
-                  c.members.map((m) => [m.lat, m.lng] as [number, number]),
-                  { padding: [40, 40], maxZoom: 17 },
-                ),
-            }}
-          />
-        ),
-      )}
+        );
+      })}
     </>
   );
 }
 
 export interface MapViewProps {
-  points: Point[];
+  points: MapPoint[];
   hrefBase: string;
   label: string;
-  /** Mode fiche : un seul point, pas de molette, pas de regroupement. */
+  /** Mode fiche : quelques points (siège, agences), pas de molette, pas de regroupement. */
   mini?: boolean;
 }
 
@@ -107,18 +135,24 @@ export default function MapView({ points, hrefBase, label, mini = false }: MapVi
         center={first ? [first.lat, first.lng] : DEFAULT_CENTER}
         zoom={mini ? 15 : 11}
         scrollWheelZoom={!mini}
-        className={mini ? 'h-56 w-full rounded-lg' : 'h-[28rem] w-full rounded-lg'}
+        className={mini ? 'h-56 w-full' : 'h-[28rem] w-full'}
       >
         <TileLayer url={TILE_URL} attribution={ATTRIBUTION} maxZoom={19} />
         {mini ? (
-          first ? (
-            <Marker
-              position={[first.lat, first.lng]}
-              icon={markerIcon}
-              title={first.name}
-              alt={first.name}
-            />
-          ) : null
+          <>
+            {points.length > 1 ? <FitBounds points={points} singleZoom={15} /> : null}
+            {points.map((p) => (
+              <Marker
+                key={pointKey(p)}
+                position={[p.lat, p.lng]}
+                icon={markerIcon}
+                title={pointLabel(p)}
+                alt={pointLabel(p)}
+              >
+                {points.length > 1 ? <Popup>{pointLabel(p)}</Popup> : null}
+              </Marker>
+            ))}
+          </>
         ) : (
           <>
             <FitBounds points={points} />

@@ -20,6 +20,7 @@ import { Button, ButtonLink } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { FormError } from '../ui/Field';
 import { Stepper } from '../ui/Stepper';
+import { SimilarEstablishmentsWarning } from '../claims/SimilarEstablishmentsWarning';
 import { StepContent } from './RegistrationSteps';
 
 /** Étape portant chaque champ de l'API (pour ramener l'utilisateur au champ fautif après un 422). */
@@ -39,9 +40,16 @@ function stepOfField(field: string): StepId {
   )
     return 'identity';
   if (
-    ['city_id', 'district_id', 'address', 'geo_description', 'plus_code', 'lat', 'lng'].includes(
-      root,
-    )
+    [
+      'city_id',
+      'district_id',
+      'address',
+      'geo_description',
+      'plus_code',
+      'lat',
+      'lng',
+      'branches',
+    ].includes(root)
   )
     return 'location';
   if (
@@ -241,6 +249,15 @@ export function EstablishmentRegistration({ reference }: { reference: ReferenceD
         </div>
 
         <FormError message={formError} />
+
+        {step.id !== 'type' && step.id !== 'declarant' ? (
+          <SimilarEstablishmentsWarning
+            type={draft.type}
+            name={draft.name}
+            cityId={draft.city_id}
+            phone={draft.phone}
+          />
+        ) : null}
 
         <StepContent
           step={step.id}

@@ -26,6 +26,9 @@ class AdminAlert extends Notification
 
     public const KIND_CONTACT_RECEIVED = 'contact_received';
 
+    /** Revendication d'une fiche sans propriétaire (contrat §10.3). */
+    public const KIND_CLAIM_RECEIVED = 'claim_received';
+
     /**
      * @param  array{type?: string, id?: int, slug?: string, name?: string}|null  $establishment
      * @param  array{type: string, id: int, reference?: string}|null  $subject  objet concerné (avis, dossier, devis, message) : identifiants uniquement, jamais de donnée personnelle

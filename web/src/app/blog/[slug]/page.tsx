@@ -5,12 +5,12 @@ import { cache } from 'react';
 import { PostCardItem } from '@/components/content/PostCardItem';
 import { SectionHeader } from '@/components/ui/Section';
 import { toneAt, type Tone } from '@/components/ui/tone';
+import { PopularPosts } from '@/components/content/PopularPosts';
 import { PostComments } from '@/components/content/PostComments';
+import { PostViewTracker } from '@/components/content/PostViewTracker';
 import { SanitizedHtml } from '@/components/content/SanitizedHtml';
 import { ShareLinks } from '@/components/directory/ShareLinks';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
-import { Container } from '@/components/ui/Container';
-import { ErrorState } from '@/components/ui/EmptyState';
 import { JsonLd } from '@/components/ui/JsonLd';
 import { serverApi } from '@/lib/api/server';
 import { SITE_URL } from '@/lib/env';
@@ -21,12 +21,19 @@ const RELATED_TONES: Tone[] = ['t1', 't2', 't3'];
 
 type Props = { params: Promise<{ slug: string }> };
 
-const getPost = cache((slug: string) => safe(serverApi.getPost(slug), () => notFound()));
+/**
+ * Article : 404 → page introuvable ; toute autre erreur d'API est levée (error boundary, statut 5xx)
+ * plutôt que de rendre une page vide en 200, indexable.
+ */
+const getPost = cache(async (slug: string) => {
+  const [post, error] = await safe(serverApi.getPost(slug), () => notFound());
+  if (!post) throw new Error(`Article indisponible (${error.status})`);
+  return post;
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const [post] = await getPost(slug);
-  if (!post) return { title: 'Article' };
+  const post = await getPost(slug);
   const description = post.seo_description ?? post.excerpt;
   return {
     title: post.seo_title ?? post.title,
@@ -47,15 +54,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PostPage({ params }: Props) {
   const { slug } = await params;
-  const [post, error] = await getPost(slug);
-  if (!post) {
-    return (
-      <Container className="py-10">
-        <ErrorState title="Article indisponible">{error?.message}</ErrorState>
-      </Container>
-    );
-  }
+  const [post, [popular]] = await Promise.all([
+    getPost(slug),
+    safe(serverApi.listPosts({ per_page: 6, sort: 'popular' })),
+  ]);
   const url = `${SITE_URL}/blog/${post.slug}`;
+  const popularPosts = (popular?.data ?? []).filter((p) => p.slug !== post.slug).slice(0, 5);
   return (
     <>
       <JsonLd
@@ -72,6 +76,7 @@ export default async function PostPage({ params }: Props) {
           publisher: { '@type': 'Organization', name: 'ProtectIci' },
         }}
       />
+      <PostViewTracker slug={post.slug} />
       <article>
         <header className="bg-c1 text-on-c1">
           <div className="wrap py-8 md:py-12 [&_a]:text-inherit">
@@ -102,30 +107,35 @@ export default async function PostPage({ params }: Props) {
             </p>
           </div>
         </header>
-        <div className="wrap">
-          <figure className="max-w-[52rem] border-x-2 border-b-2 border-ink bg-c4">
-            {post.cover_url ? (
-              // <img> et non next/image : next/image injecte un style en ligne bloqué par la CSP.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={post.cover_url}
-                alt={post.cover_alt ?? ''}
-                width={1200}
-                height={675}
-                fetchPriority="high"
-                decoding="async"
-                className="block aspect-video w-full object-cover"
-              />
-            ) : (
-              <div aria-hidden="true" className="aspect-[16/6] placeholder-hatch" />
-            )}
-          </figure>
-          <div className="flex max-w-[52rem] flex-col gap-10 py-10">
-            <SanitizedHtml html={post.body} />
-            <div className="border-2 border-ink p-5">
-              <ShareLinks url={url} title={post.title} label="Partager cet article" />
+        {/* Article 2/3 + les plus lus 1/3 */}
+        <div className="wrap grid grid-cols-1 items-start gap-10 pb-section lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:gap-12">
+          <div className="min-w-0">
+            <figure className="border-x-2 border-b-2 border-ink bg-c4">
+              {post.cover_url ? (
+                // <img> et non next/image : next/image injecte un style en ligne bloqué par la CSP.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={post.cover_url}
+                  alt={post.cover_alt ?? ''}
+                  width={1200}
+                  height={675}
+                  fetchPriority="high"
+                  decoding="async"
+                  className="block aspect-video w-full object-cover"
+                />
+              ) : (
+                <div aria-hidden="true" className="aspect-[16/6] placeholder-hatch" />
+              )}
+            </figure>
+            <div className="flex flex-col gap-10 py-10">
+              <SanitizedHtml html={post.body} />
+              <div className="border-2 border-ink p-5">
+                <ShareLinks url={url} title={post.title} label="Partager cet article" icons />
+              </div>
             </div>
+            <PostComments slug={post.slug} />
           </div>
+          <PopularPosts posts={popularPosts} />
         </div>
       </article>
       {post.related.length > 0 ? (
@@ -146,11 +156,6 @@ export default async function PostPage({ params }: Props) {
           </div>
         </section>
       ) : null}
-      <div className="wrap py-section">
-        <div className="max-w-[52rem]">
-          <PostComments slug={post.slug} />
-        </div>
-      </div>
     </>
   );
 }

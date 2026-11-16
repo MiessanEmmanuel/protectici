@@ -24,6 +24,8 @@ class StateForceDetailResource extends StateForceSummaryResource
                 'name' => $p->name,
                 'notes' => data_get($p, 'pivot.notes'),
             ])->values(),
+            // Contrat §10.1 : fiche publiée sans propriétaire (revendicable).
+            'is_claimable' => (bool) $f->is_visible && $f->status === 'approved' && $f->user_id === null,
         ];
     }
 }

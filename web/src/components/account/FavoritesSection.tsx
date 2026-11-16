@@ -8,6 +8,7 @@ import { ProviderCard } from '../directory/ProviderCard';
 import { Button, ButtonLink } from '../ui/Button';
 import { EmptyState, ErrorState } from '../ui/EmptyState';
 import { LoadingBlock } from '../ui/Spinner';
+import { useToast } from '../ui/Toast';
 
 export function FavoritesSection() {
   const [page, setPage] = useState(1);
@@ -18,6 +19,22 @@ export function FavoritesSection() {
     error: string | null;
   } | null>(null);
   const id = `${page}:${attempt}`;
+  const [removing, setRemoving] = useState<string | null>(null);
+  const toast = useToast();
+
+  async function remove(p: ProviderSummary, lastOnPage: boolean) {
+    setRemoving(p.slug);
+    try {
+      await clientApi.removeFavorite(p.slug);
+      toast.show(`« ${p.name} » a été retiré de vos favoris.`, 'success');
+      if (lastOnPage && page > 1) setPage((n) => n - 1);
+      else setAttempt((n) => n + 1);
+    } catch (e) {
+      toast.show(errorMessage(e), 'error');
+    } finally {
+      setRemoving(null);
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -63,8 +80,20 @@ export function FavoritesSection() {
     <div className="flex flex-col gap-4">
       <ul className="grid gap-4 sm:grid-cols-2">
         {data.data.map((p) => (
-          <li key={p.slug}>
+          <li key={p.slug} className="flex flex-col gap-2">
             <ProviderCard provider={p} />
+            <div>
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={removing === p.slug}
+                disabled={removing !== null && removing !== p.slug}
+                aria-label={`Retirer ${p.name} de mes favoris`}
+                onClick={() => void remove(p, data.data.length === 1)}
+              >
+                Retirer
+              </Button>
+            </div>
           </li>
         ))}
       </ul>

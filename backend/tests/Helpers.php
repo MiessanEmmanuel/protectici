@@ -9,7 +9,7 @@ use App\Models\StateForceType;
 use App\Models\User;
 use PragmaRX\Google2FA\Google2FA;
 
-const SUMMARY_KEYS = ['slug', 'name', 'logo_url', 'city', 'district', 'phone', 'services', 'price_from', 'rating_avg', 'rating_count', 'is_verified', 'is_featured', 'lat', 'lng', 'distance_m'];
+const SUMMARY_KEYS = ['slug', 'name', 'logo_url', 'city', 'district', 'phone', 'services', 'price_from', 'rating_avg', 'rating_count', 'is_verified', 'is_featured', 'lat', 'lng', 'distance_m', 'branches_count', 'nearest_branch'];
 
 /** Fiche publique par défaut (approuvée + visible), rattachée à une ville existante si fournie. */
 function makeProvider(array $attributes = [], ?City $city = null): Provider
@@ -65,7 +65,7 @@ function providerPayload(array $overrides = []): array
         'city_id' => $city->id,
         'submitter_role' => 'manager',
         'is_in_service' => true,
-        'description' => 'Société de gardiennage <b>fictive</b>.',
+        'description' => 'Société de gardiennage fictive.',
         'consent' => true,
     ], $overrides);
 }

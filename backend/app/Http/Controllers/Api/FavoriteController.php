@@ -17,7 +17,7 @@ class FavoriteController extends Controller
     {
         $page = $request->user()->favoriteProviders()
             ->published()
-            ->with(['city', 'district', 'serviceTypes', 'logo'])
+            ->with(['city', 'district', 'serviceTypes', 'logo'])->withCount('branches')
             ->orderByDesc('favorites.created_at')
             ->paginate($request->perPage())
             ->withQueryString();

@@ -108,4 +108,10 @@ describe('formatChangeValue', () => {
     expect(formatChangeValue('force_type_id', 1, REFERENCE)).toBe('Police');
     expect(formatChangeValue('service_type_ids', [2, 9], REFERENCE)).toBe('Alarme, n° 9');
   });
+  it('rend les horaires structurés en texte', () => {
+    const text = formatChangeValue('opening_hours', { mon: [['08:00', '17:00']] });
+    expect(text).not.toContain('[object');
+    expect(text).not.toContain('{');
+    expect(text).toMatch(/lundi/i);
+  });
 });

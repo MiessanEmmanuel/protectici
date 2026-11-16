@@ -6,6 +6,7 @@ use App\Enums\EstablishmentType;
 use App\Models\ConsentLog;
 use App\Models\District;
 use App\Models\Provider;
+use App\Models\ProviderBranch;
 use App\Models\ProviderExecutive;
 use App\Models\StateForce;
 use App\Models\User;
@@ -217,6 +218,10 @@ class EstablishmentWriter
                 $changed[] = 'executives';
                 $this->syncExecutives($model, $data['executives'] ?? []);
             }
+            if ($has('branches')) {
+                $changed[] = 'branches';
+                $this->syncBranches($model, $data['branches'] ?? []);
+            }
         } else {
             $sync = null;
             if ($has('procedures')) {
@@ -244,14 +249,17 @@ class EstablishmentWriter
      * Remplacement de la liste des dirigeants. Les lignes sont conservées par `id` (appartenant à cette fiche),
      * les autres sont créées, les absentes supprimées. Affichage public seulement si is_visible (consentement).
      *
-     * @param  list<array<string, mixed>>  $executives
+     * @param  array<int, array<string, mixed>>  $executives
      */
     private function syncExecutives(Provider $provider, array $executives): void
     {
+        // validated() peut réordonner les lignes quand seules certaines ont un `id` : on revient à l'ordre envoyé.
+        ksort($executives);
+
         $existing = ProviderExecutive::query()->where('provider_id', $provider->id)->get()->keyBy('id');
         $keep = [];
 
-        foreach (array_values($executives) as $position => $row) {
+        foreach ($executives as $position => $row) {
             $id = isset($row['id']) ? (int) $row['id'] : null;
             $executive = $id !== null ? $existing->get($id) : null;
             $executive ??= new ProviderExecutive;
@@ -271,7 +279,57 @@ class EstablishmentWriter
         ProviderExecutive::query()->where('provider_id', $provider->id)->whereNotIn('id', $keep)->delete();
     }
 
-    private function uniqueSlug(EstablishmentType $type, string $name): string
+    /**
+     * Remplacement de la liste des agences. Les lignes sont conservées par `id` (appartenant à cette fiche),
+     * les autres sont créées, les absentes supprimées. L'adresse de la fiche reste le siège.
+     *
+     * @param  array<int, array<string, mixed>>  $branches
+     */
+    private function syncBranches(Provider $provider, array $branches): void
+    {
+        // validated() peut réordonner les lignes quand seules certaines ont un `id` : on revient à l'ordre envoyé.
+        ksort($branches);
+
+        $errors = [];
+        foreach ($branches as $i => $row) {
+            $districtId = $row['district_id'] ?? null;
+            if ($districtId !== null && ! District::query()->whereKey($districtId)->where('city_id', $row['city_id'])->exists()) {
+                $errors["branches.{$i}.district_id"] = ['Ce quartier n\'appartient pas à la ville choisie.'];
+            }
+        }
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        $existing = ProviderBranch::query()->where('provider_id', $provider->id)->get()->keyBy('id');
+        $keep = [];
+
+        foreach ($branches as $position => $row) {
+            $id = isset($row['id']) ? (int) $row['id'] : null;
+            $branch = $id !== null ? $existing->get($id) : null;
+            $branch ??= new ProviderBranch;
+
+            $branch->forceFill([
+                'provider_id' => $provider->id,
+                'label' => $row['label'],
+                'city_id' => $row['city_id'],
+                'district_id' => $row['district_id'] ?? null,
+                'address' => $row['address'] ?? null,
+                'geo_description' => $row['geo_description'] ?? null,
+                'phone' => $row['phone'] ?? null,
+                'latitude' => $row['lat'] ?? null,
+                'longitude' => $row['lng'] ?? null,
+                'sort_order' => $position,
+            ])->save();
+
+            $keep[] = $branch->id;
+        }
+
+        // Une à une (pas de delete de masse) : les événements Eloquent invalident le cache public.
+        $existing->reject(fn (ProviderBranch $b) => in_array($b->id, $keep, true))->each->delete();
+    }
+
+    public function uniqueSlug(EstablishmentType $type, string $name): string
     {
         $base = Str::slug(Str::limit($name, 180, ''));
         $base = $base !== '' ? $base : ($type === EstablishmentType::Provider ? 'prestataire' : 'force-etatique');

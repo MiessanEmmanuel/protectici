@@ -72,7 +72,7 @@ it('affiche le devis avec les coordonnées du demandeur et passe à viewed (idem
         ->assertJsonPath('data.provider.slug', $pa->slug)
         ->assertJsonPath('data.requester.name', 'Awa Traoré')
         ->assertJsonPath('data.requester.email', 'awa.traore@example.com')
-        ->assertJsonPath('data.requester.phone', '+2250709445111')
+        ->assertJsonPath('data.requester.phone', '+2250708123456')
         ->assertJsonPath('data.requester.company_name', 'Entrepôts Traoré');
     expect($first->json('data'))->toHaveKeys(PROVIDER_QUOTE_KEYS)->and($first->json('data.viewed_at'))->not->toBeNull();
 
@@ -101,6 +101,12 @@ it('renvoie 404 pour un devis adressé à un autre prestataire ou inexistant, sa
     $this->actingAs($ownerA)->postJson("/api/v1/me/quote-requests/$idB/decline")->assertNotFound();
     $this->actingAs($ownerA)->getJson('/api/v1/me/quote-requests/999999')->assertNotFound();
 
+    // Autorisation avant validation : un corps invalide sur le devis d'autrui donne 404, jamais 422.
+    $this->actingAs($ownerA)->postJson("/api/v1/me/quote-requests/$idB/reply", [])->assertNotFound();
+    $this->actingAs($ownerA)->postJson("/api/v1/me/quote-requests/$idB/decline", ['reason' => str_repeat('a', 501)])->assertNotFound();
+    $this->actingAs($ownerA)->postJson('/api/v1/me/quote-requests/999999/reply', ['message' => 'x'])->assertNotFound();
+    $this->actingAs(User::factory()->create())->postJson("/api/v1/me/quote-requests/$idB/reply", [])->assertForbidden();
+
     expect(QuoteRequestRecipient::find($idB)->status)->toBe('sent');
     Notification::assertNothingSent();
 });
@@ -109,8 +115,10 @@ it('répond au devis : destinataire replied, demande answered, e-mail au demande
     [$ownerA, $pa, $qa] = twoInboxes();
     $id = recipientOf($qa, $pa)->id;
 
+    $this->actingAs($ownerA)->postJson("/api/v1/me/quote-requests/$id/reply", ['message' => 'Bonjour, voici notre <b>proposition</b>.'])
+        ->assertUnprocessable()->assertJsonValidationErrors('message');
     $this->actingAs($ownerA)->postJson("/api/v1/me/quote-requests/$id/reply", [
-        'message' => 'Bonjour, voici notre <b>proposition</b> [cliquez](http://pirate.example)', 'quoted_amount' => 750000,
+        'message' => 'Bonjour, voici notre proposition [cliquez](http://pirate.example)', 'quoted_amount' => 750000,
         'status' => 'declined',
     ])->assertOk()->assertJsonPath('data.status', 'replied')->assertJsonPath('data.quoted_amount', 750000);
 
@@ -158,6 +166,8 @@ it('refuse un devis : motif stocké, idempotent, aucun e-mail, 409 après une r�
     $id = recipientOf($qa, $pa)->id;
 
     $this->actingAs($ownerA)->postJson("/api/v1/me/quote-requests/$id/decline", ['reason' => 'Hors de notre <i>zone</i>'])
+        ->assertUnprocessable()->assertJsonValidationErrors('reason');
+    $this->actingAs($ownerA)->postJson("/api/v1/me/quote-requests/$id/decline", ['reason' => '  Hors de notre zone '])
         ->assertOk()->assertJsonPath('data.status', 'declined')->assertJsonPath('data.response_message', 'Hors de notre zone');
     $this->actingAs($ownerA)->postJson("/api/v1/me/quote-requests/$id/decline", ['reason' => 'Autre motif'])
         ->assertOk()->assertJsonPath('data.response_message', 'Hors de notre zone');
@@ -184,7 +194,7 @@ it('un prestataire ne voit jamais les coordonnées d\'un demandeur adressées à
     $b = $this->actingAs($ownerB)->getJson('/api/v1/me/quote-requests')->getContent();
 
     expect($a)->not->toContain('autre.client@example.com')->not->toContain('+2250102030405')
-        ->and($b)->not->toContain('awa.traore@example.com')->not->toContain('+2250709445111');
+        ->and($b)->not->toContain('awa.traore@example.com')->not->toContain('+2250708123456');
 });
 
 it('un admin non propriétaire de fiche n\'a pas de boîte prestataire', function () {

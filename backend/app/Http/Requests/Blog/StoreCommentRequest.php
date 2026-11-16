@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Blog;
 
+use App\Http\Requests\Concerns\RejectsMarkup;
 use App\Rules\ValidTurnstileToken;
 use App\Support\PlainText;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,6 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
 /** Commentaire d'article (contrat §9.1) : texte brut, antispam §8.0 (Turnstile, champ piège, Idempotency-Key). */
 class StoreCommentRequest extends FormRequest
 {
+    use RejectsMarkup;
+
     public function authorize(): bool
     {
         return $this->user() !== null;

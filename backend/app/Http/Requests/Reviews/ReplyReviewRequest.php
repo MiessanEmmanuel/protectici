@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Reviews;
 
+use App\Http\Requests\Concerns\RejectsMarkup;
 use App\Support\PlainText;
 use Illuminate\Foundation\Http\FormRequest;
 
 /** Réponse unique du prestataire à un avis. */
 class ReplyReviewRequest extends FormRequest
 {
+    use RejectsMarkup;
+
     public function authorize(): bool
     {
         return $this->user() !== null;

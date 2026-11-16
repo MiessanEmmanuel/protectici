@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { describeError } from '@/lib/api/errors';
 import type { QuoteReceipt, QuoteRequestInput, ReferenceData } from '@/lib/api/types';
 import { formToObject, validate, type FieldErrors } from '@/lib/validation';
 import { QUOTE_MAX_PROVIDERS, quoteSchema, todayIso } from '@/lib/wave-b-schemas';
 import { ProviderPicker, type PickedProvider } from '../directory/ProviderPicker';
+import { useSession } from '../layout/SessionProvider';
 import { ErrorSummary } from '../establishment/ErrorSummary';
 import { AntiSpamFields } from '../security/AntiSpamFields';
 import { TURNSTILE_REQUIRED_MESSAGE, useAntiSpam } from '../security/use-anti-spam';
@@ -44,6 +45,7 @@ export function QuoteForm({
     null,
   );
   const [formKey, setFormKey] = useState(0);
+  const signedIn = useSession().user !== null;
 
   if (receipt) {
     return (
@@ -57,10 +59,15 @@ export function QuoteForm({
           {receipt.withProviders
             ? 'Votre demande sera transmise aux prestataires choisis.'
             : 'Votre demande sera examinée par notre équipe, qui l’acheminera vers les prestataires adaptés.'}{' '}
-          Conservez votre numéro de référence.
+          {signedIn
+            ? 'Vous pouvez la suivre dans « Mes demandes de devis ».'
+            : 'Conservez votre numéro de référence.'}
         </p>
         <div className="flex flex-wrap gap-3">
-          <ButtonLink href="/annuaire">Parcourir l’annuaire</ButtonLink>
+          {signedIn ? <ButtonLink href="/compte/mes-devis">Suivre mes demandes</ButtonLink> : null}
+          <ButtonLink href="/annuaire" variant={signedIn ? 'secondary' : undefined}>
+            Parcourir l’annuaire
+          </ButtonLink>
           <Button
             variant="secondary"
             onClick={() => {
@@ -106,6 +113,24 @@ function QuoteFields({
   );
   const spam = useAntiSpam();
   const idem = useIdempotencyKey();
+  const formRef = useRef<HTMLFormElement>(null);
+  const { user } = useSession();
+
+  // Préremplit les coordonnées depuis la session (R28), sans écraser une saisie en cours.
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form || !user) return;
+    const values: Record<string, string | null> = {
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      phone: user.phone,
+    };
+    for (const [name, value] of Object.entries(values)) {
+      const el = form.elements.namedItem(name);
+      if (el instanceof HTMLInputElement && el.value === '' && value) el.value = value;
+    }
+  }, [user]);
 
   const districts = reference.cities.find((c) => String(c.id) === cityId)?.districts ?? [];
 
@@ -166,6 +191,7 @@ function QuoteFields({
 
   return (
     <form
+      ref={formRef}
       method="post"
       action="/devis"
       onSubmit={(e) => void onSubmit(e)}

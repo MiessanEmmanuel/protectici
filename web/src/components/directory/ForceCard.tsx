@@ -1,17 +1,24 @@
 import Link from 'next/link';
-import { Phone, Siren } from 'lucide-react';
+import { Navigation, Phone, Siren } from 'lucide-react';
 import type { StateForceSummary } from '@/lib/api/types';
 import { formatDistance, formatPhone, telHref } from '@/lib/format';
 import { ficheActionClasses } from '../ui/FicheCard';
 import { Badge } from '../ui/Tag';
+import { googleMapsDirectionsUrl } from './DirectionsLink';
 
 /**
  * Fiche de force étatique v9 : bande de type en aplat bleu, nom en lien étiré, adresse,
- * disponibilité explicite, numéros d'urgence et standard en actions directes.
+ * disponibilité explicite, numéros d'urgence et standard et itinéraire Google Maps en actions directes.
  */
 export function ForceCard({ force }: { force: StateForceSummary }) {
   const distance = formatDistance(force.distance_m);
   const place = [force.district?.name, force.city.name].filter(Boolean).join(', ');
+  const directionsUrl = googleMapsDirectionsUrl({
+    lat: force.lat,
+    lng: force.lng,
+    address: force.address,
+    place,
+  });
   return (
     <article className="group relative flex h-full flex-col border-2 border-ink bg-white text-ink transition-colors hover:bg-ink hover:text-white">
       <p className="flex items-center justify-between gap-3 bg-c1 px-[18px] py-2 eyebrow text-on-c1 group-hover:bg-c2 group-hover:text-on-c2">
@@ -43,7 +50,7 @@ export function ForceCard({ force }: { force: StateForceSummary }) {
             <Badge>Horaires limités</Badge>
           )}
         </p>
-        {force.emergency_phone || force.phone ? (
+        {force.emergency_phone || force.phone || directionsUrl ? (
           <div className="relative z-10 mt-auto flex flex-wrap gap-2 pt-2">
             {force.emergency_phone ? (
               <a href={telHref(force.emergency_phone)} className={ficheActionClasses}>
@@ -56,6 +63,18 @@ export function ForceCard({ force }: { force: StateForceSummary }) {
                 <Phone aria-hidden="true" />
                 <span className="sr-only">Standard : </span>
                 {formatPhone(force.phone)}
+              </a>
+            ) : null}
+            {directionsUrl ? (
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={ficheActionClasses}
+                aria-label={`Itinéraire vers ${force.name} dans Google Maps (s’ouvre dans un nouvel onglet)`}
+              >
+                <Navigation aria-hidden="true" />
+                Itinéraire
               </a>
             ) : null}
           </div>

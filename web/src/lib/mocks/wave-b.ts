@@ -14,6 +14,8 @@ import type {
   MyReview,
   OwnerReview,
   ProviderQuote,
+  MyFeedback,
+  SentQuote,
   QuoteRecipientStatus,
   QuoteStatus,
   Review,
@@ -54,6 +56,7 @@ export type WaveBApi = Pick<
   | 'adminReviewReportAction'
   | 'createFeedback'
   | 'trackFeedback'
+  | 'listMyFeedbacks'
   | 'adminListFeedbacks'
   | 'adminGetFeedback'
   | 'adminGetFeedbackVoice'
@@ -62,6 +65,7 @@ export type WaveBApi = Pick<
   | 'createQuoteRequest'
   | 'listMyQuotes'
   | 'getMyQuote'
+  | 'listSentQuotes'
   | 'replyToQuote'
   | 'declineQuote'
   | 'adminListQuotes'
@@ -147,6 +151,8 @@ interface FeedbackRec {
   replies: FeedbackReply[];
   /** Message vocal factice (en mémoire uniquement). */
   voice: { blob: Blob; mime: string; duration_seconds: number } | null;
+  /** Compte de l'auteur si le dossier a été envoyé en étant connecté. */
+  user_email?: string | null;
 }
 
 /** WAV silencieux (8 kHz, mono, 8 bits) : message vocal de démonstration lisible partout. */
@@ -155,7 +161,8 @@ function silentWav(seconds: number): Blob {
   const samples = rate * seconds;
   const buf = new ArrayBuffer(44 + samples);
   const v = new DataView(buf);
-  const str = (o: number, t: string) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  const str = (o: number, t: string) =>
+    [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
   str(0, 'RIFF');
   v.setUint32(4, 36 + samples, true);
   str(8, 'WAVE');
@@ -201,6 +208,8 @@ interface QuoteRec {
   status: QuoteStatus;
   created_at: string;
   recipients: RecipientRec[];
+  /** Compte de l'auteur si la demande a été envoyée en étant connecté. */
+  user_email?: string | null;
 }
 
 const providerIndex = (slug: string) => providers.findIndex((p) => p.slug === slug);
@@ -240,7 +249,10 @@ export function createWaveBMocks(
       });
     }
   });
-  const addReview = (rec: Omit<ReviewRec, 'id' | 'deleted' | 'provider_reply' | 'provider_replied_at'> & Partial<ReviewRec>) => {
+  const addReview = (
+    rec: Omit<ReviewRec, 'id' | 'deleted' | 'provider_reply' | 'provider_replied_at'> &
+      Partial<ReviewRec>,
+  ) => {
     const full: ReviewRec = {
       id: next(),
       deleted: false,
@@ -290,9 +302,27 @@ export function createWaveBMocks(
     created_at: isoDaysAgo(6),
   });
   const pendingSeeds: [number, string, string, number, string][] = [
-    [0, 'Koffi A.', 'Koffi Alla', 5, 'Contrat clair et équipe réactive, nous renouvelons pour l’an prochain.'],
-    [0, 'Mariam S.', 'Mariam Sylla', 3, 'Service correct mais des retards de remplacement des agents en soirée.'],
-    [1, 'Jean-Marc D.', 'Jean-Marc Dosso', 4, 'Bonne couverture de nos locaux, les rapports quotidiens sont appréciables.'],
+    [
+      0,
+      'Koffi A.',
+      'Koffi Alla',
+      5,
+      'Contrat clair et équipe réactive, nous renouvelons pour l’an prochain.',
+    ],
+    [
+      0,
+      'Mariam S.',
+      'Mariam Sylla',
+      3,
+      'Service correct mais des retards de remplacement des agents en soirée.',
+    ],
+    [
+      1,
+      'Jean-Marc D.',
+      'Jean-Marc Dosso',
+      4,
+      'Bonne couverture de nos locaux, les rapports quotidiens sont appréciables.',
+    ],
   ];
   pendingSeeds.forEach(([i, short, , rating, body], k) =>
     addReview({
@@ -310,7 +340,9 @@ export function createWaveBMocks(
   );
 
   const reports: ReportRec[] = [];
-  const reportedTarget = reviews.find((r) => r.providerSlug === slugAt(1) && r.status === 'approved');
+  const reportedTarget = reviews.find(
+    (r) => r.providerSlug === slugAt(1) && r.status === 'approved',
+  );
   if (reportedTarget) {
     (
       [
@@ -378,7 +410,11 @@ export function createWaveBMocks(
   const toOwner = (r: ReviewRec): OwnerReview => ({ ...toPublic(r), status: r.status });
   const toAdminRow = (r: ReviewRec): AdminReviewRow => ({
     id: r.id,
-    provider: { id: providerId(r.providerSlug), slug: r.providerSlug, name: providerName(r.providerSlug) },
+    provider: {
+      id: providerId(r.providerSlug),
+      slug: r.providerSlug,
+      name: providerName(r.providerSlug),
+    },
     author: { id: 900 + (r.id % 100), name: r.authorName, email: r.authorEmail },
     rating: r.rating,
     title: r.title,
@@ -389,15 +425,21 @@ export function createWaveBMocks(
     created_at: r.created_at,
   });
 
-  function checkReview(input: { rating?: unknown; title?: unknown; body?: unknown }, partial: boolean) {
+  function checkReview(
+    input: { rating?: unknown; title?: unknown; body?: unknown },
+    partial: boolean,
+  ) {
     if (!partial || input.rating !== undefined) {
       const n = Number(input.rating);
-      if (!Number.isInteger(n) || n < 1 || n > 5) throw invalid('rating', 'Choisissez une note de 1 à 5.');
+      if (!Number.isInteger(n) || n < 1 || n > 5)
+        throw invalid('rating', 'Choisissez une note de 1 à 5.');
     }
     if (!partial || input.body !== undefined) {
       const body = String(input.body ?? '').trim();
-      if (body.length < 10) throw invalid('body', 'Votre avis doit comporter au moins 10 caractères.');
-      if (body.length > 3000) throw invalid('body', 'Votre avis ne doit pas dépasser 3000 caractères.');
+      if (body.length < 10)
+        throw invalid('body', 'Votre avis doit comporter au moins 10 caractères.');
+      if (body.length > 3000)
+        throw invalid('body', 'Votre avis ne doit pas dépasser 3000 caractères.');
     }
     if (input.title && String(input.title).length > 150)
       throw invalid('title', 'Le titre ne doit pas dépasser 150 caractères.');
@@ -410,7 +452,11 @@ export function createWaveBMocks(
   const ref = (prefix: string, n: number) => `${prefix}-2026-${String(n).padStart(6, '0')}`;
 
   const seedFeedback = (
-    partial: Partial<FeedbackRec> & Pick<FeedbackRec, 'first_name' | 'last_name' | 'email' | 'action_type' | 'target_type' | 'comment' | 'status'>,
+    partial: Partial<FeedbackRec> &
+      Pick<
+        FeedbackRec,
+        'first_name' | 'last_name' | 'email' | 'action_type' | 'target_type' | 'comment' | 'status'
+      >,
   ) => {
     const rec: FeedbackRec = {
       id: ++feedbackSeq,
@@ -446,6 +492,7 @@ export function createWaveBMocks(
     comment: 'Les agents sont arrivés avec plus d’une heure de retard le jour de notre événement.',
     status: 'in_progress',
     assigned_to: 1,
+    user_email: 'client.demo@example.test',
   });
   f1.replies.push(
     {
@@ -495,7 +542,8 @@ export function createWaveBMocks(
     target_type: 'service',
     service_type_id: 4,
     topic_id: 6,
-    comment: 'Il serait utile de pouvoir comparer les tarifs de plusieurs prestataires dans l’annuaire.',
+    comment:
+      'Il serait utile de pouvoir comparer les tarifs de plusieurs prestataires dans l’annuaire.',
     status: 'resolved',
     resolved_at: isoDaysAgo(5),
   });
@@ -523,14 +571,20 @@ export function createWaveBMocks(
     id: f.id,
     reference: f.reference,
     author: { first_name: f.first_name, last_name: f.last_name, email: f.email },
-    provider: f.providerSlug ? { id: providerId(f.providerSlug), name: providerName(f.providerSlug) } : null,
+    provider: f.providerSlug
+      ? { id: providerId(f.providerSlug), name: providerName(f.providerSlug) }
+      : null,
     action_type: f.action_type,
     target_type: f.target_type,
     status: f.status,
     assigned_to: adminName(f.assigned_to),
     created_at: f.created_at,
     voice: f.voice
-      ? { duration_seconds: f.voice.duration_seconds, mime: f.voice.mime, size_bytes: f.voice.blob.size }
+      ? {
+          duration_seconds: f.voice.duration_seconds,
+          mime: f.voice.mime,
+          size_bytes: f.voice.blob.size,
+        }
       : null,
   });
   const toFeedback = (f: FeedbackRec): AdminFeedback => ({
@@ -547,11 +601,32 @@ export function createWaveBMocks(
     replies: structuredClone(f.replies),
   });
 
+  const toMyFeedback = (f: FeedbackRec): MyFeedback => ({
+    id: f.id,
+    reference: f.reference,
+    status: f.status,
+    action_type: f.action_type,
+    target_type: f.target_type,
+    provider: f.providerSlug ? { slug: f.providerSlug, name: providerName(f.providerSlug) } : null,
+    service_type: optionById(serviceTypes, f.service_type_id),
+    topic: optionById(feedbackTopics, f.topic_id),
+    comment: f.comment || null,
+    has_voice: f.voice !== null,
+    created_at: f.created_at,
+    resolved_at: f.resolved_at,
+    replies: f.replies
+      .filter((r) => !r.is_internal)
+      .map((r) => ({ body: r.body, created_at: r.created_at })),
+  });
+
   /* ---------- Devis ---------- */
   const quotes: QuoteRec[] = [];
   const quoteKeys = new Map<string, QuoteRec>();
   let quoteSeq = 100;
-  const addQuote = (partial: Partial<QuoteRec> & Pick<QuoteRec, 'first_name' | 'last_name' | 'email' | 'phone' | 'description' | 'status'>) => {
+  const addQuote = (
+    partial: Partial<QuoteRec> &
+      Pick<QuoteRec, 'first_name' | 'last_name' | 'email' | 'phone' | 'description' | 'status'>,
+  ) => {
     const rec: QuoteRec = {
       id: ++quoteSeq,
       reference: ref('DEV', quoteSeq),
@@ -568,7 +643,11 @@ export function createWaveBMocks(
     quotes.push(rec);
     return rec;
   };
-  const recipient = (slug: string, status: QuoteRecipientStatus, extra: Partial<RecipientRec> = {}): RecipientRec => ({
+  const recipient = (
+    slug: string,
+    status: QuoteRecipientStatus,
+    extra: Partial<RecipientRec> = {},
+  ): RecipientRec => ({
     id: next(),
     providerSlug: slug,
     status,
@@ -587,10 +666,12 @@ export function createWaveBMocks(
     company_name: 'Boulangerie Soleil',
     service_type_id: 2,
     city_id: 1,
-    description: 'Gardiennage de nuit pour une boulangerie industrielle, du lundi au samedi, deux agents.',
+    description:
+      'Gardiennage de nuit pour une boulangerie industrielle, du lundi au samedi, deux agents.',
     desired_start_date: '2026-11-02',
     budget_range: '300 000 à 500 000 FCFA / mois',
     status: 'sent',
+    user_email: 'client.demo@example.test',
     recipients: [recipient(slugAt(0), 'sent'), recipient(slugAt(1), 'sent')],
   });
   addQuote({
@@ -600,13 +681,15 @@ export function createWaveBMocks(
     phone: '+2250700000011',
     service_type_id: 4,
     city_id: 1,
-    description: 'Installation de quatre caméras de vidéosurveillance dans une villa avec accès à distance.',
+    description:
+      'Installation de quatre caméras de vidéosurveillance dans une villa avec accès à distance.',
     status: 'answered',
     recipients: [
       recipient(slugAt(0), 'replied', {
         viewed_at: isoDaysAgo(2, 9),
         replied_at: isoDaysAgo(2, 15),
-        response_message: 'Bonjour, nous pouvons intervenir sous 10 jours. Devis détaillé joint à ce message.',
+        response_message:
+          'Bonjour, nous pouvons intervenir sous 10 jours. Devis détaillé joint à ce message.',
         quoted_amount: 850000,
       }),
     ],
@@ -618,7 +701,8 @@ export function createWaveBMocks(
     phone: '+2250700000012',
     service_type_id: 10,
     city_id: 2,
-    description: 'Sécurité incendie : audit et formation du personnel d’un petit hôtel de vingt chambres.',
+    description:
+      'Sécurité incendie : audit et formation du personnel d’un petit hôtel de vingt chambres.',
     status: 'new',
   });
   addQuote({
@@ -628,15 +712,22 @@ export function createWaveBMocks(
     phone: '+2250700000013',
     service_type_id: 11,
     city_id: 1,
-    description: 'Sécurité d’un mariage de deux cents invités, quatre agents pour une soirée en novembre.',
+    description:
+      'Sécurité d’un mariage de deux cents invités, quatre agents pour une soirée en novembre.',
     status: 'sent',
-    recipients: [recipient(slugAt(0), 'viewed', { viewed_at: isoDaysAgo(1, 8) }), recipient(slugAt(1), 'declined')],
+    recipients: [
+      recipient(slugAt(0), 'viewed', { viewed_at: isoDaysAgo(1, 8) }),
+      recipient(slugAt(1), 'declined'),
+    ],
   });
 
   const service = (id: number) => optionById(serviceTypes, id) ?? serviceTypes[0]!;
   const cityName = (id: number) => cities.find((c) => c.id === id)?.name ?? '—';
   const districtName = (cityId: number, districtId: number | null) =>
-    districtId ? (cities.find((c) => c.id === cityId)?.districts.find((d) => d.id === districtId)?.name ?? null) : null;
+    districtId
+      ? (cities.find((c) => c.id === cityId)?.districts.find((d) => d.id === districtId)?.name ??
+        null)
+      : null;
 
   const toProviderQuote = (q: QuoteRec, r: RecipientRec): ProviderQuote => ({
     id: q.id,
@@ -649,7 +740,9 @@ export function createWaveBMocks(
     },
     service: service(q.service_type_id),
     city: { name: cityName(q.city_id) },
-    district: districtName(q.city_id, q.district_id) ? { name: districtName(q.city_id, q.district_id)! } : null,
+    district: districtName(q.city_id, q.district_id)
+      ? { name: districtName(q.city_id, q.district_id)! }
+      : null,
     description: q.description,
     desired_start_date: q.desired_start_date,
     budget_range: q.budget_range,
@@ -660,6 +753,36 @@ export function createWaveBMocks(
     response_message: r.response_message,
     quoted_amount: r.quoted_amount,
   });
+  const toSentQuote = (q: QuoteRec): SentQuote => ({
+    id: q.id,
+    reference: q.reference,
+    service: service(q.service_type_id),
+    city: { name: cityName(q.city_id) },
+    district: districtName(q.city_id, q.district_id)
+      ? { name: districtName(q.city_id, q.district_id)! }
+      : null,
+    description: q.description,
+    desired_start_date: q.desired_start_date,
+    budget_range: q.budget_range,
+    status: q.status,
+    created_at: q.created_at,
+    recipients: q.recipients.map((r) => ({
+      provider: { slug: r.providerSlug, name: providerName(r.providerSlug) },
+      status: r.status,
+      sent_at: r.sent_at,
+      replied_at: r.replied_at,
+      response_message: r.response_message,
+      quoted_amount: r.quoted_amount,
+    })),
+  });
+  /** E-mail de la session ouverte, ou null pour un visiteur. */
+  const sessionEmail = (): string | null => {
+    try {
+      return ctx.requireSession().email;
+    } catch {
+      return null;
+    }
+  };
   const toQuoteRow = (q: QuoteRec): AdminQuoteRow => ({
     id: q.id,
     reference: q.reference,
@@ -715,7 +838,8 @@ export function createWaveBMocks(
       name: 'Léa Brou',
       email: 'lea.demo@example.test',
       subject: 'Problème d’accès à mon compte',
-      message: 'Je ne reçois pas l’e-mail de confirmation après mon inscription. Pouvez-vous m’aider ?',
+      message:
+        'Je ne reçois pas l’e-mail de confirmation après mon inscription. Pouvez-vous m’aider ?',
       status: 'read',
       handled_by: { id: 1, name: 'Admin Démo' },
       handled_at: isoDaysAgo(3),
@@ -778,11 +902,20 @@ export function createWaveBMocks(
     async createReview(slug, input) {
       const s = ctx.requireSession();
       await ctx.delay();
-      if (!s.verified) throw forbidden('Veuillez vérifier votre adresse e-mail pour publier un avis.');
+      if (!s.verified)
+        throw forbidden('Veuillez vérifier votre adresse e-mail pour publier un avis.');
       if (providerIndex(slug) < 0) throw notFound();
-      if (ownsSlug(s, slug)) throw forbidden('Vous ne pouvez pas donner un avis sur votre propre fiche.');
+      if (ownsSlug(s, slug))
+        throw forbidden('Vous ne pouvez pas donner un avis sur votre propre fiche.');
       checkReview(input, false);
-      if (reviews.some((r) => !r.deleted && r.providerSlug === slug && r.authorEmail.toLowerCase() === s.email.toLowerCase()))
+      if (
+        reviews.some(
+          (r) =>
+            !r.deleted &&
+            r.providerSlug === slug &&
+            r.authorEmail.toLowerCase() === s.email.toLowerCase(),
+        )
+      )
         throw conflict('Vous avez déjà donné un avis pour ce prestataire.');
       const rec = addReview({
         providerSlug: slug,
@@ -810,7 +943,9 @@ export function createWaveBMocks(
     async updateMyReview(id, patch) {
       const s = ctx.requireSession();
       await ctx.delay();
-      const r = reviews.find((x) => x.id === id && !x.deleted && x.authorEmail.toLowerCase() === s.email.toLowerCase());
+      const r = reviews.find(
+        (x) => x.id === id && !x.deleted && x.authorEmail.toLowerCase() === s.email.toLowerCase(),
+      );
       if (!r) throw notFound();
       checkReview(patch, true);
       if (patch.rating !== undefined) r.rating = Number(patch.rating);
@@ -824,7 +959,9 @@ export function createWaveBMocks(
     async deleteMyReview(id) {
       const s = ctx.requireSession();
       await ctx.delay();
-      const r = reviews.find((x) => x.id === id && !x.deleted && x.authorEmail.toLowerCase() === s.email.toLowerCase());
+      const r = reviews.find(
+        (x) => x.id === id && !x.deleted && x.authorEmail.toLowerCase() === s.email.toLowerCase(),
+      );
       if (!r) throw notFound();
       r.deleted = true;
     },
@@ -835,7 +972,11 @@ export function createWaveBMocks(
       if (!r || !visibleReview(r)) throw notFound();
       if (!['spam', 'offensive', 'false_info', 'other'].includes(input.reason))
         throw invalid('reason', 'Choisissez une raison.');
-      if (reports.some((x) => x.reviewId === id && x.reporterEmail.toLowerCase() === s.email.toLowerCase()))
+      if (
+        reports.some(
+          (x) => x.reviewId === id && x.reporterEmail.toLowerCase() === s.email.toLowerCase(),
+        )
+      )
         return; // rejeu = 204
       reports.push({
         id: next(),
@@ -876,7 +1017,13 @@ export function createWaveBMocks(
       const list = reviews
         .filter((r) => !r.deleted && r.status === status)
         .filter((r) => !query.provider || r.providerSlug === query.provider)
-        .filter((r) => !q || r.body.toLowerCase().includes(q) || r.authorName.toLowerCase().includes(q) || providerName(r.providerSlug).toLowerCase().includes(q))
+        .filter(
+          (r) =>
+            !q ||
+            r.body.toLowerCase().includes(q) ||
+            r.authorName.toLowerCase().includes(q) ||
+            providerName(r.providerSlug).toLowerCase().includes(q),
+        )
         .sort((a, b) => b.created_at.localeCompare(a.created_at))
         .map(toAdminRow);
       return ctx.paginate(list, query.page);
@@ -957,11 +1104,19 @@ export function createWaveBMocks(
       await ctx.delay();
       if (input.company_website) {
         // Robot : succès simulé identique, rien n'est enregistré.
-        return { reference: ref('DMT', ++feedbackSeq), status: 'new', message: 'Votre message a bien été reçu. Conservez ce numéro de suivi.' };
+        return {
+          reference: ref('DMT', ++feedbackSeq),
+          status: 'new',
+          message: 'Votre message a bien été reçu. Conservez ce numéro de suivi.',
+        };
       }
       const previous = feedbackKeys.get(idempotencyKey);
       if (previous)
-        return { reference: previous.reference, status: previous.status, message: 'Votre message a bien été reçu. Conservez ce numéro de suivi.' };
+        return {
+          reference: previous.reference,
+          status: previous.status,
+          message: 'Votre message a bien été reçu. Conservez ce numéro de suivi.',
+        };
       guardPublic(input);
       need('last_name', input.last_name, 'Le nom');
       need('first_name', input.first_name, 'Le prénom');
@@ -970,7 +1125,8 @@ export function createWaveBMocks(
         throw invalid('action_type', 'Choisissez ce que vous désirez faire.');
       if (!['employee', 'product', 'service'].includes(input.target_type))
         throw invalid('target_type', 'Précisez l’objet de votre message.');
-      if (input.target_type !== 'product' && !input.topic_id) throw invalid('topic_id', 'Choisissez le sujet concerné.');
+      if (input.target_type !== 'product' && !input.topic_id)
+        throw invalid('topic_id', 'Choisissez le sujet concerné.');
       if (input.target_type === 'service' && !input.service_type_id)
         throw invalid('service_type_id', 'Choisissez le type de prestation.');
       if (!voice && !input.comment?.trim())
@@ -1004,6 +1160,7 @@ export function createWaveBMocks(
         created_at: new Date().toISOString(),
         resolved_at: null,
         replies: [],
+        user_email: sessionEmail(),
         voice: voice
           ? {
               blob: voice.blob,
@@ -1014,13 +1171,29 @@ export function createWaveBMocks(
       };
       feedbacks.unshift(rec);
       feedbackKeys.set(idempotencyKey, rec);
-      return { reference: rec.reference, status: 'new', message: 'Votre message a bien été reçu. Conservez ce numéro de suivi.' };
+      return {
+        reference: rec.reference,
+        status: 'new',
+        message: 'Votre message a bien été reçu. Conservez ce numéro de suivi.',
+      };
+    },
+    async listMyFeedbacks(query = {}) {
+      const s = ctx.requireSession();
+      await ctx.delay();
+      const list = feedbacks
+        .filter((f) => f.user_email?.toLowerCase() === s.email.toLowerCase())
+        .filter((f) => !query.status || f.status === query.status)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))
+        .map(toMyFeedback);
+      return ctx.paginate(list, query.page);
     },
     async trackFeedback(input) {
       await ctx.delay();
       if (input.email?.toLowerCase() === 'limite@example.test') throw tooMany();
       const f = feedbacks.find(
-        (x) => x.reference === String(input.reference).trim().toUpperCase() && x.email.toLowerCase() === String(input.email).trim().toLowerCase(),
+        (x) =>
+          x.reference === String(input.reference).trim().toUpperCase() &&
+          x.email.toLowerCase() === String(input.email).trim().toLowerCase(),
       );
       if (!f) throw new ApiError(404, 'Aucun dossier ne correspond à ces informations.');
       return {
@@ -1028,7 +1201,9 @@ export function createWaveBMocks(
         status: f.status,
         created_at: f.created_at,
         provider_name: f.providerSlug ? providerName(f.providerSlug) : null,
-        replies: f.replies.filter((r) => !r.is_internal).map((r) => ({ body: r.body, created_at: r.created_at })),
+        replies: f.replies
+          .filter((r) => !r.is_internal)
+          .map((r) => ({ body: r.body, created_at: r.created_at })),
       };
     },
     async adminListFeedbacks(query = {}) {
@@ -1048,7 +1223,9 @@ export function createWaveBMocks(
             f.email.toLowerCase().includes(q),
         )
         .sort((a, b) =>
-          query.sort === 'status' ? a.status.localeCompare(b.status) : b.created_at.localeCompare(a.created_at),
+          query.sort === 'status'
+            ? a.status.localeCompare(b.status)
+            : b.created_at.localeCompare(a.created_at),
         )
         .map(toFeedbackRow);
       return ctx.paginate(list, query.page);
@@ -1091,14 +1268,19 @@ export function createWaveBMocks(
       const f = feedbacks.find((x) => x.id === id);
       if (!f) throw notFound();
       if (idempotencyKey) {
-        const dup = f.replies.find((r) => (r as FeedbackReply & { key?: string }).key === idempotencyKey);
+        const dup = f.replies.find(
+          (r) => (r as FeedbackReply & { key?: string }).key === idempotencyKey,
+        );
         if (dup) return dup;
       }
       between('body', input.body, 5, 5000, 'La réponse');
       const now = new Date().toISOString();
       const reply: FeedbackReply & { key?: string } = {
         id: next(),
-        author: { id: ADMINS.find((a) => s.first_name === a.name.split(' ')[0])?.id ?? 1, name: `${s.first_name} ${s.last_name}`.trim() },
+        author: {
+          id: ADMINS.find((a) => s.first_name === a.name.split(' ')[0])?.id ?? 1,
+          name: `${s.first_name} ${s.last_name}`.trim(),
+        },
         body: input.body.trim(),
         is_internal: input.is_internal,
         sent_at: input.is_internal ? null : now,
@@ -1121,12 +1303,16 @@ export function createWaveBMocks(
       need('last_name', input.last_name, 'Le nom');
       emailOk(input.email);
       need('phone', input.phone, 'Le téléphone');
-      if (!serviceTypes.some((x) => x.id === input.service_type_id)) throw invalid('service_type_id', 'Choisissez un service.');
-      if (!cities.some((c) => c.id === input.city_id)) throw invalid('city_id', 'Choisissez une ville.');
+      if (!serviceTypes.some((x) => x.id === input.service_type_id))
+        throw invalid('service_type_id', 'Choisissez un service.');
+      if (!cities.some((c) => c.id === input.city_id))
+        throw invalid('city_id', 'Choisissez une ville.');
       between('description', input.description, 20, 3000, 'La description');
       const slugs = input.provider_slugs ?? [];
-      if (slugs.length > 5) throw invalid('provider_slugs', 'Vous pouvez choisir 5 prestataires au maximum.');
-      if (slugs.some((x) => providerIndex(x) < 0)) throw invalid('provider_slugs', 'Un des prestataires est introuvable.');
+      if (slugs.length > 5)
+        throw invalid('provider_slugs', 'Vous pouvez choisir 5 prestataires au maximum.');
+      if (slugs.some((x) => providerIndex(x) < 0))
+        throw invalid('provider_slugs', 'Un des prestataires est introuvable.');
       const rec = addQuote({
         first_name: input.first_name.trim(),
         last_name: input.last_name.trim(),
@@ -1142,6 +1328,7 @@ export function createWaveBMocks(
         status: slugs.length ? 'sent' : 'new',
         created_at: new Date().toISOString(),
         recipients: slugs.map((x) => recipient(x, 'sent', { sent_at: new Date().toISOString() })),
+        user_email: sessionEmail(),
       });
       quoteKeys.set(idempotencyKey, rec);
       return { reference: rec.reference, message };
@@ -1149,7 +1336,8 @@ export function createWaveBMocks(
     async listMyQuotes(query = {}) {
       const s = ctx.requireSession();
       await ctx.delay();
-      if (ownedIndexes(s).length === 0) throw forbidden('Cette page est réservée aux propriétaires de fiches.');
+      if (ownedIndexes(s).length === 0)
+        throw forbidden('Cette page est réservée aux propriétaires de fiches.');
       const list: ProviderQuote[] = [];
       for (const q of quotes) {
         for (const r of q.recipients) {
@@ -1170,12 +1358,25 @@ export function createWaveBMocks(
       }
       return toProviderQuote(q, r);
     },
+    async listSentQuotes(query = {}) {
+      const s = ctx.requireSession();
+      await ctx.delay();
+      const list = quotes
+        .filter((q) => q.user_email?.toLowerCase() === s.email.toLowerCase())
+        .filter((q) => !query.status || q.status === query.status)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))
+        .map(toSentQuote);
+      return ctx.paginate(list, query.page);
+    },
     async replyToQuote(id, input) {
       const s = ctx.requireSession();
       await ctx.delay();
       const { q, r } = myRecipient(s, id);
       between('message', input.message, 10, 3000, 'Le message');
-      if (input.quoted_amount != null && (!Number.isInteger(input.quoted_amount) || input.quoted_amount < 0))
+      if (
+        input.quoted_amount != null &&
+        (!Number.isInteger(input.quoted_amount) || input.quoted_amount < 0)
+      )
         throw invalid('quoted_amount', 'Le montant doit être un nombre entier de FCFA.');
       if (r.status === 'replied') throw conflict('Vous avez déjà répondu à cette demande.');
       r.status = 'replied';
@@ -1227,7 +1428,8 @@ export function createWaveBMocks(
       for (const pid of providerIds) {
         const p = providers[pid - 1];
         if (!p) throw invalid('provider_ids', 'Un des prestataires est introuvable.');
-        if (!q.recipients.some((r) => r.providerSlug === p.slug)) q.recipients.push(recipient(p.slug, 'sent', { sent_at: new Date().toISOString() }));
+        if (!q.recipients.some((r) => r.providerSlug === p.slug))
+          q.recipients.push(recipient(p.slug, 'sent', { sent_at: new Date().toISOString() }));
       }
       if (q.status === 'new') q.status = 'sent';
       return toAdminQuote(q);
@@ -1237,7 +1439,8 @@ export function createWaveBMocks(
       await ctx.delay();
       const q = quotes.find((x) => x.id === id);
       if (!q) throw notFound();
-      if (!['new', 'sent', 'answered', 'closed', 'cancelled'].includes(status)) throw invalid('status', 'Statut inconnu.');
+      if (!['new', 'sent', 'answered', 'closed', 'cancelled'].includes(status))
+        throw invalid('status', 'Statut inconnu.');
       q.status = status;
     },
 
@@ -1251,7 +1454,8 @@ export function createWaveBMocks(
       need('name', input.name, 'Le nom');
       emailOk(input.email);
       need('subject', input.subject, 'L’objet');
-      if (input.subject.length > 200) throw invalid('subject', 'L’objet ne doit pas dépasser 200 caractères.');
+      if (input.subject.length > 200)
+        throw invalid('subject', 'L’objet ne doit pas dépasser 200 caractères.');
       between('message', input.message, 10, 5000, 'Le message');
       const id = ++messageSeq;
       messages.unshift({
@@ -1275,7 +1479,13 @@ export function createWaveBMocks(
       const status = query.status ?? 'new';
       const list = messages
         .filter((m) => m.status === status)
-        .filter((m) => !q || m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q) || m.subject.toLowerCase().includes(q))
+        .filter(
+          (m) =>
+            !q ||
+            m.name.toLowerCase().includes(q) ||
+            m.email.toLowerCase().includes(q) ||
+            m.subject.toLowerCase().includes(q),
+        )
         .sort((a, b) => b.created_at.localeCompare(a.created_at))
         .map(({ key, ...m }) => {
           void key;
@@ -1288,7 +1498,8 @@ export function createWaveBMocks(
       await ctx.delay();
       const m = messages.find((x) => x.id === id);
       if (!m) throw notFound();
-      if (!['new', 'read', 'answered', 'archived'].includes(status)) throw invalid('status', 'Statut inconnu.');
+      if (!['new', 'read', 'answered', 'archived'].includes(status))
+        throw invalid('status', 'Statut inconnu.');
       m.status = status;
       m.handled_by = { id: 1, name: `${s.first_name} ${s.last_name}`.trim() };
       m.handled_at = new Date().toISOString();

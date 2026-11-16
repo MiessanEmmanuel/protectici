@@ -38,7 +38,7 @@ class VerificationMailer
 
     public function send(User $user): bool
     {
-        $key = 'verification-mail|'.sha1(mb_strtolower((string) $user->email));
+        $key = ''.sha1(mb_strtolower((string) $user->email));
         $max = (int) config('auth.verification_mail_per_hour', 3);
 
         if (RateLimiter::tooManyAttempts($key, $max)) {

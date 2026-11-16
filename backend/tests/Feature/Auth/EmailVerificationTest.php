@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AuditLog;
 use App\Models\User;
 use App\Notifications\VerifyEmailNotification;
 use Illuminate\Support\Facades\Notification;
@@ -21,8 +22,11 @@ it('vérifie l\'email via un lien signé valide et redirige vers le front', func
     $this->get($url)->assertRedirect('http://localhost:3000/compte?verified=1');
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
 
-    // Lien déjà utilisé : refusé (usage unique).
-    $this->get($url)->assertRedirect('http://localhost:3000/connexion?verified=0');
+    // Lien déjà utilisé : usage unique (aucune nouvelle session), mais message « adresse confirmée, connectez-vous »
+    // au lieu de « lien invalide ou expiré ».
+    auth()->forgetGuards();
+    $this->get($url)->assertRedirect('http://localhost:3000/connexion?verified=1');
+    expect(AuditLog::query()->where('event', 'email_verified')->count())->toBe(1);
 });
 
 it('redirige en échec pour une signature invalide', function () {

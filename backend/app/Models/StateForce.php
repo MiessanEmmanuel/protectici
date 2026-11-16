@@ -88,6 +88,16 @@ class StateForce extends Model
         return $this->belongsTo(StateForceType::class, 'force_type_id');
     }
 
+    /**
+     * Lot d'import Excel d'origine (null si la fiche vient d'une inscription).
+     *
+     * @return BelongsTo<EstablishmentImport, $this>
+     */
+    public function import(): BelongsTo
+    {
+        return $this->belongsTo(EstablishmentImport::class, 'import_id');
+    }
+
     /** @return BelongsTo<City, $this> */
     public function city(): BelongsTo
     {
@@ -110,6 +120,12 @@ class StateForce extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(ProviderDocument::class);
+    }
+
+    /** @return HasMany<EstablishmentClaim, $this> */
+    public function claims(): HasMany
+    {
+        return $this->hasMany(EstablishmentClaim::class);
     }
 
     /** @return HasMany<ProviderChangeRequest, $this> */

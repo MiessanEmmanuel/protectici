@@ -6,11 +6,51 @@
  * Nécessite un DOM (navigateur ou jsdom).
  */
 
-const ALLOWED = new Set(['P', 'H2', 'H3', 'H4', 'UL', 'OL', 'LI', 'STRONG', 'EM', 'A', 'BLOCKQUOTE', 'IMG', 'BR']);
-const RENAME: Record<string, string> = { B: 'STRONG', I: 'EM', H1: 'H2', H5: 'H4', H6: 'H4', DIV: 'P' };
+const ALLOWED = new Set([
+  'P',
+  'H2',
+  'H3',
+  'H4',
+  'UL',
+  'OL',
+  'LI',
+  'STRONG',
+  'EM',
+  'A',
+  'BLOCKQUOTE',
+  'IMG',
+  'BR',
+]);
+const RENAME: Record<string, string> = {
+  B: 'STRONG',
+  I: 'EM',
+  H1: 'H2',
+  H5: 'H4',
+  H6: 'H4',
+  DIV: 'P',
+};
 const DROP = new Set([
-  'SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'NOSCRIPT', 'TEMPLATE', 'SVG', 'MATH', 'FORM',
-  'INPUT', 'BUTTON', 'TEXTAREA', 'SELECT', 'LINK', 'META', 'TITLE', 'HEAD', 'AUDIO', 'VIDEO', 'CANVAS',
+  'SCRIPT',
+  'STYLE',
+  'IFRAME',
+  'OBJECT',
+  'EMBED',
+  'NOSCRIPT',
+  'TEMPLATE',
+  'SVG',
+  'MATH',
+  'FORM',
+  'INPUT',
+  'BUTTON',
+  'TEXTAREA',
+  'SELECT',
+  'LINK',
+  'META',
+  'TITLE',
+  'HEAD',
+  'AUDIO',
+  'VIDEO',
+  'CANVAS',
 ]);
 const INLINE = new Set(['STRONG', 'EM', 'A', 'BR', 'IMG']);
 const BLOCK = new Set(['P', 'H2', 'H3', 'H4', 'UL', 'OL', 'BLOCKQUOTE']);
@@ -71,8 +111,11 @@ function wrapInlineRuns(root: HTMLElement, doc: Document): void {
   const nodes = Array.from(root.childNodes);
   let run: HTMLElement | null = null;
   for (const n of nodes) {
-    const isBlock = n.nodeType === 1 && (BLOCK.has((n as Element).tagName.toUpperCase()) || (n as Element).tagName === 'LI');
-    const isInline = n.nodeType === 3 || (n.nodeType === 1 && INLINE.has((n as Element).tagName.toUpperCase()));
+    const isBlock =
+      n.nodeType === 1 &&
+      (BLOCK.has((n as Element).tagName.toUpperCase()) || (n as Element).tagName === 'LI');
+    const isInline =
+      n.nodeType === 3 || (n.nodeType === 1 && INLINE.has((n as Element).tagName.toUpperCase()));
     if (isBlock || !isInline) {
       run = null;
       continue;

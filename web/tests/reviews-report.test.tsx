@@ -13,11 +13,16 @@ const reportReview = vi.fn((...args: unknown[]) => {
   void args;
   return impl();
 });
+const listMyReviews = vi.fn();
 vi.mock('@/lib/api/client', () => ({
-  clientApi: { reportReview: (...a: unknown[]) => reportReview(...a) },
+  clientApi: {
+    reportReview: (...a: unknown[]) => reportReview(...a),
+    listMyReviews: (...a: unknown[]) => listMyReviews(...a),
+  },
 }));
 
 import { ReviewsList } from '@/components/directory/ReviewsList';
+import { invalidateMyReviews } from '@/components/reviews/my-reviews';
 import { chooseOption } from './select-helpers';
 
 const reviews: Review[] = [
@@ -41,8 +46,30 @@ function setup() {
 describe('Signalement d’un avis', () => {
   beforeEach(() => {
     reportReview.mockClear();
+    invalidateMyReviews();
+    listMyReviews.mockReset();
+    listMyReviews.mockResolvedValue({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 }, links: { next: null, prev: null } });
     impl = async () => undefined;
     session = { user: { email_verified: true }, status: 'authenticated' };
+  });
+
+  it('son propre avis : pas de bouton « Signaler » (R44)', async () => {
+    listMyReviews.mockResolvedValue({ data: [{ id: 7, provider: { slug: 'agence-x', name: 'X' } }], meta: { current_page: 1, last_page: 1, per_page: 15, total: 1 }, links: { next: null, prev: null } });
+    setup();
+    expect(await screen.findByText('Votre avis')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Signaler/ })).toBeNull();
+  });
+
+  it('noms accessibles distincts pour chaque bouton « Signaler » (R44)', () => {
+    render(
+      <ReviewsList
+        reviews={[reviews[0]!, { ...reviews[0]!, id: 8, author: 'Yao B.' }]}
+        redirectTo="/annuaire/agence-x"
+      />,
+    );
+    const names = screen.getAllByRole('button', { name: /Signaler/ }).map((b) => b.textContent);
+    expect(names[0]).toContain('Awa K.');
+    expect(names[1]).toContain('Yao B.');
   });
 
   it('affiche le texte de l’avis et la réponse littéralement (pas de HTML)', () => {

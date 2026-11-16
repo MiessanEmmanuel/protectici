@@ -4,9 +4,10 @@ import type { User } from '@/lib/api/types';
 import { adminHomeFor, adminNavFor, canAccessAdminPath } from '@/lib/admin-access';
 
 let pathname = '/admin/blog';
+const replace = vi.hoisted(() => vi.fn());
 let session: { user: User | null; status: 'loading' | 'anonymous' | 'authenticated' };
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({ replace, push: vi.fn() }),
   usePathname: () => pathname,
 }));
 vi.mock('@/components/layout/SessionProvider', () => ({ useSession: () => session }));
@@ -47,14 +48,24 @@ describe('garde d’accès : editor', () => {
   beforeEach(() => { pathname = '/admin/blog'; });
   const gate = () => render(<AdminAccessGate><p>Contenu</p></AdminAccessGate>);
 
-  it('autorise l’écran blog sans 2FA', () => {
-    session = { user: user('editor'), status: 'authenticated' };
+  it('autorise l’écran blog avec la 2FA', () => {
+    session = { user: user('editor', true), status: 'authenticated' };
     gate();
     expect(screen.getByText('Contenu')).toBeInTheDocument();
   });
+  it('exige la 2FA de l’éditeur, avec un lien vers /compte (R09)', () => {
+    session = { user: user('editor', false), status: 'authenticated' };
+    gate();
+    expect(screen.getByText('Vérification en deux étapes requise')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Activer la vérification en deux étapes' })).toHaveAttribute(
+      'href',
+      '/compte',
+    );
+    expect(screen.queryByText('Contenu')).not.toBeInTheDocument();
+  });
   it.each(['/admin', '/admin/parametres', '/admin/partenaires', '/admin/newsletter'])('refuse %s', (p) => {
     pathname = p;
-    session = { user: user('editor'), status: 'authenticated' };
+    session = { user: user('editor', true), status: 'authenticated' };
     gate();
     expect(screen.getByText('Accès refusé')).toBeInTheDocument();
     expect(screen.queryByText('Contenu')).not.toBeInTheDocument();
@@ -63,5 +74,15 @@ describe('garde d’accès : editor', () => {
     session = { user: user('admin', false), status: 'authenticated' };
     gate();
     expect(screen.getByText('Vérification en deux étapes requise')).toBeInTheDocument();
+  });
+});
+
+describe('garde d’accès : visiteur anonyme (R20)', () => {
+  it('redirige vers la connexion en conservant la page demandée', () => {
+    pathname = '/admin/avis';
+    replace.mockClear();
+    session = { user: null, status: 'anonymous' };
+    render(<AdminAccessGate><p>Contenu</p></AdminAccessGate>);
+    expect(replace).toHaveBeenCalledWith('/connexion?redirect=%2Fadmin%2Favis');
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api/errors';
@@ -27,7 +27,15 @@ beforeAll(async () => {
 
 afterEach(() => vi.restoreAllMocks());
 
-const SENSITIVE = ['name', 'rccm', 'legal_form', 'share_capital', 'corporate_purpose', 'approval_number', 'force_type_id'];
+const SENSITIVE = [
+  'name',
+  'rccm',
+  'legal_form',
+  'share_capital',
+  'corporate_purpose',
+  'approval_number',
+  'force_type_id',
+];
 
 function manager(slug: string, type: 'provider' | 'state_force' = 'provider') {
   return render(<EstablishmentManager type={type} slug={slug} reference={reference} />);
@@ -85,7 +93,9 @@ describe('espace prestataire : fiche suspendue', () => {
     manager('garde-lagune-securite');
     expect(await screen.findByText(/Fiche suspendue : lecture seule/)).toBeInTheDocument();
     expect(screen.getByLabelText('Description')).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Enregistrer les modifications' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Enregistrer les modifications' }),
+    ).not.toBeInTheDocument();
     const u = userEvent.setup();
     await u.click(screen.getByRole('tab', { name: 'Médias' }));
     expect(screen.queryByRole('button', { name: 'Envoyer l’image' })).not.toBeInTheDocument();
@@ -136,12 +146,141 @@ describe('espace prestataire : gestion d’une fiche', () => {
     await u.type(screen.getByLabelText(/Intitulé de la fonction/), 'Directrice RH');
     await u.click(screen.getAllByLabelText(/Afficher ce dirigeant publiquement/)[1]!);
     await u.click(screen.getByRole('button', { name: 'Enregistrer les dirigeants' }));
-    expect(await screen.findByText('La liste des dirigeants a été enregistrée.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('La liste des dirigeants a été enregistrée.'),
+    ).toBeInTheDocument();
     expect(patch.mock.calls[0]![2]).toEqual({
       executives: [
-        { full_name: 'Yao Prestataire', position: 'general_manager', position_label: null, is_visible: true },
-        { full_name: 'Awa Koné', position: 'other', position_label: 'Directrice RH', is_visible: true },
+        {
+          full_name: 'Yao Prestataire',
+          position: 'general_manager',
+          position_label: null,
+          is_visible: true,
+        },
+        {
+          full_name: 'Awa Koné',
+          position: 'other',
+          position_label: 'Directrice RH',
+          is_visible: true,
+        },
       ],
+    });
+  });
+
+  it('agences : ajout, validation, envoi en remplacement complet et conservation des identifiants', async () => {
+    const u = userEvent.setup();
+    const patch = vi.spyOn(clientApi, 'updateMyEstablishment');
+    manager('garde-lagune-securite');
+    await u.click(await screen.findByRole('tab', { name: 'Agences' }));
+    expect(screen.getByText('Aucune agence renseignée pour le moment.')).toBeInTheDocument();
+
+    await u.click(screen.getByRole('button', { name: 'Ajouter une agence' }));
+    await u.click(screen.getByRole('button', { name: 'Enregistrer les agences' }));
+    expect(
+      await screen.findByText('Le nom de l’agence est obligatoire.', { selector: 'li' }),
+    ).toBeInTheDocument();
+    expect(patch).not.toHaveBeenCalled();
+
+    await u.type(screen.getByLabelText(/Nom de l’agence/), 'Agence de Cocody');
+    const city = reference.cities[0]!;
+    await chooseOption(u, screen.getByLabelText(/Ville/), String(city.id));
+    await u.type(screen.getByLabelText(/Téléphone de l’agence/), '07 09 44 51 22');
+    await u.click(screen.getByRole('button', { name: 'Enregistrer les agences' }));
+    expect(await screen.findByText('La liste des agences a été enregistrée.')).toBeInTheDocument();
+    expect(patch.mock.calls[0]![2]).toEqual({
+      branches: [
+        {
+          label: 'Agence de Cocody',
+          city_id: city.id,
+          district_id: null,
+          address: null,
+          geo_description: null,
+          phone: '+2250709445122',
+          lat: null,
+          lng: null,
+        },
+      ],
+    });
+
+    // Second envoi : l'agence créée garde l'identifiant renvoyé par le serveur.
+    const created = (await patch.mock.results[0]!.value).branches[0];
+    expect(created.id).toEqual(expect.any(Number));
+    await u.click(screen.getByRole('button', { name: 'Enregistrer les agences' }));
+    await waitFor(() => expect(patch).toHaveBeenCalledTimes(2));
+    expect(patch.mock.calls[1]![2]).toMatchObject({ branches: [{ id: created.id }] });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Retirer Agence de Cocody' })).toBeEnabled(),
+    );
+
+    // Remise à zéro : la fiche factice est partagée avec les autres tests.
+    await u.click(screen.getByRole('button', { name: 'Retirer Agence de Cocody' }));
+    await u.click(screen.getByRole('button', { name: 'Enregistrer les agences' }));
+    await waitFor(() => expect(patch).toHaveBeenCalledTimes(3));
+    expect(patch.mock.calls[2]![2]).toEqual({ branches: [] });
+  });
+
+  it('agences : affiche les erreurs renvoyées par l’API', async () => {
+    const u = userEvent.setup();
+    vi.spyOn(clientApi, 'updateMyEstablishment').mockRejectedValue(
+      new ApiError(422, 'Certaines informations sont invalides.', {
+        'branches.0.district_id': ['Ce quartier n’appartient pas à la ville choisie.'],
+      }),
+    );
+    manager('garde-lagune-securite');
+    await u.click(await screen.findByRole('tab', { name: 'Agences' }));
+    await u.click(screen.getByRole('button', { name: 'Ajouter une agence' }));
+    await u.type(screen.getByLabelText(/Nom de l’agence/), 'Agence test');
+    await chooseOption(u, screen.getByLabelText(/Ville/), String(reference.cities[0]!.id));
+    await u.click(screen.getByRole('button', { name: 'Enregistrer les agences' }));
+    expect(
+      (await screen.findAllByText('Ce quartier n’appartient pas à la ville choisie.')).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it('agences : lecture seule sur une fiche suspendue, onglet absent pour une force étatique', async () => {
+    const u = userEvent.setup();
+    const real = await clientApi.getMyEstablishment('provider', 'garde-lagune-securite');
+    const get = vi.spyOn(clientApi, 'getMyEstablishment');
+    get.mockResolvedValue({ ...real, status: 'suspended' });
+    manager('garde-lagune-securite');
+    await u.click(await screen.findByRole('tab', { name: 'Agences' }));
+    expect(screen.getByRole('button', { name: 'Ajouter une agence' })).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: 'Enregistrer les agences' }),
+    ).not.toBeInTheDocument();
+    cleanup();
+    get.mockResolvedValue({ ...real, type: 'state_force', status: 'approved' });
+    manager('garde-lagune-securite', 'state_force');
+    await screen.findByRole('tab', { name: 'Informations' });
+    expect(screen.queryByRole('tab', { name: 'Agences' })).not.toBeInTheDocument();
+  });
+
+  it('force étatique sans `executives` : la page s’ouvre et les horaires partent au format structuré (R02, R03)', async () => {
+    const u = userEvent.setup();
+    const real = await clientApi.getMyEstablishment('provider', 'garde-lagune-securite');
+    const { executives: _omit, ...withoutExecutives } = real;
+    void _omit;
+    const force = {
+      ...withoutExecutives,
+      type: 'state_force' as const,
+      status: 'approved' as const,
+      force_type_id: reference.state_force_types[0]!.id,
+      procedure_type_ids: [],
+      opening_hours: { mon: [['08:00', '17:00']] as [string, string][] },
+      is_open_24h: false,
+    };
+    vi.spyOn(clientApi, 'getMyEstablishment').mockResolvedValue(force);
+    const patch = vi.spyOn(clientApi, 'updateMyEstablishment').mockResolvedValue(force);
+    manager('garde-lagune-securite', 'state_force');
+    expect(await screen.findByLabelText('Fermeture du lundi')).toHaveValue('17:00');
+    await u.click(screen.getByRole('checkbox', { name: 'Samedi, jour ouvert' }));
+    await u.clear(screen.getByLabelText('Fermeture du samedi'));
+    await u.type(screen.getByLabelText('Fermeture du samedi'), '12:00');
+    await u.click(screen.getByRole('button', { name: 'Enregistrer les modifications' }));
+    await waitFor(() => expect(patch).toHaveBeenCalledTimes(1));
+    expect(patch.mock.calls[0]![2]).toMatchObject({
+      opening_hours: { mon: [['08:00', '17:00']], sat: [['08:00', '12:00']] },
+      is_open_24h: false,
     });
   });
 
@@ -153,7 +292,9 @@ describe('espace prestataire : gestion d’une fiche', () => {
     await u.upload(input, new File(['x'], 'logo.png', { type: 'image/png' }));
     const logoSection = screen.getByRole('region', { name: /Logo/ });
     await u.click(within(logoSection).getByRole('button', { name: 'Envoyer l’image' }));
-    expect(await screen.findByText('Le texte alternatif est obligatoire.', { selector: 'p' })).toBeInTheDocument();
+    expect(
+      await screen.findByText('Le texte alternatif est obligatoire.', { selector: 'p' }),
+    ).toBeInTheDocument();
     await u.type(within(logoSection).getByLabelText(/Texte alternatif/), 'Logo de Garde Lagune');
     await u.click(within(logoSection).getByRole('button', { name: 'Envoyer l’image' }));
     expect(await screen.findByAltText('Logo de Garde Lagune')).toBeInTheDocument();
@@ -162,11 +303,16 @@ describe('espace prestataire : gestion d’une fiche', () => {
 
   it('affiche l’erreur 413 d’un envoi trop volumineux', async () => {
     const u = userEvent.setup();
-    vi.spyOn(clientApi, 'uploadMedia').mockRejectedValue(new ApiError(413, 'Le fichier est trop volumineux.'));
+    vi.spyOn(clientApi, 'uploadMedia').mockRejectedValue(
+      new ApiError(413, 'Le fichier est trop volumineux.'),
+    );
     manager('garde-lagune-securite');
     await u.click(await screen.findByRole('tab', { name: 'Médias' }));
     const gallery = screen.getByRole('region', { name: /Galerie/ });
-    await u.upload(within(gallery).getByLabelText(/Ajouter une image/), new File(['x'], 'g.png', { type: 'image/png' }));
+    await u.upload(
+      within(gallery).getByLabelText(/Ajouter une image/),
+      new File(['x'], 'g.png', { type: 'image/png' }),
+    );
     await u.type(within(gallery).getByLabelText(/Texte alternatif/), 'Photo');
     await u.click(within(gallery).getByRole('button', { name: 'Envoyer l’image' }));
     expect(await screen.findByText('Le fichier est trop volumineux.')).toBeInTheDocument();
@@ -179,10 +325,15 @@ describe('espace prestataire : gestion d’une fiche', () => {
     expect(screen.getByText('extrait-rccm.pdf')).toBeInTheDocument();
     expect(screen.getByText(/stockés de façon privée/)).toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
-    await u.upload(screen.getByLabelText('Fichier'), new File(['%PDF'], 'agrement.pdf', { type: 'application/pdf' }));
+    await u.upload(
+      screen.getByLabelText('Fichier'),
+      new File(['%PDF'], 'agrement.pdf', { type: 'application/pdf' }),
+    );
     await u.click(screen.getByRole('button', { name: 'Envoyer le justificatif' }));
     // Le nom s'affiche d'abord dans le champ fichier ; on attend la ligne de la liste envoyée.
-    await u.click(await screen.findByRole('button', { name: 'Supprimer le justificatif agrement.pdf' }));
+    await u.click(
+      await screen.findByRole('button', { name: 'Supprimer le justificatif agrement.pdf' }),
+    );
     await u.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Supprimer' }));
     await waitFor(() => expect(screen.queryByText('agrement.pdf')).not.toBeInTheDocument());
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
@@ -196,7 +347,11 @@ describe('espace prestataire : gestion d’une fiche', () => {
     // champs sensibles actuels en lecture seule
     expect(screen.getByText('CI-ABJ-2024-B-00301', { selector: 'dd' })).toBeInTheDocument();
     await u.click(screen.getByRole('button', { name: 'Envoyer la demande' }));
-    expect(await screen.findByText('Modifiez au moins un champ avant d’envoyer la demande.', { selector: 'li' })).toBeInTheDocument();
+    expect(
+      await screen.findByText('Modifiez au moins un champ avant d’envoyer la demande.', {
+        selector: 'li',
+      }),
+    ).toBeInTheDocument();
     expect(create).not.toHaveBeenCalled();
 
     const rccm = screen.getByLabelText('Numéro RCCM');
@@ -204,7 +359,9 @@ describe('espace prestataire : gestion d’une fiche', () => {
     await u.type(rccm, 'CI-ABJ-2025-B-99999');
     await u.click(screen.getByRole('button', { name: 'Envoyer la demande' }));
     expect(await screen.findByRole('heading', { name: 'Demande en attente' })).toBeInTheDocument();
-    expect(create).toHaveBeenCalledWith('provider', 'garde-lagune-securite', { rccm: 'CI-ABJ-2025-B-99999' });
+    expect(create).toHaveBeenCalledWith('provider', 'garde-lagune-securite', {
+      rccm: 'CI-ABJ-2025-B-99999',
+    });
     const pending = screen.getByRole('region', { name: 'Demande en attente' });
     expect(within(pending).getByText('CI-ABJ-2024-B-00301')).toBeInTheDocument();
     expect(within(pending).getByText('CI-ABJ-2025-B-99999')).toBeInTheDocument();
@@ -213,8 +370,12 @@ describe('espace prestataire : gestion d’une fiche', () => {
     expect(screen.getByLabelText('Numéro RCCM')).toBeDisabled();
 
     await u.click(screen.getByRole('button', { name: 'Annuler la demande' }));
-    await u.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Annuler la demande' }));
-    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Demande en attente' })).not.toBeInTheDocument());
+    await u.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Annuler la demande' }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole('heading', { name: 'Demande en attente' })).not.toBeInTheDocument(),
+    );
     expect(screen.getByRole('button', { name: 'Envoyer la demande' })).toBeEnabled();
   });
 
@@ -228,7 +389,9 @@ describe('espace prestataire : gestion d’une fiche', () => {
     const legal = screen.getByLabelText('Forme juridique');
     await chooseOption(u, legal, 'sas');
     await u.click(screen.getByRole('button', { name: 'Envoyer la demande' }));
-    expect(await screen.findByText('Une demande de modification est déjà en attente.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Une demande de modification est déjà en attente.'),
+    ).toBeInTheDocument();
   });
 
   it('fiche introuvable : message explicite', async () => {

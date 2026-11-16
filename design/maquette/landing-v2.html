@@ -607,37 +607,6 @@ footer .legal{border-top:1px solid rgba(255,255,255,.1);padding:18px 0;font-size
   <div class="container legal"><span>© 2022–2026 ProtectIci — Une plateforme FYG Technologies</span><span>Fiches vérifiées · Avis modérés · Données protégées</span></div>
 </footer>
 
-<script>
-(() => {
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // En-tête : ombre au défilement
-  const head = document.getElementById('head');
-  addEventListener('scroll', () => head.classList.toggle('scrolled', scrollY > 8), { passive: true });
-  // Flash info : bouton pause accessible
-  const flash = document.getElementById('flash'), btn = flash.querySelector('.pause');
-  btn.addEventListener('click', () => {
-    const p = flash.classList.toggle('paused');
-    btn.setAttribute('aria-pressed', p); btn.setAttribute('aria-label', p ? 'Reprendre le défilement' : 'Mettre en pause le défilement');
-    btn.innerHTML = `<svg class="i"><use href="#i-${p ? 'play' : 'pause'}"/></svg>`;
-  });
-  // Apparitions + compteurs
-  const count = el => {
-    const end = parseFloat(el.dataset.count), dec = +(el.dataset.dec || 0);
-    if (reduce) { el.textContent = end.toLocaleString('fr-FR', { minimumFractionDigits: dec }); return; }
-    const t0 = performance.now(), d = 1400;
-    const step = t => { const k = Math.min(1, (t - t0) / d), v = end * (1 - Math.pow(1 - k, 3));
-      el.textContent = v.toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + (k === 1 && !dec ? '+' : '');
-      if (k < 1) requestAnimationFrame(step); };
-    requestAnimationFrame(step);
-  };
-  const io = new IntersectionObserver(es => es.forEach(e => {
-    if (!e.isIntersecting) return;
-    e.target.classList.add('in');
-    e.target.querySelectorAll('[data-count]').forEach(count);
-    io.unobserve(e.target);
-  }), { threshold: .15 });
-  document.querySelectorAll('.reveal,.stagger').forEach(el => io.observe(el));
-})();
-</script>
+<script src="landing-v2.inline.js"></script>
 </body>
 </html>

@@ -56,10 +56,14 @@ it('valide le formulaire de contact', function () {
     expect(ContactMessage::query()->count())->toBe(0);
 });
 
-it('nettoie les balises et les caractères de contrôle', function () {
-    $this->postJson(CONTACT_URL, contactPayload(['subject' => "Bonjour\r\nBcc: pirate@exemple.test <b>x</b>", 'message' => '<script>x</script>Un message assez long pour passer.']))->assertCreated();
+it('rejette les balises HTML (422) et nettoie les caractères de contrôle', function () {
+    $this->postJson(CONTACT_URL, contactPayload(['subject' => 'Bonjour <b>x</b>', 'message' => '<script>x</script>Un message assez long pour passer.']))
+        ->assertUnprocessable()->assertJsonValidationErrors(['subject', 'message']);
+    expect(ContactMessage::query()->count())->toBe(0);
+
+    $this->postJson(CONTACT_URL, contactPayload(['subject' => "Bonjour\r\nBcc: pirate@exemple.test", 'message' => 'Un message assez long pour passer.']))->assertCreated();
     $message = ContactMessage::query()->firstOrFail();
-    expect($message->subject)->not->toContain("\n")->not->toContain('<')->and($message->message)->not->toContain('<');
+    expect($message->subject)->not->toContain("\n");
 });
 
 it('champ piège rempli : succès simulé identique, rien enregistré ni envoyé', function () {

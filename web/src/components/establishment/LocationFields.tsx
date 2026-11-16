@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { errorMessage } from '@/lib/api/errors';
 import type { GeocodeResult, ReferenceData } from '@/lib/api/types';
@@ -37,39 +37,6 @@ interface Props {
  */
 export function LocationFields({ values, onChange, errors, reference, disabled }: Props) {
   const city = reference.cities.find((c) => String(c.id) === values.city_id);
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<GeocodeResult[] | null>(null);
-  const [searching, setSearching] = useState(false);
-  const [geoError, setGeoError] = useState<string | null>(null);
-
-  const lat = parseCoordinate(values.lat, 90);
-  const lng = parseCoordinate(values.lng, 180);
-
-  async function search() {
-    const q = query.trim();
-    if (searching) return;
-    if (q.length < 3) {
-      setGeoError('Saisissez au moins 3 caractères pour lancer la recherche.');
-      return;
-    }
-    setSearching(true);
-    setGeoError(null);
-    try {
-      const found = await clientApi.geocode(q);
-      setResults(found);
-      if (found.length === 0)
-        setGeoError('Aucun résultat. Pointez la position directement sur la carte.');
-    } catch (e) {
-      setResults(null);
-      setGeoError(errorMessage(e));
-    } finally {
-      setSearching(false);
-    }
-  }
-
-  function pick(la: number, ln: number) {
-    onChange({ lat: String(la), lng: String(ln) });
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -133,76 +100,172 @@ export function LocationFields({ values, onChange, errors, reference, disabled }
         maxLength={32}
         disabled={disabled}
       />
+      <PositionFields
+        lat={values.lat}
+        lng={values.lng}
+        onChange={onChange}
+        errors={{ lat: errors.lat, lng: errors.lng }}
+        disabled={disabled}
+        mapLabel="Carte de pointage : cliquez pour placer l’établissement"
+      />
+    </div>
+  );
+}
 
-      <fieldset className="flex flex-col gap-3 border-2 border-ink p-4" disabled={disabled}>
-        <legend className="px-1 font-semibold">Position sur la carte</legend>
-        <p className="text-sm text-muted">
-          Recherchez une adresse puis choisissez un résultat, cliquez sur la carte, ou saisissez
-          directement la latitude et la longitude.
-        </p>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-          <Input
-            label="Rechercher une adresse"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                void search();
-              }
-            }}
-            wrapperClassName="flex-1"
-            autoComplete="off"
-          />
-          <Button variant="secondary" loading={searching} onClick={() => void search()}>
-            Rechercher
+interface PositionProps {
+  lat: string;
+  lng: string;
+  onChange: (patch: { lat: string; lng: string } | { lat: string } | { lng: string }) => void;
+  errors: { lat?: string; lng?: string };
+  disabled?: boolean;
+  /** Identifiants des champs latitude/longitude (liens du résumé d'erreurs). */
+  latId?: string;
+  lngId?: string;
+  legend?: string;
+  mapLabel: string;
+  /**
+   * Carte repliée par défaut (bouton « Afficher la carte ») : évite de charger une carte par
+   * agence. La saisie directe des coordonnées reste toujours disponible.
+   */
+  collapsible?: boolean;
+}
+
+/**
+ * Position sur la carte : recherche d'adresse (géocodage sur action explicite), pointage sur la
+ * carte, ou saisie directe de la latitude et de la longitude (alternative clavier).
+ */
+export function PositionFields({
+  lat: latValue,
+  lng: lngValue,
+  onChange,
+  errors,
+  disabled,
+  latId,
+  lngId,
+  legend = 'Position sur la carte',
+  mapLabel,
+  collapsible = false,
+}: PositionProps) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<GeocodeResult[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
+  const [open, setOpen] = useState(!collapsible);
+  const panelId = useId();
+
+  const lat = parseCoordinate(latValue, 90);
+  const lng = parseCoordinate(lngValue, 180);
+
+  async function search() {
+    const q = query.trim();
+    if (searching) return;
+    if (q.length < 3) {
+      setGeoError('Saisissez au moins 3 caractères pour lancer la recherche.');
+      return;
+    }
+    setSearching(true);
+    setGeoError(null);
+    try {
+      const found = await clientApi.geocode(q);
+      setResults(found);
+      if (found.length === 0)
+        setGeoError('Aucun résultat. Pointez la position directement sur la carte.');
+    } catch (e) {
+      setResults(null);
+      setGeoError(errorMessage(e));
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  function pick(la: number, ln: number) {
+    onChange({ lat: String(la), lng: String(ln) });
+  }
+
+  return (
+    <fieldset className="flex flex-col gap-3 border-2 border-ink p-4" disabled={disabled}>
+      <legend className="px-1 font-semibold">{legend}</legend>
+      <p className="text-sm text-muted">
+        {collapsible
+          ? 'Saisissez la latitude et la longitude, ou affichez la carte pour rechercher une adresse ou cliquer sur la position.'
+          : 'Recherchez une adresse puis choisissez un résultat, cliquez sur la carte, ou saisissez directement la latitude et la longitude.'}
+      </p>
+      {collapsible ? (
+        <div>
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-expanded={open}
+            aria-controls={panelId}
+            onClick={() => setOpen((o) => !o)}
+          >
+            {open ? 'Masquer la carte' : 'Afficher la carte'}
           </Button>
         </div>
-        <FormError message={geoError} />
-        {results && results.length > 0 ? (
-          <ul aria-label="Résultats de la recherche d’adresse" className="flex flex-col gap-1">
-            {results.map((r) => (
-              <li key={`${r.lat},${r.lng},${r.label}`}>
-                <Button
-                  variant="ghost"
-                  className="h-auto w-full justify-start py-2 text-left"
-                  onClick={() => {
-                    pick(r.lat, r.lng);
-                    setResults(null);
-                  }}
-                >
-                  {r.label}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        <MapPicker
-          lat={lat}
-          lng={lng}
-          onPick={pick}
-          label="Carte de pointage : cliquez pour placer l’établissement"
-        />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input
-            label="Latitude"
-            inputMode="decimal"
-            value={values.lat}
-            onChange={(e) => onChange({ lat: e.target.value })}
-            error={errors.lat}
-            hint="Entre -90 et 90, par exemple 5,3364."
-          />
-          <Input
-            label="Longitude"
-            inputMode="decimal"
-            value={values.lng}
-            onChange={(e) => onChange({ lng: e.target.value })}
-            error={errors.lng}
-            hint="Entre -180 et 180, par exemple -4,0267."
-          />
+      ) : null}
+      {open ? (
+        <div id={panelId} className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <Input
+              label="Rechercher une adresse"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  void search();
+                }
+              }}
+              wrapperClassName="flex-1"
+              autoComplete="off"
+            />
+            <Button variant="secondary" loading={searching} onClick={() => void search()}>
+              Rechercher
+            </Button>
+          </div>
+          <FormError message={geoError} />
+          {results && results.length > 0 ? (
+            <ul aria-label="Résultats de la recherche d’adresse" className="flex flex-col gap-1">
+              {results.map((r) => (
+                <li key={`${r.lat},${r.lng},${r.label}`}>
+                  <Button
+                    variant="ghost"
+                    className="h-auto w-full justify-start py-2 text-left"
+                    onClick={() => {
+                      pick(r.lat, r.lng);
+                      setResults(null);
+                    }}
+                  >
+                    {r.label}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <MapPicker lat={lat} lng={lng} onPick={pick} label={mapLabel} />
+          <p className="text-xs text-muted">© OpenStreetMap contributors</p>
         </div>
-        <p className="text-xs text-muted">© OpenStreetMap contributors</p>
-      </fieldset>
-    </div>
+      ) : null}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Input
+          id={latId}
+          label="Latitude"
+          inputMode="decimal"
+          value={latValue}
+          onChange={(e) => onChange({ lat: e.target.value })}
+          error={errors.lat}
+          hint="Entre -90 et 90, par exemple 5,3364."
+        />
+        <Input
+          id={lngId}
+          label="Longitude"
+          inputMode="decimal"
+          value={lngValue}
+          onChange={(e) => onChange({ lng: e.target.value })}
+          error={errors.lng}
+          hint="Entre -180 et 180, par exemple -4,0267."
+        />
+      </div>
+    </fieldset>
   );
 }

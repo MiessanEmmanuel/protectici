@@ -21,7 +21,7 @@ class MyEstablishmentResource extends JsonResource
     public static function relations(EstablishmentType $type): array
     {
         return $type === EstablishmentType::Provider
-            ? ['companyTypes', 'serviceTypes', 'executives', 'media', 'documents', 'changeRequests']
+            ? ['companyTypes', 'serviceTypes', 'executives', 'branches', 'media', 'documents', 'changeRequests']
             : ['procedureTypes', 'media', 'documents', 'changeRequests'];
     }
 
@@ -82,7 +82,21 @@ class MyEstablishmentResource extends JsonResource
                 'position_label' => $x->position_label,
                 'is_visible' => (bool) $x->is_visible,
             ])->values(),
+            'branches' => $e->branches->map(fn ($b) => [
+                'id' => $b->id,
+                'label' => $b->label,
+                'city_id' => $b->city_id,
+                'district_id' => $b->district_id,
+                'address' => $b->address,
+                'geo_description' => $b->geo_description,
+                'phone' => $b->phone,
+                'lat' => $b->latitude === null ? null : (float) $b->latitude,
+                'lng' => $b->longitude === null ? null : (float) $b->longitude,
+            ])->values(),
         ] : [
+            // Même forme que pour un prestataire : le front lit ces listes sans distinguer le type (R03).
+            'executives' => [],
+            'branches' => [],
             'force_type_id' => $e->force_type_id,
             'opening_hours' => $e->opening_hours,
             'is_open_24h' => (bool) $e->is_open_24h,

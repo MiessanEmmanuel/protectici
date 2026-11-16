@@ -61,7 +61,7 @@ export default async function AnnuairePage({ searchParams }: Props) {
     <>
       <PageHeader
         title="Annuaire des prestataires de sécurité"
-        intro="Entreprises de gardiennage, vidéosurveillance, alarmes, escorte, formation… Filtrez par ville, service ou nom."
+        intro="Entreprises de gardiennage, vidéosurveillance, alarmes, escorte, formation… Filtrez par ville, service ou nom, ou recherchez à partir de votre position."
         eyebrow="Annuaire vérifié"
       />
       <section aria-label="Filtres de recherche" className="bg-c4 text-on-c4">

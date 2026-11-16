@@ -131,6 +131,9 @@ describe('avis reçus : réponse unique', () => {
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText(/ne pourra plus être modifiée/)).toBeInTheDocument();
     expect(reply).not.toHaveBeenCalled();
+    // R01 : la boîte de confirmation (qui a son propre <form>) n’est pas dans le formulaire de saisie.
+    const publish = within(dialog).getByRole('button', { name: 'Publier la réponse' });
+    expect(publish.closest('form')?.parentElement?.closest('form')).toBeNull();
     await u.dblClick(within(dialog).getByRole('button', { name: 'Publier la réponse' }));
     await waitFor(() => expect(reply).toHaveBeenCalledTimes(1));
     expect(reply).toHaveBeenCalledWith(nav.fiche, 1, 'Merci pour votre confiance.');
@@ -170,6 +173,11 @@ describe('avis reçus : réponse unique', () => {
     expect(screen.getByText('Merci !')).toBeInTheDocument();
     expect(screen.getByText('Publié')).toBeInTheDocument();
     expect(screen.getByText('Rejeté')).toBeInTheDocument();
+  });
+
+  it('propose « Signaler » sur les avis publiés seulement (R33)', async () => {
+    await setup([review({ id: 1 }), review({ id: 2, status: 'pending' }), review({ id: 3, status: 'rejected' })]);
+    expect(screen.getAllByRole('button', { name: /^Signaler/ })).toHaveLength(1);
   });
 
   it('affiche les textes libres comme du texte, jamais comme du HTML', async () => {

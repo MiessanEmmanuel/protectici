@@ -17,6 +17,7 @@ use App\Models\PostCategory;
 use App\Models\PostComment;
 use App\Models\ProcedureType;
 use App\Models\Provider;
+use App\Models\ProviderBranch;
 use App\Models\ProviderChangeRequest;
 use App\Models\ProviderDocument;
 use App\Models\ProviderExecutive;
@@ -62,6 +63,7 @@ class AppServiceProvider extends ServiceProvider
             PublicCache::DIRECTORY => [
                 Provider::class, StateForce::class, Review::class, City::class, District::class, CompanyType::class,
                 ServiceType::class, StateForceType::class, ProcedureType::class, FeedbackTopic::class, ProviderExecutive::class,
+                ProviderBranch::class,
             ],
             PublicCache::BLOG => [Post::class, PostCategory::class, PostComment::class],
             PublicCache::SITE => [Page::class, Partner::class, Setting::class],
@@ -148,6 +150,7 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
         RateLimiter::for('provider-view', fn (Request $r) => Limit::perMinute(30)->by('provider-view:'.$r->ip()));
+        RateLimiter::for('blog-view', fn (Request $r) => Limit::perMinute(30)->by('blog-view:'.$r->ip()));
     }
 
     /**

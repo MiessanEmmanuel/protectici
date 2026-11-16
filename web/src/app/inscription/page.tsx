@@ -12,7 +12,7 @@ export default function RegisterPage() {
   return (
     <AuthShell
       title="Créer un compte"
-      intro="Un compte vous permet d’enregistrer vos prestataires favoris et, bientôt, de publier des avis."
+      intro="Un compte vous permet d’enregistrer vos prestataires favoris et de publier des avis."
       footer={
         <>
           Déjà inscrit ? <Link href="/connexion">Se connecter</Link>

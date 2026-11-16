@@ -7,6 +7,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // migrate:fresh ne supprime pas les fonctions : celle laissée par la migration des agences n'a pas le même type de retour.
+        DB::unprepared('DROP FUNCTION IF EXISTS fn_providers_nearby(double precision, double precision, integer, integer)');
+
         DB::unprepared(<<<'SQL'
             CREATE OR REPLACE FUNCTION fn_providers_nearby(
                 lat double precision,
@@ -71,7 +74,7 @@ return new class extends Migration
                     last_name = 'Anonymisé',
                     email = 'anonymise-' || id || '@anonymise.invalid',
                     phone = NULL,
-                    password = '!anonymise!',
+                    password = '',
                     role = 'user',
                     is_active = false,
                     email_verified_at = NULL,

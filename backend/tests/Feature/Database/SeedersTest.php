@@ -48,6 +48,17 @@ it('DemoSeeder génère des données factices cohérentes', function () {
     expect(Provider::where('rating_count', '>', 0)->exists())->toBeTrue();
 });
 
+it('DemoSeeder élide « de » devant une voyelle, jusque dans les slugs', function () {
+    $this->seed(DemoSeeder::class);
+
+    $names = StateForce::pluck('name');
+    expect($names)->toContain("Commissariat de police d'Adjamé", "Commissariat de police d'Abobo", "Brigade de gendarmerie d'Anyama", 'Commissariat de police du Plateau', 'Commissariat de police de Cocody')
+        ->and($names->filter(fn (string $n) => preg_match('/\bde [AEIOUÉ]/u', $n) === 1 || str_contains($n, 'de Plateau'))->all())->toBe([]);
+    expect(StateForce::where('slug', 'commissariat-de-police-d-adjame')->exists())->toBeTrue()
+        ->and(StateForce::where('slug', 'like', '%-de-adjame')->exists())->toBeFalse()
+        ->and(Provider::where('geo_description', 'like', '%commune de A%')->exists())->toBeFalse();
+});
+
 it('DemoSeeder refuse de s\'exécuter en production', function () {
     $this->app['env'] = 'production';
 

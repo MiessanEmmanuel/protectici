@@ -18,7 +18,9 @@ class ProviderSummaryResource extends JsonResource
     {
         /** @var Provider $p */
         $p = $this->resource;
-        $distance = $p->getAttributes()['distance_m'] ?? null;
+        $attributes = $p->getAttributes();
+        $distance = $attributes['distance_m'] ?? null;
+        $nearestBranchId = $attributes['nearest_branch_id'] ?? null;
 
         return [
             'slug' => $p->slug,
@@ -36,6 +38,8 @@ class ProviderSummaryResource extends JsonResource
             'lat' => $p->latitude === null ? null : (float) $p->latitude,
             'lng' => $p->longitude === null ? null : (float) $p->longitude,
             'distance_m' => $distance === null ? null : (int) round((float) $distance),
+            'branches_count' => (int) ($attributes['branches_count'] ?? $p->branches()->count()),
+            'nearest_branch' => $nearestBranchId === null ? null : ['id' => (int) $nearestBranchId, 'label' => $attributes['nearest_branch_label']],
         ];
     }
 }

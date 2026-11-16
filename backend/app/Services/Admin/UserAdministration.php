@@ -5,6 +5,7 @@ namespace App\Services\Admin;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\Auth\SessionInvalidator;
+use App\Services\Claims\ClaimService;
 use App\Services\Directory\DirectoryFilters;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -23,6 +24,7 @@ class UserAdministration
     public function __construct(
         private readonly AuditLogger $audit,
         private readonly SessionInvalidator $sessions,
+        private readonly ClaimService $claims,
     ) {}
 
     /**
@@ -155,6 +157,8 @@ class UserAdministration
             }
 
             DB::statement('CALL sp_anonymize_user(?)', [$target->getKey()]);
+            // Revendications (contrat §10.3) : téléphone, message et justificatif effacés (fichiers après validation).
+            $this->claims->forgetUser((int) $target->getKey());
 
             // Aucune adresse e-mail dans le journal : seulement l'identifiant (le compte est déjà anonymisé).
             $this->audit->record('user_anonymized_by_admin', $target, null, null, ['target_id' => $target->getKey()], $actor);

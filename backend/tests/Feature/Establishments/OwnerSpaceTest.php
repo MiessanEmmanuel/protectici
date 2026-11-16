@@ -4,6 +4,7 @@ use App\Models\AuditLog;
 use App\Models\City;
 use App\Models\Provider;
 use App\Models\ProviderChangeRequest;
+use App\Models\ProviderExecutive;
 use App\Models\StateForce;
 use App\Models\StateForceType;
 use App\Models\User;
@@ -59,6 +60,16 @@ it('affiche le détail complet du propriétaire sans URL de justificatif', funct
         ->assertJsonStructure(['data' => ['company_type_ids', 'service_type_ids', 'executives', 'media', 'documents', 'change_requests', 'city_id', 'lat', 'lng']]);
 });
 
+it('renvoie pour une force étatique les mêmes listes qu\'un prestataire (dirigeants vides, antennes vides)', function () {
+    $me = User::factory()->create();
+    $f = StateForce::factory()->create(['user_id' => $me->id, 'city_id' => City::factory()->create()->id]);
+
+    $this->actingAs($me)->getJson('/api/v1/me/establishments/state_force/'.$f->slug)->assertOk()
+        ->assertJsonPath('data.executives', [])
+        ->assertJsonPath('data.branches', [])
+        ->assertJsonStructure(['data' => ['executives', 'branches', 'media', 'documents', 'change_requests', 'procedure_type_ids']]);
+});
+
 it('modifie les champs non sensibles, remplace les dirigeants et ignore les champs interdits', function () {
     $me = User::factory()->create();
     $p = pendingProviderOf($me);
@@ -75,6 +86,22 @@ it('modifie les champs non sensibles, remplace les dirigeants et ignore les cham
     expect($p->status)->toBe('pending')->and($p->is_visible)->toBeFalse()->and($p->is_featured)->toBeFalse()
         ->and($p->is_verified)->toBeFalse()->and($p->user_id)->toBe($me->id)->and($p->phone)->toBe('+2250102030405');
     expect(AuditLog::where('event', 'establishment_updated')->count())->toBe(1);
+});
+
+it('conserve l\'ordre envoyé des dirigeants quand seules certaines lignes ont un id', function () {
+    $me = User::factory()->create();
+    $p = pendingProviderOf($me);
+    $kept = ProviderExecutive::create(['provider_id' => $p->id, 'full_name' => 'Awa Conservée', 'position' => 'general_manager', 'sort_order' => 0]);
+
+    $this->actingAs($me)->patchJson('/api/v1/me/establishments/provider/'.$p->slug, ['executives' => [
+        ['full_name' => 'Yao Premier', 'position' => 'general_manager'],
+        ['id' => $kept->id, 'full_name' => 'Awa Conservée', 'position' => 'general_manager'],
+        ['full_name' => 'Koffi Dernier', 'position' => 'general_manager'],
+    ]])->assertOk();
+
+    expect(ProviderExecutive::where('provider_id', $p->id)->orderBy('sort_order')->pluck('full_name', 'sort_order')->all())
+        ->toBe([0 => 'Yao Premier', 1 => 'Awa Conservée', 2 => 'Koffi Dernier'])
+        ->and($kept->refresh()->sort_order)->toBe(1);
 });
 
 it('refuse de modifier directement un champ sensible mais tolère la valeur identique', function () {

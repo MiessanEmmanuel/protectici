@@ -126,7 +126,7 @@ export function useOutsidePress(
  * ajoute un filet fin couleur « contour de champ » et un rayon.
  */
 export const listboxPanelClasses =
-  'fixed z-50 flex flex-col overflow-y-auto overscroll-contain border-2 border-ink bg-white p-1 text-ink rounded-sm outline-none [[data-admin-theme]_&]:border [[data-admin-theme]_&]:border-[var(--a-ctl)]';
+  'fixed z-[60] flex flex-col overflow-y-auto overscroll-contain border-2 border-ink bg-white p-1 text-ink rounded-sm outline-none [[data-admin-theme]_&]:border [[data-admin-theme]_&]:border-[var(--a-ctl)]';
 
 export const listboxOptionClasses =
   'flex min-h-tap w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-base text-ink select-none [[data-admin-theme]_&]:rounded-[calc(var(--a-r-sm)-4px)] data-[active=true]:bg-c4 data-[active=true]:outline-2 data-[active=true]:-outline-offset-2 data-[active=true]:outline-ink aria-disabled:cursor-not-allowed aria-disabled:text-ink-2';

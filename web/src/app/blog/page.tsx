@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { BlogHeader } from '@/components/content/BlogHeader';
 import { PostCardItem } from '@/components/content/PostCardItem';
 import { SectionHeader } from '@/components/ui/Section';
 import { toneAt, type Tone } from '@/components/ui/tone';
+import { PopularPosts } from '@/components/content/PopularPosts';
 import { PostList } from '@/components/content/PostList';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Container } from '@/components/ui/Container';
@@ -65,42 +65,21 @@ export default async function BlogPage({
             </ul>
           </section>
         ) : null}
-        <section aria-labelledby="tous-articles">
-          <SectionHeader
-            id="tous-articles"
-            title={q ? `Résultats pour « ${q} »` : 'Tous les articles'}
-          />
-          {posts ? (
-            <PostList result={posts} basePath="/blog" q={q} />
-          ) : (
-            <ErrorState title="Articles indisponibles">{error?.message}</ErrorState>
-          )}
-        </section>
-        {popular && popular.data.length > 0 ? (
-          <section aria-labelledby="populaires" className="bg-c3 p-6 text-on-c3 md:p-10">
-            <h2 id="populaires" className="text-section heading-block">
-              Les plus lus
-            </h2>
-            <ol className="mt-6">
-              {popular.data.map((p, i) => (
-                <li key={p.slug} className="border-t-2 border-current">
-                  <Link
-                    href={`/blog/${p.slug}`}
-                    className="flex min-h-14 items-center gap-5 py-3 text-lg font-extrabold text-inherit no-underline hover:underline"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="text-figure leading-none font-black text-c2"
-                    >
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    {p.title}
-                  </Link>
-                </li>
-              ))}
-            </ol>
+        {/* Articles 2/3 + les plus lus 1/3 */}
+        <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:gap-12">
+          <section aria-labelledby="tous-articles">
+            <SectionHeader
+              id="tous-articles"
+              title={q ? `Résultats pour « ${q} »` : 'Tous les articles'}
+            />
+            {posts ? (
+              <PostList result={posts} basePath="/blog" q={q} narrow />
+            ) : (
+              <ErrorState title="Articles indisponibles">{error?.message}</ErrorState>
+            )}
           </section>
-        ) : null}
+          {popular ? <PopularPosts posts={popular.data} /> : null}
+        </div>
       </Container>
     </>
   );

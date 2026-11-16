@@ -21,8 +21,11 @@ it('crée un avis en attente, masqué, et alerte les administrateurs', function 
     $provider = makeProvider();
     $user = User::factory()->create();
 
+    $this->actingAs($user)->postJson("/api/v1/providers/{$provider->slug}/reviews", reviewsPayload(['title' => '<b>Super</b> prestataire']))
+        ->assertUnprocessable()->assertJsonValidationErrors('title');
+
     $res = $this->actingAs($user)->postJson("/api/v1/providers/{$provider->slug}/reviews", reviewsPayload([
-        'title' => '<b>Super</b> prestataire', 'status' => 'approved', 'is_visible' => true, 'user_id' => 999,
+        'title' => '  Super   prestataire ', 'status' => 'approved', 'is_visible' => true, 'user_id' => 999,
     ]))->assertCreated()
         ->assertJsonPath('data.status', 'pending')
         ->assertJsonPath('data.is_visible', false)

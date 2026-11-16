@@ -25,7 +25,7 @@ Route::prefix('admin')->name('admin.')
         Route::prefix('establishments')->name('establishments.')->group(function () {
             Route::get('/', [EstablishmentController::class, 'index'])->name('index');
 
-            Route::prefix('{type}/{id}')->where(['type' => 'provider|state_force', 'id' => '[0-9]+'])->group(function () {
+            Route::prefix('{type}/{id}')->where(['type' => 'provider|state_force', 'id' => '[0-9]{1,18}'])->group(function () {
                 Route::get('/', [EstablishmentController::class, 'show'])->name('show');
                 Route::patch('/', [EstablishmentController::class, 'update'])->name('update');
                 Route::delete('/', [EstablishmentController::class, 'destroy'])->name('destroy');
@@ -38,15 +38,15 @@ Route::prefix('admin')->name('admin.')
             });
         });
 
-        Route::get('documents/{id}/download', DocumentDownloadController::class)->whereNumber('id')->name('documents.download');
+        Route::get('documents/{id}/download', DocumentDownloadController::class)->where(['id' => '[0-9]{1,18}'])->name('documents.download');
 
-        Route::prefix('change-requests')->name('change-requests.')->where(['id' => '[0-9]+'])->group(function () {
+        Route::prefix('change-requests')->name('change-requests.')->where(['id' => '[0-9]{1,18}'])->group(function () {
             Route::get('/', [ChangeRequestController::class, 'index'])->name('index');
             Route::post('{id}/approve', [ChangeRequestController::class, 'approve'])->name('approve');
             Route::post('{id}/reject', [ChangeRequestController::class, 'reject'])->name('reject');
         });
 
-        Route::prefix('users')->name('users.')->where(['id' => '[0-9]+'])->group(function () {
+        Route::prefix('users')->name('users.')->where(['id' => '[0-9]{1,18}'])->group(function () {
             Route::get('/', [UserController::class, 'index'])->name('index');
             Route::get('{id}', [UserController::class, 'show'])->name('show');
             Route::patch('{id}', [UserController::class, 'update'])->name('update');
@@ -58,8 +58,8 @@ Route::prefix('admin')->name('admin.')
             ->group(function () {
                 Route::get('/', [ReferenceController::class, 'index'])->name('index');
                 Route::post('/', [ReferenceController::class, 'store'])->name('store');
-                Route::patch('{id}', [ReferenceController::class, 'update'])->whereNumber('id')->name('update');
-                Route::delete('{id}', [ReferenceController::class, 'destroy'])->whereNumber('id')->name('destroy');
+                Route::patch('{id}', [ReferenceController::class, 'update'])->where(['id' => '[0-9]{1,18}'])->name('update');
+                Route::delete('{id}', [ReferenceController::class, 'destroy'])->where(['id' => '[0-9]{1,18}'])->name('destroy');
             });
 
         Route::get('audit-logs', AuditLogController::class)->name('audit-logs');

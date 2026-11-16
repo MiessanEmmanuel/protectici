@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { ApiError, describeError } from '@/lib/api/errors';
 import { safeRedirect } from '@/lib/safe-redirect';
@@ -21,7 +21,7 @@ import { Input } from '../ui/Input';
 
 export function LoginForm({ redirect, verified }: { redirect?: string; verified?: string }) {
   const router = useRouter();
-  const { setUser } = useSession();
+  const { setUser, status } = useSession();
   const [step, setStep] = useState<'credentials' | 'two_factor'>('credentials');
   const [useRecovery, setUseRecovery] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -29,12 +29,23 @@ export function LoginForm({ redirect, verified }: { redirect?: string; verified?
   const [busy, setBusy] = useState(false);
   const [unverified, setUnverified] = useState(false);
   const target = safeRedirect(redirect, '/compte');
+  const leaving = useRef(false);
+
+  // Déjà connecté (R32) : la page de connexion n'a pas lieu d'être, on part vers la destination.
+  useEffect(() => {
+    if (status === 'authenticated' && !leaving.current) {
+      leaving.current = true;
+      router.replace(target);
+    }
+  }, [status, router, target]);
 
   function fail(e: unknown) {
-    setUnverified(e instanceof ApiError && e.status === 403 && e.code === 'email_unverified');
+    const isUnverified = e instanceof ApiError && e.status === 403 && e.code === 'email_unverified';
+    setUnverified(isUnverified);
     const d = describeError(e);
     setErrors(d.fields);
-    setFormError(d.form);
+    // Compte non vérifié (R30) : un seul message, le rappel « nouveau lien » ci-dessous.
+    setFormError(isUnverified ? null : d.form);
   }
 
   async function onCredentials(e: FormEvent<HTMLFormElement>) {
@@ -53,6 +64,7 @@ export function LoginForm({ redirect, verified }: { redirect?: string; verified?
       if (res.kind === 'two_factor') {
         setStep('two_factor');
       } else {
+        leaving.current = true;
         setUser(res.user);
         router.push(target);
       }
@@ -78,6 +90,7 @@ export function LoginForm({ redirect, verified }: { redirect?: string; verified?
     setBusy(true);
     try {
       const user = await clientApi.twoFactorChallenge(input);
+      leaving.current = true;
       setUser(user);
       router.push(target);
     } catch (err) {

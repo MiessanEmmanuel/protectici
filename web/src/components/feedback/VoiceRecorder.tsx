@@ -58,7 +58,11 @@ function messageFor(error: unknown): string {
   const name = error && typeof error === 'object' && 'name' in error ? String(error.name) : '';
   if (name === 'NotAllowedError' || name === 'SecurityError' || name === 'PermissionDeniedError')
     return VOICE_MESSAGES.denied;
-  if (name === 'NotFoundError' || name === 'OverconstrainedError' || name === 'DevicesNotFoundError')
+  if (
+    name === 'NotFoundError' ||
+    name === 'OverconstrainedError' ||
+    name === 'DevicesNotFoundError'
+  )
     return VOICE_MESSAGES.noDevice;
   if (name === 'NotReadableError' || name === 'TrackStartError') return VOICE_MESSAGES.busy;
   return VOICE_MESSAGES.generic;
@@ -194,8 +198,14 @@ export function VoiceRecorder({
       focusAfter.current = 'start';
       return;
     }
-    setNotice(`Message vocal enregistré (${formatClock(seconds)}). Vous pouvez l’écouter avant l’envoi.`);
-    onChangeRef.current({ blob, mimeType: blob.type || type || 'audio/webm', durationSeconds: seconds });
+    setNotice(
+      `Message vocal enregistré (${formatClock(seconds)}). Vous pouvez l’écouter avant l’envoi.`,
+    );
+    onChangeRef.current({
+      blob,
+      mimeType: blob.type || type || 'audio/webm',
+      durationSeconds: seconds,
+    });
     focusAfter.current = 'recorded';
   }
 
@@ -370,11 +380,15 @@ export function VoiceRecorder({
               {VOICE_MESSAGES.unsupported}
             </p>
           ) : problem ? (
-            <p role="alert" className="border-2 border-danger bg-danger-soft p-3 font-semibold text-danger">
+            <p
+              role="alert"
+              className="border-2 border-danger bg-danger-soft p-3 font-semibold text-danger"
+            >
               {problem}
             </p>
           ) : null}
-          {(blocked || (problem && problem !== VOICE_MESSAGES.tooLarge && problem !== VOICE_MESSAGES.empty)) &&
+          {(blocked ||
+            (problem && problem !== VOICE_MESSAGES.tooLarge && problem !== VOICE_MESSAGES.empty)) &&
           onUseText ? (
             <Button variant="outline" onClick={onUseText} className="self-start">
               Écrire un commentaire plutôt

@@ -26,13 +26,13 @@ Route::middleware(['auth:sanctum', 'verified.api', 'throttle:api-authenticated']
                 Route::post('resubmit', [MyEstablishmentController::class, 'resubmit'])->name('resubmit');
 
                 Route::post('change-requests', [ChangeRequestController::class, 'store'])->name('change-requests.store');
-                Route::delete('change-requests/{id}', [ChangeRequestController::class, 'destroy'])->whereNumber('id')->name('change-requests.destroy');
+                Route::delete('change-requests/{id}', [ChangeRequestController::class, 'destroy'])->where(['id' => '[0-9]{1,18}'])->name('change-requests.destroy');
 
                 Route::post('documents', [DocumentController::class, 'store'])->name('documents.store');
-                Route::delete('documents/{id}', [DocumentController::class, 'destroy'])->whereNumber('id')->name('documents.destroy');
+                Route::delete('documents/{id}', [DocumentController::class, 'destroy'])->where(['id' => '[0-9]{1,18}'])->name('documents.destroy');
 
                 Route::post('media', [MediaController::class, 'store'])->name('media.store');
-                Route::delete('media/{id}', [MediaController::class, 'destroy'])->whereNumber('id')->name('media.destroy');
+                Route::delete('media/{id}', [MediaController::class, 'destroy'])->where(['id' => '[0-9]{1,18}'])->name('media.destroy');
             });
     });
 });

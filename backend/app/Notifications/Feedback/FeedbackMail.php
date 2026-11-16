@@ -10,7 +10,7 @@ use Illuminate\Notifications\Notification;
 
 /**
  * E-mails « Dis-moi tout » (contrat §8.2), envoyés uniquement à l'adresse du dossier (jamais à un tiers) :
- * accusé de réception avec la référence, puis réponse de l'équipe. Mis en file (driver database).
+ * accusé de réception avec la référence, réponse de l'équipe, changement de statut. Mis en file (driver database).
  */
 class FeedbackMail extends Notification implements ShouldQueueAfterCommit
 {
@@ -19,6 +19,17 @@ class FeedbackMail extends Notification implements ShouldQueueAfterCommit
     public const RECEIVED = 'received';
 
     public const REPLY = 'reply';
+
+    public const STATUS_CHANGED = 'status_changed';
+
+    /** Libellés publics des statuts (identiques à FEEDBACK_STATUS_LABELS côté web). */
+    private const STATUS_LABELS = [
+        'new' => 'Reçu',
+        'in_progress' => 'En cours de traitement',
+        'forwarded' => 'Transmis au prestataire',
+        'resolved' => 'Résolu',
+        'closed' => 'Clôturé',
+    ];
 
     public int $tries = 3;
 
@@ -50,6 +61,12 @@ class FeedbackMail extends Notification implements ShouldQueueAfterCommit
             $mail
                 ->line('Votre numéro de suivi : '.$this->reference)
                 ->line('Conservez-le : il vous permet de suivre l\'avancement de votre dossier avec votre adresse e-mail.')
+                ->action('Suivre mon dossier', $front.'/dis-moi-tout/suivi');
+        } elseif ($this->event === self::STATUS_CHANGED) {
+            $label = self::STATUS_LABELS[(string) $this->body] ?? (string) $this->body;
+            $mail->subject('Votre dossier '.$this->reference.' a été mis à jour - ProtectIci')
+                ->line('Le statut de votre dossier « Dis-moi tout » '.$this->reference.' a changé.')
+                ->line('Nouveau statut : **'.$label.'**')
                 ->action('Suivre mon dossier', $front.'/dis-moi-tout/suivi');
         } else {
             $mail->subject('Réponse à votre dossier '.$this->reference.' - ProtectIci')

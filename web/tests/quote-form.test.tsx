@@ -14,6 +14,9 @@ vi.mock('@/lib/api/client', () => ({
   },
 }));
 
+const session = vi.hoisted(() => ({ user: null as unknown }));
+vi.mock('@/components/layout/SessionProvider', () => ({ useSession: () => session }));
+
 import { QuoteForm } from '@/components/quote/QuoteForm';
 import { chooseOption, openOptions } from './select-helpers';
 
@@ -291,5 +294,18 @@ describe('QuoteForm', () => {
     await submit(u);
     await screen.findByTestId('reference');
     expect(createQuote.mock.calls[0]![0].turnstile_token).toBe('jeton-ok');
+  });
+
+  it('préremplit les coordonnées depuis la session (R28)', async () => {
+    session.user = { id: 1, first_name: 'Awa', last_name: 'Koné', email: 'awa@example.test', phone: '+2250700000000', role: 'user', email_verified: true, two_factor_enabled: false, created_at: '2026-01-01T00:00:00Z' };
+    try {
+      render(<QuoteForm reference={referenceData} />);
+      await waitFor(() => expect(screen.getByLabelText(/Prénom/)).toHaveValue('Awa'));
+      expect(screen.getByLabelText(/^Nom/)).toHaveValue('Koné');
+      expect(screen.getByLabelText(/Adresse e-mail/)).toHaveValue('awa@example.test');
+      expect(screen.getByLabelText(/^Téléphone/)).toHaveValue('+2250700000000');
+    } finally {
+      session.user = null;
+    }
   });
 });

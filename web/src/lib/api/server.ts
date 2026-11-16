@@ -30,4 +30,6 @@ function serverHeaders(): Record<string, string> {
 
 export const serverApi: Api = USE_MOCKS
   ? mockApi
-  : buildApi(createRequester({ baseUrl: serverApiUrl(), getCookieHeader, serverHeaders, timeoutMs: 8000 }));
+  : buildApi(
+      createRequester({ baseUrl: serverApiUrl(), getCookieHeader, serverHeaders, timeoutMs: 8000 }),
+    );

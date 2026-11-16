@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { clientApi } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
 import type { ReviewReportReason } from '@/lib/api/types';
@@ -16,6 +16,7 @@ import { Modal } from '../ui/Modal';
 import { Select } from '../ui/Select';
 import { Textarea } from '../ui/Textarea';
 import { useToast } from '../ui/Toast';
+import { loadMyReviews } from './my-reviews';
 
 const REASONS = Object.keys(REPORT_REASON_LABELS) as ReviewReportReason[];
 
@@ -23,13 +24,34 @@ const REASONS = Object.keys(REPORT_REASON_LABELS) as ReviewReportReason[];
 export function ReportReviewButton({
   reviewId,
   redirectTo,
+  label = 'cet avis',
 }: {
   reviewId: number;
   redirectTo: string;
+  /** Complément du nom accessible, distinct pour chaque avis (ex. « l’avis de Awa K. du 1 sept. 2026 »). */
+  label?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [done, setDone] = useState(false);
+  const [own, setOwn] = useState(false);
   const toast = useToast();
+  const { user, status } = useSession();
+  const signedIn = status === 'authenticated' && user !== null;
+  const userId = user?.id;
+
+  // Son propre avis ne se signale pas (l'API refuse en 403, R44).
+  useEffect(() => {
+    if (!signedIn) return;
+    let active = true;
+    loadMyReviews(userId)
+      .then((list) => active && setOwn(list.some((r) => r.id === reviewId)))
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [signedIn, userId, reviewId]);
+
+  if (own && signedIn) return <p className="text-sm text-muted">Votre avis</p>;
 
   if (done) {
     return (
@@ -42,7 +64,7 @@ export function ReportReviewButton({
     <>
       <Button variant="ghost" size="sm" onClick={() => setOpen(true)} aria-haspopup="dialog">
         Signaler
-        <span className="sr-only"> cet avis</span>
+        <span className="sr-only"> {label}</span>
       </Button>
       <Modal open={open} onClose={() => setOpen(false)} title="Signaler cet avis">
         {open ? (

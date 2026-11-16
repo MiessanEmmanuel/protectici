@@ -80,8 +80,9 @@ class Provider extends Model
     }
 
     /**
-     * Prestataires dans un rayon (mètres) via fn_providers_nearby (ST_DWithin + tri KNN) ;
-     * ajoute la colonne distance_m et joint uniquement les fiches publiques.
+     * Prestataires dans un rayon (mètres) via fn_providers_nearby (siège ou agence, ST_DWithin) ;
+     * ajoute distance_m (distance minimale siège/agences), nearest_branch_id et nearest_branch_label (null = siège),
+     * et joint uniquement les fiches publiques.
      *
      * @param  Builder<Provider>  $query
      * @return Builder<Provider>
@@ -90,17 +91,28 @@ class Provider extends Model
     {
         $nearby = DB::query()
             ->fromRaw('fn_providers_nearby(?::double precision, ?::double precision, ?::integer, ?::integer)', [$lat, $lng, $radiusMeters, $limit])
-            ->select('id', 'distance_m');
+            ->select('id', 'distance_m', 'branch_id');
 
         return $query
             ->joinSub($nearby, 'nearby', 'nearby.id', '=', 'providers.id')
-            ->addSelect('providers.*', 'nearby.distance_m');
+            ->leftJoin('provider_branches as nearest_branch', 'nearest_branch.id', '=', 'nearby.branch_id')
+            ->addSelect('providers.*', 'nearby.distance_m', 'nearby.branch_id as nearest_branch_id', 'nearest_branch.label as nearest_branch_label');
     }
 
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Lot d'import Excel d'origine (null si la fiche vient d'une inscription).
+     *
+     * @return BelongsTo<EstablishmentImport, $this>
+     */
+    public function import(): BelongsTo
+    {
+        return $this->belongsTo(EstablishmentImport::class, 'import_id');
     }
 
     /** @return BelongsTo<City, $this> */
@@ -133,10 +145,26 @@ class Provider extends Model
         return $this->hasMany(ProviderExecutive::class)->orderBy('sort_order');
     }
 
+    /**
+     * Agences (adresses secondaires) ; la fiche elle-même porte l'adresse du siège.
+     *
+     * @return HasMany<ProviderBranch, $this>
+     */
+    public function branches(): HasMany
+    {
+        return $this->hasMany(ProviderBranch::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     /** @return HasMany<ProviderDocument, $this> */
     public function documents(): HasMany
     {
         return $this->hasMany(ProviderDocument::class);
+    }
+
+    /** @return HasMany<EstablishmentClaim, $this> */
+    public function claims(): HasMany
+    {
+        return $this->hasMany(EstablishmentClaim::class);
     }
 
     /** @return HasMany<ProviderChangeRequest, $this> */

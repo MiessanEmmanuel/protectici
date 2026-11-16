@@ -51,6 +51,23 @@ it('crée une force étatique pending', function () {
     expect(StateForce::count())->toBe(1);
 });
 
+it('rejette le HTML dans les champs texte de l\'inscription (422), sans rien créer', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->postJson('/api/v1/establishments', providerPayload([
+        'name' => 'Sentinelle<script>alert(1)</script>',
+        'description' => 'Société de gardiennage <b>fictive</b>.',
+        'executives' => [['full_name' => '<i>Awa</i> Test', 'position' => 'general_manager']],
+    ]))->assertUnprocessable()
+        ->assertJsonValidationErrors(['name', 'description', 'executives.0.full_name'])
+        ->assertJsonPath('errors.description.0', 'Le champ description ne doit pas contenir de balises HTML.');
+    expect(Provider::query()->count())->toBe(0);
+
+    // Un « < » isolé n'est pas une balise.
+    $this->actingAs($user)->postJson('/api/v1/establishments', providerPayload(['description' => 'Intervention en < 15 minutes <3']))
+        ->assertCreated();
+});
+
 it('valide la charge utile', function (array $override) {
     $this->actingAs(User::factory()->create())
         ->postJson('/api/v1/establishments', providerPayload($override))->assertUnprocessable();

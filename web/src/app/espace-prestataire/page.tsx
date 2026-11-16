@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { RequireAuth } from '@/components/establishment/RequireAuth';
 import { MyEstablishmentsList } from '@/components/establishment/MyEstablishmentsList';
+import { MyClaimsSection } from '@/components/claims/MyClaimsSection';
 import { ProviderSpaceNav } from '@/components/provider-space/ProviderSpaceNav';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ButtonLink } from '@/components/ui/Button';
@@ -30,6 +31,7 @@ export default function ProviderSpacePage() {
             </ButtonLink>
           </div>
           <MyEstablishmentsList />
+          <MyClaimsSection />
         </RequireAuth>
       </Container>
     </>

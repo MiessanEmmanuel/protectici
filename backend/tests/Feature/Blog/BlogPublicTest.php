@@ -89,7 +89,7 @@ it('valide les paramètres de liste', function (string $query, string $field) {
     'page nulle' => ['page=0', 'page'],
 ]);
 
-it('affiche un article avec ses articles liés et compte une vue par fenêtre de 30 minutes', function () {
+it('affiche un article avec ses articles liés, sans compter de vue', function () {
     $category = PostCategory::factory()->create();
     $post = postIn($category, ['views_count' => 10, 'body' => '<p>Texte de l\'article</p>', 'seo_title' => 'Titre SEO']);
     $siblings = Post::factory()->count(4)->create(['category_id' => $category->id]);
@@ -102,18 +102,44 @@ it('affiche un article avec ses articles liés et compte une vue par fenêtre de
     expect($data['body'])->toBe('<p>Texte de l\'article</p>')
         ->and($data['seo_title'])->toBe('Titre SEO')
         ->and($data['author_name'])->toBe('Koffi É.')
-        ->and($data['views_count'])->toBe(11)
+        ->and($data['views_count'])->toBe(10)
         ->and($data['related'])->toHaveCount(3)
         ->and(array_column($data['related'], 'slug'))->not->toContain($post->slug)
         ->and(json_encode($data))->not->toContain('@');
 
-    // Même visiteur : pas de nouvelle vue ; autre visiteur : nouvelle vue.
-    $this->getJson(BLOG.'/posts/'.$post->slug)->assertOk()->assertJsonPath('data.views_count', 11);
-    $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.9'])->getJson(BLOG.'/posts/'.$post->slug)->assertOk()->assertJsonPath('data.views_count', 12);
+    $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.9'])->getJson(BLOG.'/posts/'.$post->slug)->assertOk();
+    expect($post->refresh()->views_count)->toBe(10);
+});
+
+it('compte une vue par visiteur et par fenêtre de 30 minutes via POST /view (204)', function () {
+    $post = postIn(PostCategory::factory()->create(), ['views_count' => 10]);
+    $url = BLOG.'/posts/'.$post->slug.'/view';
+
+    $this->postJson($url)->assertNoContent();
+    $this->postJson($url)->assertNoContent();
+    expect($post->refresh()->views_count)->toBe(11);
+
+    $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.9'])->postJson($url)->assertNoContent();
     expect($post->refresh()->views_count)->toBe(12);
 
     $this->travel(31)->minutes();
+    $this->postJson($url)->assertNoContent();
+    expect($post->refresh()->views_count)->toBe(13);
     $this->getJson(BLOG.'/posts/'.$post->slug)->assertOk()->assertJsonPath('data.views_count', 13);
+});
+
+it('refuse de compter la vue d\'un article non publié ou inconnu (404) et limite le débit', function () {
+    $draft = Post::factory()->create(['status' => 'draft', 'published_at' => null, 'is_visible' => false, 'category_id' => PostCategory::factory()]);
+
+    $this->postJson(BLOG.'/posts/'.$draft->slug.'/view')->assertNotFound();
+    $this->postJson(BLOG.'/posts/inconnu/view')->assertNotFound();
+    expect($draft->refresh()->views_count)->toBe(0);
+
+    $post = postIn(PostCategory::factory()->create());
+    for ($i = 0; $i < 28; $i++) {
+        $this->postJson(BLOG.'/posts/'.$post->slug.'/view')->assertNoContent();
+    }
+    $this->postJson(BLOG.'/posts/'.$post->slug.'/view')->assertStatus(429);
 });
 
 it('répond 404 pour un article non publié, planifié, archivé ou inconnu', function (array $state) {
@@ -187,7 +213,9 @@ it('crée un commentaire en attente de modération pour un compte vérifié', fu
     $post = postIn(PostCategory::factory()->create());
     $user = User::factory()->create();
 
-    $this->actingAs($user)->postJson(BLOG.'/posts/'.$post->slug.'/comments', ['body' => "  Merci pour cet <b>article</b>.\n"])
+    $this->actingAs($user)->postJson(BLOG.'/posts/'.$post->slug.'/comments', ['body' => 'Merci pour cet <b>article</b>.'])
+        ->assertUnprocessable()->assertJsonValidationErrors('body');
+    $this->actingAs($user)->postJson(BLOG.'/posts/'.$post->slug.'/comments', ['body' => "  Merci pour cet article.\n"])
         ->assertCreated()->assertExactJson(['data' => ['status' => 'pending']]);
 
     $comment = PostComment::first();

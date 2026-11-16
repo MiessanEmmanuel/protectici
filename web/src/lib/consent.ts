@@ -25,13 +25,17 @@ export function serializeConsent(analytics: boolean, now = Date.now()): string {
 }
 
 /** Lit la valeur brute du cookie ; renvoie null si absent, illisible ou expiré (> 6 mois). */
-export function parseConsent(raw: string | null | undefined, now = Date.now()): ConsentChoice | null {
+export function parseConsent(
+  raw: string | null | undefined,
+  now = Date.now(),
+): ConsentChoice | null {
   if (!raw) return null;
   try {
     const data: unknown = JSON.parse(decodeURIComponent(raw));
     if (!data || typeof data !== 'object') return null;
     const { v, a, t } = data as Record<string, unknown>;
-    if (v !== 1 || (a !== 0 && a !== 1) || typeof t !== 'number' || !Number.isFinite(t)) return null;
+    if (v !== 1 || (a !== 0 && a !== 1) || typeof t !== 'number' || !Number.isFinite(t))
+      return null;
     if (now - t > CONSENT_MAX_AGE_SECONDS * 1000 || t > now + 60_000) return null;
     return { analytics: a === 1, decidedAt: t };
   } catch {

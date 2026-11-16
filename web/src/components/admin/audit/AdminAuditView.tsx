@@ -254,12 +254,16 @@ function LogRow({ log }: { log: AdminAuditLog }) {
             <dt>Utilisateur :</dt>
             <dd className="text-ink">{log.user ? `${log.user.name} (n° ${log.user.id})` : 'Système'}</dd>
           </div>
-          <div className="flex gap-1">
-            <dt>Objet :</dt>
-            <dd className="text-ink">
-              {TYPE_LABELS[log.auditable_type] ?? log.auditable_type} n° {log.auditable_id}
-            </dd>
-          </div>
+          {/* Événements sans objet (connexion, etc.) : pas de ligne « Objet : n° » vide. */}
+          {log.auditable_type ? (
+            <div className="flex gap-1">
+              <dt>Objet :</dt>
+              <dd className="text-ink">
+                {TYPE_LABELS[log.auditable_type] ?? log.auditable_type}
+                {log.auditable_id != null ? ` n° ${log.auditable_id}` : ''}
+              </dd>
+            </div>
+          ) : null}
           <div className="flex gap-1">
             <dt>Adresse IP :</dt>
             <dd className="text-ink">{log.ip_address ?? '—'}</dd>

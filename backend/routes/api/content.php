@@ -35,6 +35,10 @@ Route::middleware('throttle:public-read')->group(function () use ($slug) {
     Route::get('settings/public', [SitePageController::class, 'settings'])->middleware('public.cache:site,300')->name('settings.public');
 });
 
+// Vue d'un article : appelée par le navigateur (IP réelle du visiteur), jamais par le rendu serveur.
+Route::post('blog/posts/{slug}/view', [BlogController::class, 'recordView'])
+    ->middleware('throttle:blog-view')->where('slug', $slug)->name('blog.posts.view');
+
 Route::post('blog/posts/{slug}/comments', [CommentController::class, 'store'])
     ->middleware(['auth:sanctum', 'verified.api', 'throttle:api-authenticated', 'throttle:blog-comment'])
     ->where('slug', $slug)->name('blog.comments.store');
@@ -48,7 +52,7 @@ Route::prefix('newsletter')->name('newsletter.')->group(function () {
 // --- Back-office contenu (editor + admin) --------------------------------------------------------------------
 Route::prefix('content')->name('content.')
     ->middleware(['auth:sanctum', 'verified.api', 'can:content-area', '2fa.staff', 'throttle:content-api'])
-    ->whereNumber('id')
+    ->where(['id' => '[0-9]{1,18}'])
     ->group(function () use ($slug) {
         Route::get('posts', [PostController::class, 'index'])->name('posts.index');
         Route::post('posts', [PostController::class, 'store'])->name('posts.store');

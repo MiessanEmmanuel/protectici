@@ -35,13 +35,13 @@ function Probe({ onSubmit }: { onSubmit: (p: ReturnType<ReturnType<typeof useAnt
 
 describe('CSP et Turnstile', () => {
   it('sans clé : aucune origine Cloudflare dans la CSP', () => {
-    const csp = buildCsp({ nonce: 'abc', isDev: false, apiOrigin: 'http://api.test' });
+    const csp = buildCsp({ nonce: 'abc', isDev: false, apiOrigin: 'https://api.test' });
     expect(csp).not.toContain('challenges.cloudflare.com');
     expect(csp).not.toMatch(/frame-src/);
   });
 
   it('avec clé : script-src et frame-src autorisent Cloudflare, sans unsafe-inline ni unsafe-eval en production', () => {
-    const csp = buildCsp({ nonce: 'abc', isDev: false, apiOrigin: 'http://api.test', turnstile: true });
+    const csp = buildCsp({ nonce: 'abc', isDev: false, apiOrigin: 'https://api.test', turnstile: true });
     expect(csp).toMatch(/script-src [^;]*https:\/\/challenges\.cloudflare\.com/);
     expect(csp).toMatch(/frame-src https:\/\/challenges\.cloudflare\.com/);
     expect(csp).not.toContain('unsafe-inline');

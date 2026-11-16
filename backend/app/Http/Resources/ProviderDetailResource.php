@@ -43,9 +43,22 @@ class ProviderDetailResource extends ProviderSummaryResource
                 'position' => $e->position,
                 'position_label' => $e->position_label,
             ])->values(),
+            'branches' => $p->branches->map(fn ($b) => [
+                'id' => $b->id,
+                'label' => $b->label,
+                'city' => ['name' => $b->city->name, 'slug' => $b->city->slug],
+                'district' => $b->district ? ['name' => $b->district->name, 'slug' => $b->district->slug] : null,
+                'address' => $b->address,
+                'geo_description' => $b->geo_description,
+                'phone' => $b->phone,
+                'lat' => $b->latitude === null ? null : (float) $b->latitude,
+                'lng' => $b->longitude === null ? null : (float) $b->longitude,
+            ])->values(),
             'gallery' => $p->gallery->map(fn ($m) => ['url' => $m->url(), 'alt' => $m->alt_text ?? $p->name])->values(),
             'views_count' => $p->views_count,
             'is_favorite' => $user === null ? null : $user->favoriteProviders()->whereKey($p->getKey())->exists(),
+            // Contrat §10.1 : fiche publiée sans propriétaire (revendicable).
+            'is_claimable' => (bool) $p->is_visible && $p->status === 'approved' && $p->user_id === null,
         ];
     }
 }
