@@ -38,6 +38,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -86,6 +87,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         self::pinRootUrl();
+        self::registerRouteBindings();
         self::registerPublicCacheInvalidation();
 
         // Morph map obligatoire (modele.md §1.4, §8) : jamais de nom de classe en base.
@@ -181,5 +183,15 @@ class AppServiceProvider extends ServiceProvider
             URL::forceRootUrl((string) config('app.url'));
             URL::forceScheme(parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https');
         }
+    }
+
+    /**
+     * Seules les fiches publiées (is_visible AND status = approved AND non supprimées) se résolvent : sinon 404.
+     * Déclarées ici et non dans routes/ : avec route:cache, les fichiers de routes ne sont plus chargés.
+     */
+    private static function registerRouteBindings(): void
+    {
+        Route::bind('publishedProvider', fn (string $slug) => Provider::query()->published()->where('slug', $slug)->firstOrFail());
+        Route::bind('publishedStateForce', fn (string $slug) => StateForce::query()->published()->where('slug', $slug)->firstOrFail());
     }
 }

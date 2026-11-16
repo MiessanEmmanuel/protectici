@@ -7,13 +7,10 @@ use App\Http\Controllers\Api\MapMarkerController;
 use App\Http\Controllers\Api\ProviderController;
 use App\Http\Controllers\Api\ReferenceDataController;
 use App\Http\Controllers\Api\StateForceController;
-use App\Models\Provider;
-use App\Models\StateForce;
 use Illuminate\Support\Facades\Route;
 
-// Seules les fiches publiées (is_visible AND status = approved AND non supprimées) se résolvent : sinon 404.
-Route::bind('publishedProvider', fn (string $slug) => Provider::query()->published()->where('slug', $slug)->firstOrFail());
-Route::bind('publishedStateForce', fn (string $slug) => StateForce::query()->published()->where('slug', $slug)->firstOrFail());
+// Liaisons {publishedProvider} / {publishedStateForce} : AppServiceProvider::registerRouteBindings()
+// (un Route::bind placé ici est perdu quand les routes sont en cache, cf. php artisan route:cache).
 
 Route::get('reference-data', ReferenceDataController::class)->middleware('public.cache:directory,300');
 Route::get('home', HomeController::class)->middleware('public.cache:directory,60');
